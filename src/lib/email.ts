@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import type { Order } from "@/lib/types";
 import { BANK_TRANSFER_DETAILS } from "@/lib/bank-details";
+import { getSiteUrl } from "@/lib/site-url";
 
 // Sends a transactional email if SMTP env vars are configured, otherwise
 // logs it to the console so auth/checkout flows still complete in dev.
@@ -122,5 +123,5 @@ function buildShippingBody(order: Order): string {
 }
 
 function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  return getSiteUrl();
 }

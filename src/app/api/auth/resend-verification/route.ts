@@ -3,6 +3,7 @@ import { getCurrentCustomer } from "@/lib/users/current-user";
 import { updateUser } from "@/lib/users/store";
 import { generateToken } from "@/lib/users/password";
 import { sendMail } from "@/lib/email";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -16,7 +17,7 @@ export async function POST() {
   const verificationTokenExpiresAt = new Date(Date.now() + VERIFICATION_TTL_MS).toISOString();
   await updateUser(user.id, { verificationToken, verificationTokenExpiresAt });
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
   const verifyUrl = `${siteUrl}/api/auth/verify-email?token=${verificationToken}`;
   try {
     await sendMail(

@@ -5,6 +5,7 @@ import { SiteChrome } from "@/components/SiteChrome";
 import { CartProvider } from "@/lib/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { buildMetadata, SITE_NAME } from "@/lib/seo";
+import { getSiteUrl } from "@/lib/site-url";
 
 const displayFont = Playfair_Display({
   variable: "--font-display",
@@ -18,7 +19,7 @@ const bodyFont = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(getSiteUrl()),
   ...buildMetadata({
     title: `${SITE_NAME} | Research Peptides, Verified`,
     path: "/",

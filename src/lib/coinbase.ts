@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { CryptoChargeInfo, Order } from "@/lib/types";
+import { getSiteUrl } from "@/lib/site-url";
 
 // Coinbase Commerce REST API (server-only). Endpoint/field names follow the
 // long-standing Commerce v2 API — verify against your Coinbase Commerce
@@ -30,7 +31,7 @@ type CoinbaseChargeResponse = {
 };
 
 export async function createCoinbaseCharge(order: Order): Promise<CryptoChargeInfo> {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
 
   const res = await fetch(`${API_BASE}/charges`, {
     method: "POST",

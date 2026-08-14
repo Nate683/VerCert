@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { listUsers } from "@/lib/users/store";
 import { sendMarketingEmail, createUnsubscribeToken } from "@/lib/resend";
+import { getSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
       ? optedIn
       : optedIn.filter((u) => body.recipients.includes(u.email));
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
   let sent = 0;
   const failures: string[] = [];
 

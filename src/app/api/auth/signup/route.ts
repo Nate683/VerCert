@@ -4,6 +4,7 @@ import { createUser, getUserByEmail } from "@/lib/users/store";
 import { hashPassword, generateToken } from "@/lib/users/password";
 import { CUSTOMER_SESSION_COOKIE, createCustomerSessionToken } from "@/lib/users/session";
 import { sendMail } from "@/lib/email";
+import { getSiteUrl } from "@/lib/site-url";
 import { getRealmForEmail } from "@/lib/executive/staff";
 import { signupSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     verificationTokenExpiresAt,
   });
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
   const verifyUrl = `${siteUrl}/api/auth/verify-email?token=${verificationToken}`;
   try {
     await sendMail(

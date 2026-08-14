@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getUserByEmail, updateUser } from "@/lib/users/store";
 import { generateToken } from "@/lib/users/password";
 import { sendMail } from "@/lib/email";
+import { getSiteUrl } from "@/lib/site-url";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
       const resetTokenExpiresAt = new Date(Date.now() + RESET_TTL_MS).toISOString();
       await updateUser(user.id, { resetToken, resetTokenExpiresAt });
 
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      const siteUrl = getSiteUrl();
       const resetUrl = `${siteUrl}/reset-password?token=${resetToken}`;
       try {
         await sendMail(
