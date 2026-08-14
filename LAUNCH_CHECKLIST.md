@@ -64,9 +64,11 @@ real order. Grouped by what kind of decision/action it is.
 - **Database**: hosted Postgres on Neon, accessed via the serverless HTTP
   driver (`@neondatabase/serverless`) — no connection pooling to manage, and
   it works from Vercel serverless functions, a VPS, or anywhere else without
-  changes. Run `npm run db:migrate` once after setting `DATABASE_URL` to
-  create the schema (it also runs automatically before `dev`/`build` via
-  `predev`/`prebuild`).
+  changes. Run `npm run db:migrate` once after setting `DATABASE_URL` (and
+  again after pulling any future schema change) to create/update the schema.
+  This is a deliberate manual step, not part of `build` — a transient DB
+  connectivity issue during a Vercel build shouldn't be able to fail your
+  whole deployment.
 - **Deploying on Vercel**: for the tightest integration, add Postgres from
   the Vercel dashboard's Storage tab (this provisions a Neon database and
   auto-populates `DATABASE_URL` for all environments) — or create the Neon

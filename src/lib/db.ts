@@ -3,9 +3,9 @@ import { neon } from "@neondatabase/serverless";
 // Server-only Postgres access — hosted on Neon (neon.tech). Uses Neon's
 // HTTP-based query function, so there's no connection/pool lifecycle to
 // manage and it behaves identically in Node.js, Vercel serverless, and edge
-// runtimes. Schema creation/seeding lives in scripts/migrate.mjs (run via
-// `npm run db:migrate`, and automatically before `dev`/`build`) rather than
-// here, since that's a DDL step, not something to redo on every import.
+// runtimes. Schema creation/seeding lives in scripts/migrate.mjs (run
+// manually via `npm run db:migrate`) rather than here, since that's a DDL
+// step, not something to redo on every import.
 // See LAUNCH_CHECKLIST.md for how to provision a database.
 type SqlFn = ReturnType<typeof neon<false, false>>;
 

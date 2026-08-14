@@ -1,5 +1,6 @@
 // Creates/updates the Postgres schema and seeds initial inventory.
-// Run via `npm run db:migrate` — also runs automatically before `dev`/`build`.
+// Run via `npm run db:migrate` — a deliberate manual step, not part of the
+// build (a transient DB issue during `next build` shouldn't fail deploys).
 import { config } from "dotenv";
 config({ path: ".env.local", quiet: true });
 
