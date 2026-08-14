@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { updateUser } from "@/lib/users/store";
 import type { SavedAddress } from "@/lib/types";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
 const REQUIRED_FIELDS: (keyof SavedAddress)[] = ["address", "city", "state", "postalCode", "country"];
 
-export async function POST(request: Request) {
+export const POST = withApiErrorHandling(async (request: Request) => {
   const user = await getCurrentCustomer();
   if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
@@ -34,4 +35,4 @@ export async function POST(request: Request) {
 
   await updateUser(user.id, { savedAddress });
   return NextResponse.json({ ok: true, savedAddress });
-}
+});

@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { getOrderByReference, updateOrder } from "@/lib/orders/store";
 import { markOrderPaid } from "@/lib/orders/lifecycle";
 import { getCoinbaseCharge, isChargeConfirmed } from "@/lib/coinbase";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
+export const GET = withApiErrorHandling(async (
   _request: Request,
   { params }: { params: Promise<{ reference: string }> }
-) {
+) => {
   const { reference } = await params;
   const order = await getOrderByReference(reference);
   if (!order) {
@@ -43,4 +44,4 @@ export async function GET(
     paidAt: paidAt ?? null,
     expiresAt: order.crypto?.expiresAt ?? null,
   });
-}
+});

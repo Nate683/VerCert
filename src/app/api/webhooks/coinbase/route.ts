@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyCoinbaseWebhookSignature } from "@/lib/coinbase";
 import { listOrders } from "@/lib/orders/store";
 import { markOrderPaid } from "@/lib/orders/lifecycle";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ type CoinbaseWebhookEvent = {
 
 const PAID_EVENT_TYPES = new Set(["charge:confirmed", "charge:resolved"]);
 
-export async function POST(request: Request) {
+export const POST = withApiErrorHandling(async (request: Request) => {
   const rawBody = await request.text();
   const signature = request.headers.get("x-cc-webhook-signature");
 
@@ -44,4 +45,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ received: true });
-}
+});

@@ -9,10 +9,11 @@ import { findInsufficientStock } from "@/lib/inventory";
 import type { CartItem } from "@/lib/types";
 import { createOrderSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+export const POST = withApiErrorHandling(async (request: Request) => {
   const currentCustomer = await getCurrentCustomer();
   if (!currentCustomer) {
     return NextResponse.json(
@@ -106,4 +107,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ reference: order.reference });
-}
+});

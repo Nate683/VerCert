@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getUserByResetToken, updateUser } from "@/lib/users/store";
 import { hashPassword } from "@/lib/users/password";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+export const POST = withApiErrorHandling(async (request: Request) => {
   const ip = getClientIp(request);
   const limit = await checkRateLimit(`reset-password:${ip}`, { limit: 10, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfterSeconds);
@@ -41,4 +42,4 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({ ok: true });
-}
+});

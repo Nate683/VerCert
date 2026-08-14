@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getUserByVerificationToken, updateUser } from "@/lib/users/store";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export const GET = withApiErrorHandling(async (request: Request) => {
   const { searchParams, origin } = new URL(request.url);
   const token = searchParams.get("token");
 
@@ -28,4 +29,4 @@ export async function GET(request: Request) {
   });
 
   return redirect("success");
-}
+});

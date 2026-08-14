@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentCustomer } from "@/lib/users/current-user";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export const GET = withApiErrorHandling(async () => {
   const user = await getCurrentCustomer();
   if (!user) return NextResponse.json({ user: null });
 
@@ -16,4 +17,4 @@ export async function GET() {
       role: user.role ?? null,
     },
   });
-}
+});

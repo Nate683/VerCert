@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getUserByEmail, createUser, updateUser } from "@/lib/users/store";
 import { hashPassword, generateToken } from "@/lib/users/password";
 import { getRealmForEmail } from "@/lib/executive/staff";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Lightweight email capture — reuses the same Customer record + marketingOptIn
 // field as full signup, without requiring a password up front.
-export async function POST(request: Request) {
+export const POST = withApiErrorHandling(async (request: Request) => {
   let body: { email?: string };
   try {
     body = await request.json();
@@ -37,4 +38,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true });
-}
+});

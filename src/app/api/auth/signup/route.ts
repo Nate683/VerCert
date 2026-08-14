@@ -8,12 +8,13 @@ import { getSiteUrl } from "@/lib/site-url";
 import { getRealmForEmail } from "@/lib/executive/staff";
 import { signupSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-export async function POST(request: Request) {
+export const POST = withApiErrorHandling(async (request: Request) => {
   const ip = getClientIp(request);
   const limit = await checkRateLimit(`signup:${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfterSeconds);
@@ -70,4 +71,4 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({ ok: true });
-}
+});

@@ -4,11 +4,12 @@ import { updateUser } from "@/lib/users/store";
 import { generateToken } from "@/lib/users/password";
 import { sendMail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site-url";
+import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 
-export async function POST() {
+export const POST = withApiErrorHandling(async () => {
   const user = await getCurrentCustomer();
   if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   if (user.emailVerified) return NextResponse.json({ ok: true });
@@ -30,4 +31,4 @@ export async function POST() {
   }
 
   return NextResponse.json({ ok: true });
-}
+});
