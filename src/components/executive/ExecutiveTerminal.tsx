@@ -14,7 +14,6 @@ import { CustomersPanel } from "./CustomersPanel";
 import { AssistantChat } from "./AssistantChat";
 
 type Variant = "command" | "office";
-type Realm = "command" | "office";
 type Tab = "overview" | "orders" | "customers" | "assistant";
 
 const TABS: { id: Tab; label: string }[] = [
@@ -26,13 +25,11 @@ const TABS: { id: Tab; label: string }[] = [
 
 export function ExecutiveTerminal({
   variant,
-  realm,
   executiveName,
   executiveTitle,
   terminalName,
 }: {
   variant: Variant;
-  realm: Realm;
   executiveName: string;
   executiveTitle: string;
   terminalName: string;
@@ -64,12 +61,8 @@ export function ExecutiveTerminal({
   }, [tab, isCommand, mounted]);
 
   async function handleLogout() {
-    await fetch("/api/executive/logout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ realm }),
-    });
-    router.push(`/${realm}/login`);
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
     router.refresh();
   }
 

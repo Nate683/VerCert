@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUserByEmail, createUser, updateUser } from "@/lib/users/store";
 import { hashPassword, generateToken } from "@/lib/users/password";
-import { isHouseAccountEmail } from "@/lib/executive/house-account";
+import { getRealmForEmail } from "@/lib/executive/staff";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   }
 
   const email = body.email?.trim().toLowerCase();
-  if (!email || !EMAIL_RE.test(email) || isHouseAccountEmail(email)) {
+  if (!email || !EMAIL_RE.test(email) || getRealmForEmail(email)) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
   }
 

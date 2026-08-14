@@ -4,34 +4,27 @@ import { createUser, getUserByEmail } from "@/lib/users/store";
 import { hashPassword, generateToken } from "@/lib/users/password";
 import { CUSTOMER_SESSION_COOKIE, createCustomerSessionToken } from "@/lib/users/session";
 import { sendMail } from "@/lib/email";
-import { isHouseAccountEmail } from "@/lib/executive/house-account";
+import { getRealmForEmail } from "@/lib/executive/staff";
+import { signupSchema, parseBody } from "@/lib/validation";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export async function POST(request: Request) {
-  let body: { email?: string; password?: string; marketingOptIn?: boolean };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
+  const ip = getClientIp(request);
+  const limit = await checkRateLimit(`signup:${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 });
+  if (!limit.allowed) return rateLimitResponse(limit.retryAfterSeconds);
 
-  const email = body.email?.trim().toLowerCase();
-  const password = body.password;
+  const parsed = await parseBody(request, signupSchema);
+  if ("error" in parsed) return parsed.error;
+  const { email, password, marketingOptIn } = parsed.data;
 
-  if (!email || !EMAIL_RE.test(email)) {
-    return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
-  }
-  if (isHouseAccountEmail(email)) {
-    return NextResponse.json({ error: "This email address is unavailable." }, { status: 409 });
-  }
-  if (!password || password.length < 8) {
+  if (getRealmForEmail(email)) {
     return NextResponse.json(
-      { error: "Password must be at least 8 characters." },
-      { status: 400 }
+      { error: "This account already exists — sign in instead." },
+      { status: 409 }
     );
   }
   if (await getUserByEmail(email)) {
@@ -48,7 +41,7 @@ export async function POST(request: Request) {
   const user = await createUser({
     email,
     passwordHash,
-    marketingOptIn: Boolean(body.marketingOptIn),
+    marketingOptIn: Boolean(marketingOptIn),
     verificationToken,
     verificationTokenExpiresAt,
   });

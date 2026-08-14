@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyCoinbaseWebhookSignature } from "@/lib/coinbase";
-import { updateOrderByChargeId } from "@/lib/orders/store";
+import { listOrders } from "@/lib/orders/store";
+import { markOrderPaid } from "@/lib/orders/lifecycle";
 
 export const dynamic = "force-dynamic";
 
@@ -28,12 +29,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
   }
 
-  const { type, data } = payload.event ?? {};
-  if (PAID_EVENT_TYPES.has(type) && data?.id) {
-    await updateOrderByChargeId(data.id, {
-      status: "paid",
-      paidAt: new Date().toISOString(),
-    });
+  try {
+    const { type, data } = payload.event ?? {};
+    if (PAID_EVENT_TYPES.has(type) && data?.id) {
+      // No indexed lookup by charge id needed elsewhere, so a linear scan here
+      // keeps the store's public API small; order volume is low enough that
+      // this isn't a bottleneck.
+      const order = (await listOrders()).find((o) => o.crypto?.chargeId === data.id);
+      if (order) await markOrderPaid(order);
+    }
+  } catch (err) {
+    console.error("Failed to process Coinbase webhook:", err);
+    return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

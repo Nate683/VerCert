@@ -13,6 +13,9 @@ export const metadata = { title: "My Account | VeriCert", robots: { index: false
 const STATUS_LABELS: Record<string, string> = {
   paid: "Paid",
   awaiting_payment: "Awaiting Payment",
+  processing: "Processing",
+  shipped: "Shipped",
+  delivered: "Delivered",
   expired: "Expired",
   cancelled: "Cancelled",
 };

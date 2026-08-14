@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { getOrderById } from "@/lib/orders/store";
-import { markOrderPaid } from "@/lib/orders/lifecycle";
+import { cancelOrder } from "@/lib/orders/lifecycle";
+import { orderCancelSchema, parseBody } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await requireExecutiveSession())) {
@@ -18,16 +19,17 @@ export async function POST(
   if (!order) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
-  if (order.paymentMethod !== "bank_transfer") {
+
+  const parsed = await parseBody(request, orderCancelSchema);
+  if ("error" in parsed) return parsed.error;
+
+  try {
+    const updated = await cancelOrder(order, parsed.data.reason);
+    return NextResponse.json({ order: updated });
+  } catch (err) {
     return NextResponse.json(
-      { error: "Only bank transfer orders can be marked paid manually." },
+      { error: err instanceof Error ? err.message : "Could not cancel order." },
       { status: 400 }
     );
   }
-  if (order.status !== "awaiting_payment") {
-    return NextResponse.json({ error: "Order is not awaiting payment." }, { status: 400 });
-  }
-
-  const updated = await markOrderPaid(order);
-  return NextResponse.json({ order: updated });
 }

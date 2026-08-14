@@ -7,6 +7,7 @@ type AuthUser = {
   email: string;
   marketingOptIn: boolean;
   emailVerified: boolean;
+  role: "command" | "office" | null;
 };
 
 type AuthContextValue = {

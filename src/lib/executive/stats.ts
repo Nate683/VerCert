@@ -43,7 +43,10 @@ function isSameMonth(a: Date, b: Date) {
 
 export function computeOverview(orders: Order[]): ExecutiveOverview {
   const now = new Date();
-  const paidOrders = orders.filter((o) => o.status === "paid" && o.paidAt);
+  // "Paid" for revenue purposes means the order has ever been paid and
+  // wasn't subsequently cancelled — not just currently sitting in the
+  // "paid" status, since paid orders move on to processing/shipped/delivered.
+  const paidOrders = orders.filter((o) => o.paidAt && o.status !== "cancelled");
 
   let revenueToday = 0;
   let revenueMtd = 0;

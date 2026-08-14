@@ -13,6 +13,7 @@ export async function GET() {
       email: user.email,
       marketingOptIn: user.marketingOptIn,
       emailVerified: user.emailVerified,
+      role: user.role ?? null,
     },
   });
 }

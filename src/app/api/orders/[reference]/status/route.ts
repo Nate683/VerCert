@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOrderByReference, updateOrder } from "@/lib/orders/store";
+import { markOrderPaid } from "@/lib/orders/lifecycle";
 import { getCoinbaseCharge, isChargeConfirmed } from "@/lib/coinbase";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +24,7 @@ export async function GET(
     try {
       const charge = await getCoinbaseCharge(order.crypto.chargeId);
       if (isChargeConfirmed(charge.timeline)) {
-        const updated = await updateOrder(order.id, {
-          status: "paid",
-          paidAt: new Date().toISOString(),
-        });
+        const updated = await markOrderPaid(order);
         status = updated?.status ?? "paid";
         paidAt = updated?.paidAt;
       } else if (new Date(order.crypto.expiresAt).getTime() < Date.now()) {

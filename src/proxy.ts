@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import {
-  getExecutiveCookieName,
-  verifyExecutiveSessionToken,
-  type ExecutiveRealm,
-} from "@/lib/executive/auth";
+import { CUSTOMER_SESSION_COOKIE, verifyCustomerSessionToken } from "@/lib/users/session";
 
-const REALMS: ExecutiveRealm[] = ["command", "office"];
+const REALMS = ["command", "office"] as const;
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,13 +10,13 @@ export async function proxy(request: NextRequest) {
   const realm = REALMS.find((r) => pathname === `/${r}` || pathname.startsWith(`/${r}/`));
   if (!realm) return NextResponse.next();
 
-  if (pathname === `/${realm}/login`) return NextResponse.next();
+  // Only checks for a logged-in customer session here (Edge-safe, no fs
+  // access) — the page itself verifies the `role` matches this realm.
+  const token = request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value;
+  const userId = await verifyCustomerSessionToken(token);
 
-  const token = request.cookies.get(getExecutiveCookieName(realm))?.value;
-  const authed = await verifyExecutiveSessionToken(realm, token);
-
-  if (!authed) {
-    return NextResponse.redirect(new URL(`/${realm}/login`, request.url));
+  if (!userId) {
+    return NextResponse.redirect(new URL(`/login?next=/${realm}`, request.url));
   }
 
   return NextResponse.next();

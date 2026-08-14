@@ -46,7 +46,23 @@ export type CartItem = {
 
 export type PaymentMethod = "crypto" | "bank_transfer";
 
-export type OrderStatus = "awaiting_payment" | "paid" | "expired" | "cancelled";
+export type OrderStatus =
+  | "awaiting_payment"
+  | "paid"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "expired"
+  | "cancelled";
+
+// Statuses that can be manually advanced to from the executive terminals,
+// in pipeline order (awaiting_payment is entered automatically, not chosen).
+export const ORDER_STATUS_FLOW: OrderStatus[] = [
+  "paid",
+  "processing",
+  "shipped",
+  "delivered",
+];
 
 export type CryptoCurrencyCode = "bitcoin" | "ethereum" | "usdc";
 
@@ -83,6 +99,16 @@ export type Order = {
   total: number;
   crypto?: CryptoChargeInfo;
   paidAt?: string;
+  processingAt?: string;
+  shippedAt?: string;
+  deliveredAt?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
+  carrier?: string;
+  trackingNumber?: string;
+  // Tracks whether stock has already been decremented for this order, so
+  // paid/cancel transitions never double-decrement or double-restore.
+  stockDecremented?: boolean;
 };
 
 export type SavedAddress = {
@@ -105,6 +131,8 @@ export type Customer = {
   verificationTokenExpiresAt?: string;
   resetToken?: string;
   resetTokenExpiresAt?: string;
+  // Grants access to the matching executive dashboard via the normal login.
+  role?: "command" | "office";
 };
 
 export type PublicCustomer = Omit<

@@ -3,24 +3,28 @@ import { cookies } from "next/headers";
 import { getUserByEmail } from "@/lib/users/store";
 import { verifyPassword } from "@/lib/users/password";
 import { CUSTOMER_SESSION_COOKIE, createCustomerSessionToken } from "@/lib/users/session";
+import { getRealmForEmail, ensureStaffAccount } from "@/lib/executive/staff";
+import { loginSchema, parseBody } from "@/lib/validation";
+import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  let body: { email?: string; password?: string };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
-  }
+  const ip = getClientIp(request);
+  const limit = await checkRateLimit(`login:${ip}`, { limit: 10, windowMs: 5 * 60 * 1000 });
+  if (!limit.allowed) return rateLimitResponse(limit.retryAfterSeconds);
 
-  const email = body.email?.trim().toLowerCase();
-  if (!email || !body.password) {
-    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
-  }
+  const parsed = await parseBody(request, loginSchema);
+  if ("error" in parsed) return parsed.error;
+  const { email, password } = parsed.data;
+
+  // First-ever login for a staff email provisions its account so there's no
+  // separate signup step for executives.
+  const realm = getRealmForEmail(email);
+  if (realm) await ensureStaffAccount(realm);
 
   const user = await getUserByEmail(email);
-  if (!user || !(await verifyPassword(body.password, user.passwordHash))) {
+  if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
   }
 

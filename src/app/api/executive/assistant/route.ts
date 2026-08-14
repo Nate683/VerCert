@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   const [orders, users] = await Promise.all([listOrders(), listUsers()]);
   const overview = computeOverview(orders);
   const customers = computeCustomerSummaries(users, orders);
-  const lowInventory = getLowInventoryAlerts();
+  const lowInventory = await getLowInventoryAlerts();
 
   const snapshot = JSON.stringify({
     overview,

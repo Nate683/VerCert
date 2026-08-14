@@ -50,6 +50,14 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
+          {user?.role && (
+            <Link
+              href={`/${user.role}`}
+              className="hidden text-sm uppercase tracking-[0.15em] text-gold transition-colors hover:text-white sm:block"
+            >
+              Executive
+            </Link>
+          )}
           <Link
             href={user ? "/account" : "/login"}
             className="hidden text-sm uppercase tracking-[0.15em] text-white/70 transition-colors hover:text-gold sm:block"
@@ -102,6 +110,15 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          {user?.role && (
+            <Link
+              href={`/${user.role}`}
+              onClick={() => setMenuOpen(false)}
+              className="border-b border-white/5 py-3 text-sm uppercase tracking-[0.15em] text-gold last:border-none hover:text-white"
+            >
+              Executive
+            </Link>
+          )}
           <Link
             href={user ? "/account" : "/login"}
             onClick={() => setMenuOpen(false)}

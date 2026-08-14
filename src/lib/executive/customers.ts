@@ -14,7 +14,7 @@ export function computeCustomerSummaries(users: Customer[], orders: Order[]): Cu
   return users
     .map((user) => {
       const customerOrders = orders.filter((o) => o.customerId === user.id);
-      const paidOrders = customerOrders.filter((o) => o.status === "paid");
+      const paidOrders = customerOrders.filter((o) => o.paidAt && o.status !== "cancelled");
       return {
         id: user.id,
         email: user.email,

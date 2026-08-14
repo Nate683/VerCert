@@ -24,34 +24,103 @@ export async function sendMail(to: string, subject: string, text: string): Promi
   await transporter.sendMail({ from: EMAIL_FROM || SMTP_USER, to, subject, text });
 }
 
-export async function sendBankTransferEmail(order: Order): Promise<void> {
-  const subject = `VeriCert Order ${order.reference} — Bank Transfer Instructions`;
-  await sendMail(order.customer.email, subject, buildEmailBody(order));
+export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
+  const subject = `VeriCert Order ${order.reference} Confirmed`;
+  await sendMail(order.customer.email, subject, buildConfirmationBody(order));
 }
 
-function buildEmailBody(order: Order): string {
-  const d = BANK_TRANSFER_DETAILS;
+export async function sendPaymentConfirmedEmail(order: Order): Promise<void> {
+  const subject = `Payment Received — VeriCert Order ${order.reference}`;
+  await sendMail(
+    order.customer.email,
+    subject,
+    [
+      `Hi ${order.customer.firstName},`,
+      "",
+      `We've confirmed payment for order ${order.reference} ($${order.total.toFixed(2)} USD). Your order is now processing.`,
+      "",
+      `Track your order any time at:`,
+      `${siteUrl()}/order/${order.reference}`,
+      "",
+      "For research use only. Not for human or veterinary use.",
+      "— VeriCert Research",
+    ].join("\n")
+  );
+}
+
+export async function sendShippingNotificationEmail(order: Order): Promise<void> {
+  const subject = `Your VeriCert Order ${order.reference} Has Shipped`;
+  await sendMail(order.customer.email, subject, buildShippingBody(order));
+}
+
+function buildItemLines(order: Order): string {
+  return order.items
+    .map((item) => `  - ${item.name} (${item.sizeLabel}) x${item.quantity} — $${(item.priceUsd * item.quantity).toFixed(2)}`)
+    .join("\n");
+}
+
+function buildConfirmationBody(order: Order): string {
+  const lines = [
+    `Hi ${order.customer.firstName},`,
+    "",
+    `Thank you for your order. Here's a summary for your records.`,
+    "",
+    `Order number: ${order.reference}`,
+    `Items:`,
+    buildItemLines(order),
+    `Total: $${order.total.toFixed(2)} USD`,
+    "",
+  ];
+
+  if (order.paymentMethod === "bank_transfer") {
+    const d = BANK_TRANSFER_DETAILS;
+    lines.push(
+      `Please complete payment via bank transfer using the details below.`,
+      `Your order will remain in "awaiting payment" status until funds are received and confirmed.`,
+      "",
+      `IMPORTANT: Include the order reference (${order.reference}) in your transfer memo so we can match your payment.`,
+      "",
+      "Bank Transfer Details",
+      "----------------------",
+      `Account Name: ${d.accountName}`,
+      `Bank Name: ${d.bankName}`,
+      `Account Number: ${d.accountNumber}`,
+      `Routing Number: ${d.routingNumber}`,
+      `SWIFT/BIC: ${d.swiftBic}`,
+      `Account Type: ${d.accountType}`,
+      ""
+    );
+  } else {
+    lines.push(
+      `Complete your crypto payment from your order page — the payment window is time-limited:`,
+      `${siteUrl()}/order/${order.reference}`,
+      ""
+    );
+  }
+
+  lines.push("For research use only. Not for human or veterinary use.", "— VeriCert Research");
+  return lines.join("\n");
+}
+
+function buildShippingBody(order: Order): string {
   return [
     `Hi ${order.customer.firstName},`,
     "",
-    `Thank you for your order. Please complete payment via bank transfer using the details below.`,
-    `Your order will remain in "awaiting payment" status until funds are received and confirmed.`,
+    `Your VeriCert order ${order.reference} has shipped.`,
     "",
-    `Order reference: ${order.reference}`,
-    `Amount due: $${order.total.toFixed(2)} USD`,
+    order.carrier ? `Carrier: ${order.carrier}` : undefined,
+    order.trackingNumber ? `Tracking number: ${order.trackingNumber}` : undefined,
     "",
-    `IMPORTANT: Include the order reference (${order.reference}) in your transfer memo so we can match your payment.`,
-    "",
-    "Bank Transfer Details",
-    "----------------------",
-    `Account Name: ${d.accountName}`,
-    `Bank Name: ${d.bankName}`,
-    `Account Number: ${d.accountNumber}`,
-    `Routing Number: ${d.routingNumber}`,
-    `SWIFT/BIC: ${d.swiftBic}`,
-    `Account Type: ${d.accountType}`,
+    `Track your order any time at:`,
+    `${siteUrl()}/order/${order.reference}`,
     "",
     "For research use only. Not for human or veterinary use.",
     "— VeriCert Research",
-  ].join("\n");
+  ]
+    .filter((line): line is string => line !== undefined)
+    .join("\n");
+}
+
+function siteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }

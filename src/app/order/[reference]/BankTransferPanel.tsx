@@ -31,7 +31,13 @@ export function BankTransferPanel({
       const res = await fetch(`/api/orders/${reference}/status`, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
-        setStatus(data.status);
+        if (data.status === "paid" || data.status === "awaiting_payment") {
+          setStatus(data.status);
+        } else {
+          // Order moved past "paid" (processing/shipped/etc) — the status
+          // timeline covers that, so reload to get the server-rendered view.
+          window.location.reload();
+        }
       }
     } finally {
       setChecking(false);

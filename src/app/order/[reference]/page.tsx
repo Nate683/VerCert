@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getOrderByReference } from "@/lib/orders/store";
 import { CryptoPaymentPanel } from "./CryptoPaymentPanel";
 import { BankTransferPanel } from "./BankTransferPanel";
+import { OrderStatusTimeline } from "./OrderStatusTimeline";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Your Order | VeriCert", robots: { index: false, follow: false } };
@@ -15,27 +16,37 @@ export default async function OrderPage({
   const order = await getOrderByReference(reference);
   if (!order) notFound();
 
+  // Only awaiting_payment/expired orders need the interactive payment
+  // panels — everything past that point (paid through delivered, or
+  // cancelled) gets the status timeline instead. This is a fresh server
+  // read every time, so it survives a refresh or a closed browser.
+  const isPending = order.status === "awaiting_payment" || order.status === "expired";
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-20 lg:px-10">
       <p className="text-xs uppercase tracking-[0.35em] text-gold">Order {order.reference}</p>
       <h1 className="mt-3 font-serif text-4xl text-white">
-        {order.status === "paid" ? "Order Confirmed" : "Complete Your Payment"}
+        {isPending ? "Complete Your Payment" : "Order Confirmed"}
       </h1>
 
       <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          {order.paymentMethod === "crypto" && order.crypto ? (
-            <CryptoPaymentPanel
-              reference={order.reference}
-              crypto={order.crypto}
-              initialStatus={order.status}
-            />
+          {isPending ? (
+            order.paymentMethod === "crypto" && order.crypto ? (
+              <CryptoPaymentPanel
+                reference={order.reference}
+                crypto={order.crypto}
+                initialStatus={order.status}
+              />
+            ) : (
+              <BankTransferPanel
+                reference={order.reference}
+                total={order.total}
+                initialStatus={order.status}
+              />
+            )
           ) : (
-            <BankTransferPanel
-              reference={order.reference}
-              total={order.total}
-              initialStatus={order.status}
-            />
+            <OrderStatusTimeline order={order} />
           )}
         </div>
 

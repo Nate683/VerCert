@@ -13,7 +13,7 @@ export async function GET() {
 
   const orders = await listOrders();
   const overview = computeOverview(orders);
-  const lowInventory = getLowInventoryAlerts();
+  const lowInventory = await getLowInventoryAlerts();
 
   return NextResponse.json({ overview, lowInventory });
 }
