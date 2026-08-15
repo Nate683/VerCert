@@ -5,11 +5,10 @@ import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
-const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8MB
-const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+const MAX_FILE_BYTES = 15 * 1024 * 1024; // 15MB
+const ALLOWED_TYPES = new Set(["application/pdf", "image/jpeg", "image/png", "image/webp"]);
 
-// Generic image upload for editable site content (homepage hero image, etc.)
-// — both realms, since Live Edit Mode is available to command and office.
+// Uploads an expense receipt (PDF or photo) to Vercel Blob and returns its URL.
 export const POST = withApiErrorHandling(async (request: Request) => {
   if (!(await requireExecutiveSession())) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
@@ -21,13 +20,13 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     return NextResponse.json({ error: "A file is required." }, { status: 400 });
   }
   if (!ALLOWED_TYPES.has(file.type)) {
-    return NextResponse.json({ error: "Only JPEG, PNG, WEBP, or AVIF images are allowed." }, { status: 400 });
+    return NextResponse.json({ error: "Only PDF, JPEG, PNG, or WEBP files are allowed." }, { status: 400 });
   }
   if (file.size > MAX_FILE_BYTES) {
-    return NextResponse.json({ error: "Image must be 8MB or smaller." }, { status: 400 });
+    return NextResponse.json({ error: "File must be 15MB or smaller." }, { status: 400 });
   }
 
-  const blob = await put(`site-content/${Date.now()}-${file.name}`, file, {
+  const blob = await put(`receipts/${Date.now()}-${file.name}`, file, {
     access: "public",
     addRandomSuffix: true,
   });

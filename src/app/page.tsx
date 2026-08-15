@@ -1,10 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { listProducts } from "@/lib/products";
-import { ProductCard } from "@/components/ProductCard";
+import { HomeFeaturedGrid } from "@/components/HomeFeaturedGrid";
 import { VialGlyph } from "@/components/VialGlyph";
+import { EditableText } from "@/components/EditableText";
+import { EditableImage } from "@/components/EditableImage";
+import { SectionToggle } from "@/components/SectionToggle";
 import { buildMetadata } from "@/lib/seo";
-import { getContent, DEFAULT_HOME_HERO, DEFAULT_FEATURED } from "@/lib/site-content";
+import { getContent, DEFAULT_HOME_HERO, DEFAULT_FEATURED, DEFAULT_HOME_SECTIONS } from "@/lib/site-content";
 
 export const metadata = buildMetadata({
   title: "VeriCert | Research Peptides, Verified",
@@ -33,10 +36,11 @@ const TRUST_POINTS = [
 ];
 
 export default async function Home() {
-  const [products, hero, featuredContent] = await Promise.all([
+  const [products, hero, featuredContent, sections] = await Promise.all([
     listProducts(),
     getContent("home_hero", DEFAULT_HOME_HERO),
     getContent("featured_products", DEFAULT_FEATURED),
+    getContent("home_sections", DEFAULT_HOME_SECTIONS),
   ]);
   const featured =
     featuredContent.slugs.length > 0
@@ -50,16 +54,30 @@ export default async function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center px-6 py-28 text-center lg:px-10 lg:py-40">
-          <p className="text-xs uppercase tracking-[0.4em] text-gold">
-            {hero.badge}
-          </p>
-          <h1 className="mt-8 max-w-3xl whitespace-pre-line font-serif text-5xl leading-tight text-white text-balance lg:text-7xl">
-            {hero.headline}
-          </h1>
+          <EditableText
+            value={hero.badge}
+            as="p"
+            className="text-xs uppercase tracking-[0.4em] text-gold"
+            contentKey="home_hero"
+            field="badge"
+          />
+          <EditableText
+            value={hero.headline}
+            as="h1"
+            multiline
+            className="mt-8 max-w-3xl whitespace-pre-line font-serif text-5xl leading-tight text-white text-balance lg:text-7xl"
+            contentKey="home_hero"
+            field="headline"
+          />
           <div className="mt-8 h-px w-24 bg-gold/60" />
-          <p className="mt-8 max-w-xl text-base leading-relaxed text-white/60">
-            {hero.subtext}
-          </p>
+          <EditableText
+            value={hero.subtext}
+            as="p"
+            multiline
+            className="mt-8 max-w-xl text-base leading-relaxed text-white/60"
+            contentKey="home_hero"
+            field="subtext"
+          />
           <div className="mt-12 flex flex-col gap-4 sm:flex-row">
             <Link
               href="/shop"
@@ -74,10 +92,18 @@ export default async function Home() {
               {hero.ctaSecondaryLabel}
             </Link>
           </div>
-          {hero.heroImageUrl && (
-            <div className="relative mt-16 aspect-[16/9] w-full max-w-3xl overflow-hidden border border-white/10">
-              <Image src={hero.heroImageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" />
-            </div>
+          {hero.heroImageUrl ? (
+            <EditableImage contentKey="home_hero" field="heroImageUrl">
+              <div className="relative mt-16 aspect-[16/9] w-full max-w-3xl overflow-hidden border border-white/10">
+                <Image src={hero.heroImageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" />
+              </div>
+            </EditableImage>
+          ) : (
+            <EditableImage contentKey="home_hero" field="heroImageUrl">
+              <div className="mt-16 flex aspect-[16/9] w-full max-w-3xl items-center justify-center border border-dashed border-white/20 text-xs uppercase tracking-[0.15em] text-white/30">
+                No hero image set
+              </div>
+            </EditableImage>
           )}
         </div>
       </section>
@@ -100,56 +126,58 @@ export default async function Home() {
             View All →
           </Link>
         </div>
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((product) => (
-            <ProductCard key={product.slug} product={product} />
-          ))}
-        </div>
+        <HomeFeaturedGrid products={featured} />
       </section>
 
       {/* Trust section */}
-      <section className="border-y border-white/10 bg-white/[0.02]">
-        <div className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
-          <div className="text-center">
-            <p className="text-xs uppercase tracking-[0.35em] text-gold">
-              Third-Party Testing
-            </p>
-            <h2 className="mt-3 font-serif text-3xl text-white">
-              Verification, Not Assumption
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/50">
-              Every compound VeriCert distributes is tested by an independent
-              laboratory before it reaches a researcher&apos;s bench.
-            </p>
+      {sections.trust && (
+        <section className="relative border-y border-white/10 bg-white/[0.02]">
+          <SectionToggle sectionKey="trust" visible={sections.trust} />
+          <div className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
+            <div className="text-center">
+              <p className="text-xs uppercase tracking-[0.35em] text-gold">
+                Third-Party Testing
+              </p>
+              <h2 className="mt-3 font-serif text-3xl text-white">
+                Verification, Not Assumption
+              </h2>
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/50">
+                Every compound VeriCert distributes is tested by an independent
+                laboratory before it reaches a researcher&apos;s bench.
+              </p>
+            </div>
+            <div className="mt-16 grid grid-cols-1 gap-12 sm:grid-cols-3">
+              {TRUST_POINTS.map((point) => (
+                <div key={point.title} className="flex flex-col items-center text-center">
+                  <VialGlyph className="h-14 w-14 text-gold" />
+                  <h3 className="mt-6 font-serif text-xl text-white">{point.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/50">{point.body}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="mt-16 grid grid-cols-1 gap-12 sm:grid-cols-3">
-            {TRUST_POINTS.map((point) => (
-              <div key={point.title} className="flex flex-col items-center text-center">
-                <VialGlyph className="h-14 w-14 text-gold" />
-                <h3 className="mt-6 font-serif text-xl text-white">{point.title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-white/50">{point.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA */}
-      <section className="mx-auto max-w-7xl px-6 py-24 text-center lg:px-10">
-        <h2 className="font-serif text-3xl text-white lg:text-4xl">
-          Every Batch. Certified.
-        </h2>
-        <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/50">
-          Already have a product in hand? Enter its batch number to view the
-          independent lab report.
-        </p>
-        <Link
-          href="/coa"
-          className="mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black"
-        >
-          Verify a Certificate
-        </Link>
-      </section>
+      {sections.cta && (
+        <section className="relative mx-auto max-w-7xl px-6 py-24 text-center lg:px-10">
+          <SectionToggle sectionKey="cta" visible={sections.cta} />
+          <h2 className="font-serif text-3xl text-white lg:text-4xl">
+            Every Batch. Certified.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/50">
+            Already have a product in hand? Enter its batch number to view the
+            independent lab report.
+          </p>
+          <Link
+            href="/coa"
+            className="mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black"
+          >
+            Verify a Certificate
+          </Link>
+        </section>
+      )}
     </div>
   );
 }

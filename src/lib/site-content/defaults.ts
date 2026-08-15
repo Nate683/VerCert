@@ -24,6 +24,13 @@ export const DEFAULT_HOME_HERO: HomeHeroContent = {
 export type FeaturedContent = { slugs: string[] }; // empty = auto (first 4 by sort order)
 export const DEFAULT_FEATURED: FeaturedContent = { slugs: [] };
 
+export type HomeSectionsContent = {
+  trust: boolean;
+  cta: boolean;
+};
+
+export const DEFAULT_HOME_SECTIONS: HomeSectionsContent = { trust: true, cta: true };
+
 export type AboutPillar = { title: string; body: string };
 
 export type AboutContent = {

@@ -4,6 +4,7 @@ import "./globals.css";
 import { SiteChrome } from "@/components/SiteChrome";
 import { CartProvider } from "@/lib/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
+import { ExecModeProvider } from "@/lib/exec-mode-context";
 import { buildMetadata, SITE_NAME } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 import { getContent, DEFAULT_SALE_BANNER } from "@/lib/site-content";
@@ -37,9 +38,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-black text-white">
         <AuthProvider>
-          <CartProvider>
-            <SiteChrome saleBanner={saleBanner}>{children}</SiteChrome>
-          </CartProvider>
+          <ExecModeProvider>
+            <CartProvider>
+              <SiteChrome saleBanner={saleBanner}>{children}</SiteChrome>
+            </CartProvider>
+          </ExecModeProvider>
         </AuthProvider>
       </body>
     </html>

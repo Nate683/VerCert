@@ -1,4 +1,5 @@
 import { VialGlyph } from "@/components/VialGlyph";
+import { EditableText } from "@/components/EditableText";
 import { buildMetadata } from "@/lib/seo";
 import { getContent, DEFAULT_ABOUT } from "@/lib/site-content";
 
@@ -17,9 +18,9 @@ export default async function AboutPage() {
     <div>
       <section className="border-b border-white/10">
         <div className="mx-auto max-w-4xl px-6 py-24 text-center lg:px-10">
-          <p className="text-xs uppercase tracking-[0.35em] text-gold">{content.badge}</p>
-          <h1 className="mt-4 font-serif text-4xl text-white lg:text-5xl">{content.headline}</h1>
-          <p className="mt-6 text-base leading-relaxed text-white/60">{content.intro}</p>
+          <EditableText value={content.badge} as="p" className="text-xs uppercase tracking-[0.35em] text-gold" contentKey="about_page" field="badge" />
+          <EditableText value={content.headline} as="h1" className="mt-4 font-serif text-4xl text-white lg:text-5xl" contentKey="about_page" field="headline" />
+          <EditableText value={content.intro} as="p" multiline className="mt-6 text-base leading-relaxed text-white/60" contentKey="about_page" field="intro" />
         </div>
       </section>
 

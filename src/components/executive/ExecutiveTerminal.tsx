@@ -19,6 +19,7 @@ import { FinancialsPanel } from "./FinancialsPanel";
 import { IntelligencePanel } from "./IntelligencePanel";
 import { AffiliatesPanel } from "./AffiliatesPanel";
 import { AdminPanel } from "./AdminPanel";
+import { LedgerPanel } from "./LedgerPanel";
 
 type Variant = "command" | "office";
 type Tab =
@@ -26,6 +27,7 @@ type Tab =
   | "orders"
   | "products"
   | "financials"
+  | "ledger"
   | "intelligence"
   | "customers"
   | "assistant"
@@ -39,6 +41,7 @@ const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "orders", label: "Orders" },
   { id: "products", label: "Products" },
   { id: "financials", label: "Financials" },
+  { id: "ledger", label: "Ledger" },
   { id: "intelligence", label: "Intelligence" },
   { id: "customers", label: "Customers" },
   { id: "assistant", label: "Assistant" },
@@ -190,6 +193,7 @@ export function ExecutiveTerminal({
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}
           {tab === "financials" && <FinancialsPanel variant={variant} />}
+          {tab === "ledger" && <LedgerPanel variant={variant} />}
           {tab === "intelligence" && <IntelligencePanel variant={variant} />}
           {tab === "promotions" && isCommand && <PromotionsPanel />}
           {tab === "affiliates" && isCommand && <AffiliatesPanel />}

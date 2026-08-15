@@ -174,6 +174,58 @@ export const trackEventSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const expenseSchema = z.object({
+  date: z.string().trim().min(1).max(40),
+  category: z.string().trim().min(1).max(100),
+  vendor: z.string().trim().max(200).optional(),
+  amount: z.number().min(0).max(10000000),
+  paymentMethod: z.string().trim().max(100).optional(),
+  notes: z.string().trim().max(2000).optional(),
+  receiptUrl: z.string().trim().max(2000).optional(),
+  recurring: z.boolean().optional(),
+  recurringFrequency: z.enum(["weekly", "monthly", "yearly"]).optional(),
+});
+
+export const expenseUpdateSchema = expenseSchema.partial();
+
+export const cogsEntrySchema = z.object({
+  productSlug: z.string().trim().max(100).optional(),
+  batchNumber: z.string().trim().max(50).optional(),
+  purchasePriceUsd: z.number().min(0).max(10000000),
+  supplier: z.string().trim().max(200).optional(),
+  quantity: z.number().int().min(1).max(1000000).optional(),
+  dateReceived: z.string().trim().min(1).max(40),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+export const ledgerAssetSchema = z.object({
+  type: z.enum(["cash", "inventory", "equipment", "receivable", "other"]),
+  name: z.string().trim().min(1).max(200),
+  valueUsd: z.number().min(0).max(100000000),
+  asOfDate: z.string().trim().min(1).max(40),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+export const ledgerLiabilitySchema = z.object({
+  type: z.enum(["loan", "credit_card", "payable", "accrued_commission", "other"]),
+  name: z.string().trim().min(1).max(200),
+  valueUsd: z.number().min(0).max(100000000),
+  asOfDate: z.string().trim().min(1).max(40),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+export const ownerTransactionSchema = z.object({
+  type: z.enum(["contribution", "draw"]),
+  amountUsd: z.number().min(0).max(100000000),
+  date: z.string().trim().min(1).max(40),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+export const inlineEditSchema = z.object({
+  key: z.string().trim().min(1).max(100),
+  patch: z.union([z.record(z.string(), z.unknown()), z.array(z.unknown())]),
+});
+
 export async function parseBody<T extends z.ZodTypeAny>(
   request: Request,
   schema: T

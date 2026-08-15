@@ -260,3 +260,73 @@ export type PublicCustomer = Omit<
   Customer,
   "passwordHash" | "verificationToken" | "resetToken" | "resetTokenExpiresAt"
 >;
+
+// --- Financial ledger (manual bookkeeping) ---
+
+export type RecurringFrequency = "weekly" | "monthly" | "yearly";
+
+export type Expense = {
+  id: string;
+  date: string;
+  category: string;
+  vendor?: string;
+  amount: number;
+  paymentMethod?: string;
+  notes?: string;
+  receiptUrl?: string;
+  recurring: boolean;
+  recurringFrequency?: RecurringFrequency;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CogsEntry = {
+  id: string;
+  productSlug?: string;
+  batchNumber?: string;
+  purchasePriceUsd: number;
+  supplier?: string;
+  quantity: number;
+  dateReceived: string;
+  notes?: string;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LedgerAssetType = "cash" | "inventory" | "equipment" | "receivable" | "other";
+export type LedgerLiabilityType = "loan" | "credit_card" | "payable" | "accrued_commission" | "other";
+
+export type LedgerAsset = {
+  id: string;
+  type: LedgerAssetType;
+  name: string;
+  valueUsd: number;
+  asOfDate: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LedgerLiability = {
+  id: string;
+  type: LedgerLiabilityType;
+  name: string;
+  valueUsd: number;
+  asOfDate: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type OwnerTransactionType = "contribution" | "draw";
+
+export type OwnerTransaction = {
+  id: string;
+  type: OwnerTransactionType;
+  amountUsd: number;
+  date: string;
+  notes?: string;
+  createdAt: string;
+};

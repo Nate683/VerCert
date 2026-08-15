@@ -234,6 +234,78 @@ async function main() {
   // Customer notes (executive-facing only, never shown to the customer).
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS notes TEXT`;
 
+  // Financial ledger — manual bookkeeping entries. All amounts are USD.
+  await sql`
+    CREATE TABLE IF NOT EXISTS expenses (
+      id TEXT PRIMARY KEY,
+      date TEXT NOT NULL,
+      category TEXT NOT NULL,
+      vendor TEXT,
+      amount DOUBLE PRECISION NOT NULL,
+      payment_method TEXT,
+      notes TEXT,
+      receipt_url TEXT,
+      recurring BOOLEAN NOT NULL DEFAULT FALSE,
+      recurring_frequency TEXT,
+      created_by TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS cogs_entries (
+      id TEXT PRIMARY KEY,
+      product_slug TEXT,
+      batch_number TEXT,
+      purchase_price_usd DOUBLE PRECISION NOT NULL,
+      supplier TEXT,
+      quantity INTEGER NOT NULL DEFAULT 1,
+      date_received TEXT NOT NULL,
+      notes TEXT,
+      created_by TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS ledger_assets (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      value_usd DOUBLE PRECISION NOT NULL,
+      as_of_date TEXT NOT NULL,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS ledger_liabilities (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      name TEXT NOT NULL,
+      value_usd DOUBLE PRECISION NOT NULL,
+      as_of_date TEXT NOT NULL,
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS owner_transactions (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      amount_usd DOUBLE PRECISION NOT NULL,
+      date TEXT NOT NULL,
+      notes TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 
