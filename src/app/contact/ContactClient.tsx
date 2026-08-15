@@ -6,10 +6,34 @@ import { EditableText } from "@/components/EditableText";
 
 export default function ContactClient({ content }: { content: ContactContent }) {
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSent(true);
+    setSubmitting(true);
+    setError(null);
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.get("name"),
+          email: data.get("email"),
+          subject: data.get("subject"),
+          message: data.get("message"),
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error ?? "Could not send your message.");
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send your message.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -30,21 +54,26 @@ export default function ContactClient({ content }: { content: ContactContent }) 
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <input required type="text" placeholder="Name" className="input-field" />
-                <input required type="email" placeholder="Email address" className="input-field" />
+                <input required name="name" type="text" placeholder="Name" className="input-field" />
+                <input required name="email" type="email" placeholder="Email address" className="input-field" />
               </div>
-              <input type="text" placeholder="Subject" className="input-field" />
+              <input name="subject" type="text" placeholder="Subject" className="input-field" />
               <textarea
                 required
+                name="message"
                 placeholder="Message"
                 rows={6}
                 className="input-field resize-none"
               />
+              {error && (
+                <p className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{error}</p>
+              )}
               <button
                 type="submit"
-                className="border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold"
+                disabled={submitting}
+                className="border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
               >
-                Send Message
+                {submitting ? "Sending..." : "Send Message"}
               </button>
             </form>
           )}
@@ -54,6 +83,14 @@ export default function ContactClient({ content }: { content: ContactContent }) 
           <div>
             <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Email</h3>
             <EditableText value={content.email} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="email" />
+          </div>
+          <div>
+            <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Phone</h3>
+            <EditableText value={content.phone} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="phone" />
+          </div>
+          <div>
+            <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Address</h3>
+            <EditableText value={content.address} as="p" multiline className="mt-2 text-sm text-white/70" contentKey="contact_page" field="address" />
           </div>
           <div>
             <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Hours</h3>
@@ -68,3 +105,4 @@ export default function ContactClient({ content }: { content: ContactContent }) 
     </div>
   );
 }
+

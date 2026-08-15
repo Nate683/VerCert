@@ -174,6 +174,13 @@ export const customerNotesSchema = z.object({
   notes: z.string().trim().max(5000),
 });
 
+export const contactFormSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  email: z.string().trim().toLowerCase().email(),
+  subject: z.string().trim().max(200).optional(),
+  message: z.string().trim().min(1).max(5000),
+});
+
 export const trackEventSchema = z.object({
   event: z.enum(["page_view", "add_to_cart", "checkout_started", "order_completed"]),
   sessionId: z.string().trim().min(1).max(100),

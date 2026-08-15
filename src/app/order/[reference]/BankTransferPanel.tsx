@@ -1,26 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BANK_TRANSFER_DETAILS } from "@/lib/bank-details";
+import type { BankTransferDetails } from "@/lib/bank-details";
 import type { OrderStatus } from "@/lib/types";
 
-const DETAIL_ROWS: [string, string][] = [
-  ["Account Name", BANK_TRANSFER_DETAILS.accountName],
-  ["Bank Name", BANK_TRANSFER_DETAILS.bankName],
-  ["Account Number", BANK_TRANSFER_DETAILS.accountNumber],
-  ["Routing Number", BANK_TRANSFER_DETAILS.routingNumber],
-  ["SWIFT / BIC", BANK_TRANSFER_DETAILS.swiftBic],
-  ["Account Type", BANK_TRANSFER_DETAILS.accountType],
-];
+function detailRows(d: BankTransferDetails): [string, string][] {
+  return [
+    ["Account Name", d.accountName],
+    ["Bank Name", d.bankName],
+    ["Account Number", d.accountNumber],
+    ["Routing Number", d.routingNumber],
+    ["SWIFT / BIC", d.swiftBic],
+    ["Account Type", d.accountType],
+  ];
+}
 
 export function BankTransferPanel({
   reference,
   total,
   initialStatus,
+  bankDetails,
 }: {
   reference: string;
   total: number;
   initialStatus: OrderStatus;
+  bankDetails: BankTransferDetails;
 }) {
   const [status, setStatus] = useState<OrderStatus>(initialStatus);
   const [checking, setChecking] = useState(false);
@@ -90,7 +94,7 @@ export function BankTransferPanel({
       </div>
 
       <dl className="mt-6 divide-y divide-white/10 border-y border-white/10">
-        {DETAIL_ROWS.map(([label, value]) => (
+        {detailRows(bankDetails).map(([label, value]) => (
           <div key={label} className="flex justify-between py-3 text-sm">
             <dt className="text-white/40">{label}</dt>
             <dd className="font-mono text-white">{value}</dd>

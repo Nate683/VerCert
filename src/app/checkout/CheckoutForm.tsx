@@ -23,12 +23,15 @@ const PAYMENT_OPTIONS: { value: PaymentMethod; title: string; body: string }[] =
 export function CheckoutForm({
   initialEmail,
   initialAddress,
+  bankTransferAvailable,
 }: {
   initialEmail: string;
   initialAddress?: SavedAddress;
+  bankTransferAvailable: boolean;
 }) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
+  const paymentOptions = PAYMENT_OPTIONS.filter((o) => o.value !== "bank_transfer" || bankTransferAvailable);
   const [method, setMethod] = useState<PaymentMethod>("crypto");
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -185,7 +188,7 @@ export function CheckoutForm({
           <section>
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Payment Method</h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {PAYMENT_OPTIONS.map((option) => (
+              {paymentOptions.map((option) => (
                 <label
                   key={option.value}
                   className={`cursor-pointer border p-5 transition-colors ${

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getOrderByReference } from "@/lib/orders/store";
+import { getBankTransferDetails } from "@/lib/bank-details";
 import { CryptoPaymentPanel } from "./CryptoPaymentPanel";
 import { BankTransferPanel } from "./BankTransferPanel";
 import { OrderStatusTimeline } from "./OrderStatusTimeline";
@@ -43,6 +44,7 @@ export default async function OrderPage({
                 reference={order.reference}
                 total={order.total}
                 initialStatus={order.status}
+                bankDetails={getBankTransferDetails()}
               />
             )
           ) : (

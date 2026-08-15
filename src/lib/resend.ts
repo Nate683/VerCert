@@ -26,7 +26,10 @@ export async function sendMarketingEmail({
   text,
 }: SendMarketingEmailInput): Promise<{ ok: boolean; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.MARKETING_EMAIL_FROM || "VeriCert <updates@vericert.example>";
+  const from =
+    process.env.MARKETING_EMAIL_FROM?.trim() ||
+    process.env.EMAIL_FROM?.trim() ||
+    "VeriCert Research <onboarding@resend.dev>";
 
   if (!apiKey) {
     console.log(`[resend:dev-fallback] RESEND_API_KEY not set. Would have sent to ${to}:\nSubject: ${subject}\n\n${text}`);

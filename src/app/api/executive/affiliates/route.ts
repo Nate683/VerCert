@@ -12,6 +12,7 @@ import { affiliateSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
 import { getCurrentCustomer } from "@/lib/users/current-user";
+import { sendAffiliateInviteEmail } from "@/lib/email";
 import { toCsv } from "@/lib/csv";
 
 export const dynamic = "force-dynamic";
@@ -91,6 +92,11 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     const affiliate = await createAffiliate(parsed.data);
     const actor = await getCurrentCustomer();
     if (actor) await logActivity(actor.email, "affiliate.created", affiliate.name);
+    try {
+      await sendAffiliateInviteEmail(affiliate);
+    } catch (err) {
+      console.error("Failed to send affiliate invite email:", err);
+    }
     return NextResponse.json({ affiliate });
   } catch (err) {
     return NextResponse.json(

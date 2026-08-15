@@ -46,6 +46,8 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
   const [payoutAmount, setPayoutAmount] = useState("");
   const [payoutNote, setPayoutNote] = useState("");
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [inviteSentId, setInviteSentId] = useState<string | null>(null);
 
   const [structure, setStructure] = useState<CommissionStructureContent | null>(null);
   const [structureSaving, setStructureSaving] = useState(false);
@@ -138,6 +140,17 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
       await load();
     } finally {
       setRegeneratingId(null);
+    }
+  }
+
+  async function handleSendInvite(id: string) {
+    setInvitingId(id);
+    setInviteSentId(null);
+    try {
+      await fetch(`/api/executive/affiliates/${id}/send-invite`, { method: "POST" });
+      setInviteSentId(id);
+    } finally {
+      setInvitingId(null);
     }
   }
 
@@ -250,14 +263,24 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                     <td className="py-3 pr-4">
                       <p className="font-mono text-xs text-gold">{a.portalCode ?? "—"}</p>
                       {isCommand && (
-                        <button
-                          type="button"
-                          onClick={() => handleRegenerateCode(a.id)}
-                          disabled={regeneratingId === a.id}
-                          className="mt-1 text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-gold disabled:opacity-40"
-                        >
-                          {regeneratingId === a.id ? "Regenerating..." : "Regenerate"}
-                        </button>
+                        <div className="mt-1 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleRegenerateCode(a.id)}
+                            disabled={regeneratingId === a.id}
+                            className="text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-gold disabled:opacity-40"
+                          >
+                            {regeneratingId === a.id ? "Regenerating..." : "Regenerate"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSendInvite(a.id)}
+                            disabled={invitingId === a.id}
+                            className="text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-gold disabled:opacity-40"
+                          >
+                            {invitingId === a.id ? "Sending..." : inviteSentId === a.id ? "Sent!" : "Resend Invite"}
+                          </button>
+                        </div>
                       )}
                     </td>
                     <td className="py-3 pr-4">{a.ordersDriven}</td>

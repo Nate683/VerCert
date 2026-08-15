@@ -331,6 +331,18 @@ export function SiteContentPanel() {
             className="input-field"
           />
           <input
+            value={contact.phone}
+            onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+            placeholder="Contact phone"
+            className="input-field"
+          />
+          <input
+            value={contact.address}
+            onChange={(e) => setContact({ ...contact, address: e.target.value })}
+            placeholder="Business address"
+            className="input-field"
+          />
+          <input
             value={contact.hours}
             onChange={(e) => setContact({ ...contact, hours: e.target.value })}
             placeholder="Hours"
