@@ -45,6 +45,7 @@ export const createOrderSchema = z.object({
   customer: customerInfoSchema,
   items: z.array(orderItemSchema).min(1).max(50),
   paymentMethod: z.enum(["crypto", "bank_transfer"]),
+  promoCode: z.string().trim().max(40).optional(),
 });
 
 export const orderStatusUpdateSchema = z.object({
@@ -89,9 +90,42 @@ export const productSchema = z.object({
   summary: z.string().trim().min(1).max(500),
   description: z.array(z.string().trim().min(1).max(2000)).min(1).max(20),
   initialStock: z.number().int().min(0).max(1000000).optional(),
+  active: z.boolean().optional(),
 });
 
 export const productUpdateSchema = productSchema.partial().omit({ slug: true });
+
+export const promoCodeSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .min(3)
+    .max(40)
+    .regex(/^[A-Z0-9_-]+$/, "code must be letters, numbers, hyphens, or underscores"),
+  type: z.enum(["percent", "fixed", "free_shipping"]),
+  value: z.number().min(0).max(1000000),
+  minOrderAmount: z.number().min(0).max(1000000).optional(),
+  usageLimit: z.number().int().min(1).max(1000000).optional(),
+  perCustomerLimit: z.number().int().min(1).max(1000000).optional(),
+  startsAt: z.string().trim().min(1).max(40).optional(),
+  endsAt: z.string().trim().min(1).max(40).optional(),
+  active: z.boolean().optional(),
+  restrictedProductSlugs: z.array(z.string().trim().min(1).max(100)).max(200).optional(),
+  restrictedCategories: z.array(z.string().trim().min(1).max(100)).max(50).optional(),
+});
+
+export const promoCodeUpdateSchema = promoCodeSchema.partial();
+
+export const promoValidateSchema = z.object({
+  code: z.string().trim().min(1).max(40),
+  items: z.array(orderItemSchema).min(1).max(50),
+});
+
+export const siteContentUpdateSchema = z.object({
+  key: z.string().trim().min(1).max(100),
+  value: z.unknown(),
+});
 
 export async function parseBody<T extends z.ZodTypeAny>(
   request: Request,

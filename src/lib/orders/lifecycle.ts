@@ -1,6 +1,7 @@
 import type { Order, OrderStatus } from "@/lib/types";
 import { updateOrder } from "./store";
 import { decrementStock, restoreStock } from "@/lib/inventory";
+import { recordRedemption, removeRedemptionForOrder } from "@/lib/promotions";
 import { sendPaymentConfirmedEmail, sendShippingNotificationEmail } from "@/lib/email";
 
 // Centralizes every order status transition so stock decrements/restocks and
@@ -27,6 +28,15 @@ export async function markOrderPaid(order: Order): Promise<Order | null> {
     sendPaymentConfirmedEmail(updated).catch((err) =>
       console.error("Failed to send payment confirmation email:", err)
     );
+    // Only counted against usage/per-customer limits once payment is confirmed.
+    if (updated.promoCodeId) {
+      await recordRedemption({
+        promoCodeId: updated.promoCodeId,
+        orderId: updated.id,
+        customerId: updated.customerId,
+        discountAmount: updated.discountAmount ?? 0,
+      });
+    }
   }
   return updated;
 }
@@ -83,6 +93,9 @@ export async function cancelOrder(order: Order, reason?: string): Promise<Order 
 
   if (order.stockDecremented) {
     await restoreStock(order.items);
+  }
+  if (order.promoCodeId) {
+    await removeRedemptionForOrder(order.id);
   }
 
   return updateOrder(order.id, {

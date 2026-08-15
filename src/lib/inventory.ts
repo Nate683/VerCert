@@ -14,7 +14,7 @@ type InventoryRow = { slug: string; quantity: number; threshold: number };
 export async function getLowInventoryAlerts(): Promise<LowInventoryAlert[]> {
   const [rows, products] = await Promise.all([
     query<InventoryRow>("SELECT * FROM inventory WHERE quantity <= threshold"),
-    listProducts(),
+    listProducts({ includeInactive: true }),
   ]);
 
   return rows

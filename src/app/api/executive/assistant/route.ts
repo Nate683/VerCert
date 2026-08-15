@@ -25,7 +25,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "A question is required." }, { status: 400 });
   }
 
-  const [orders, users, products] = await Promise.all([listOrders(), listUsers(), listProducts()]);
+  const [orders, users, products] = await Promise.all([
+    listOrders(),
+    listUsers(),
+    listProducts({ includeInactive: true }),
+  ]);
   const overview = computeOverview(orders, products);
   const customers = computeCustomerSummaries(users, orders);
   const lowInventory = await getLowInventoryAlerts();

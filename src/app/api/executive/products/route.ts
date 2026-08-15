@@ -12,7 +12,10 @@ export const GET = withApiErrorHandling(async () => {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const [products, inventory] = await Promise.all([listProducts(), listInventory()]);
+  const [products, inventory] = await Promise.all([
+    listProducts({ includeInactive: true }),
+    listInventory(),
+  ]);
   const stockBySlug = new Map(inventory.map((i) => [i.slug, i]));
 
   return NextResponse.json({

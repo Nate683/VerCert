@@ -32,6 +32,58 @@ export function CheckoutForm({
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoChecking, setPromoChecking] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discountAmount: number;
+    freeShipping: boolean;
+  } | null>(null);
+
+  const discountAmount = appliedPromo?.discountAmount ?? 0;
+  const total = Math.max(0, subtotal - discountAmount);
+
+  async function handleApplyPromo() {
+    if (!promoInput.trim() || promoChecking) return;
+    setPromoChecking(true);
+    setPromoError(null);
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoInput.trim(),
+          items: items.map((item) => ({
+            slug: item.slug,
+            sizeLabel: item.sizeLabel,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.valid) {
+        setAppliedPromo(null);
+        setPromoError(data.message ?? data.error ?? "This promo code isn't valid.");
+        return;
+      }
+      setAppliedPromo({
+        code: data.code,
+        discountAmount: data.discountAmount,
+        freeShipping: data.freeShipping,
+      });
+    } catch {
+      setPromoError("Couldn't validate that code. Please try again.");
+    } finally {
+      setPromoChecking(false);
+    }
+  }
+
+  function handleRemovePromo() {
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoError(null);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,6 +111,7 @@ export function CheckoutForm({
         body: JSON.stringify({
           customer,
           paymentMethod: method,
+          promoCode: appliedPromo?.code,
           items: items.map((item) => ({
             slug: item.slug,
             sizeLabel: item.sizeLabel,
@@ -199,17 +252,64 @@ export function CheckoutForm({
               </li>
             ))}
           </ul>
+
+          <div className="mt-6 border-t border-white/10 pt-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-gold">Promo Code</p>
+            {appliedPromo ? (
+              <div className="mt-3 flex items-center justify-between border border-gold/40 bg-gold/5 px-3 py-2 text-sm">
+                <span className="text-white">
+                  {appliedPromo.code}
+                  {appliedPromo.freeShipping && " — Free Shipping"}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRemovePromo}
+                  className="text-xs uppercase tracking-[0.1em] text-white/50 hover:text-red-300"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="mt-3 flex gap-2">
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value)}
+                  placeholder="Enter code"
+                  className="input-field flex-1 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyPromo}
+                  disabled={promoChecking || !promoInput.trim()}
+                  className="border border-white/20 px-4 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {promoChecking ? "Checking..." : "Apply"}
+                </button>
+              </div>
+            )}
+            {promoError && <p className="mt-2 text-xs text-red-300">{promoError}</p>}
+          </div>
+
           <div className="mt-6 flex justify-between border-t border-white/10 pt-4 text-sm">
             <span className="text-white/60">Subtotal</span>
             <span className="text-white">${subtotal.toFixed(2)}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="mt-2 flex justify-between text-sm">
+              <span className="text-white/60">Discount</span>
+              <span className="text-gold">-${discountAmount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="mt-2 flex justify-between text-sm">
             <span className="text-white/60">Shipping</span>
-            <span className="text-white/60">Calculated at next step</span>
+            <span className="text-white/60">
+              {appliedPromo?.freeShipping ? "Free" : "Calculated at next step"}
+            </span>
           </div>
           <div className="mt-4 flex justify-between border-t border-white/10 pt-4 font-serif text-lg">
             <span className="text-white">Total</span>
-            <span className="text-gold">${subtotal.toFixed(2)}</span>
+            <span className="text-gold">${total.toFixed(2)}</span>
           </div>
         </aside>
       </div>

@@ -1,39 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import type { FaqItem } from "@/lib/site-content";
 
-const FAQS = [
-  {
-    q: "What is VeriCert's intended use for these products?",
-    a: "All VeriCert products are intended strictly for in-vitro laboratory research and analytical use by qualified professionals. They are not drugs, foods, dietary supplements, or cosmetics, and are not intended for human or veterinary consumption.",
-  },
-  {
-    q: "How is purity determined and reported?",
-    a: "Purity is quantified by reverse-phase HPLC and reported as an area percentage against a certified reference standard. Identity is separately confirmed using mass spectrometry.",
-  },
-  {
-    q: "Where do I find the batch number for my order?",
-    a: "The batch number is printed on the vial label and included on your packing slip. Enter it on the COA Verification page to view the independent lab report for that specific lot.",
-  },
-  {
-    q: "Who performs your testing?",
-    a: "Testing is conducted by accredited third-party analytical laboratories that have no ownership or affiliation with VeriCert, ensuring the results are independent.",
-  },
-  {
-    q: "What if my batch number doesn't return a result?",
-    a: "Double-check the batch number for typos. If the issue persists, contact us with your order number and we will locate the correct certificate.",
-  },
-  {
-    q: "Do you ship internationally?",
-    a: "Shipping availability varies by destination and is subject to local regulations governing research chemicals. Contact us before ordering if you are uncertain about your region.",
-  },
-  {
-    q: "Can I request additional documentation, such as a safety data sheet?",
-    a: "Yes. Reach out via the Contact page with the product name and batch number, and we will provide any available supporting documentation.",
-  },
-];
-
-export default function FaqClient() {
+export default function FaqClient({ items }: { items: FaqItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -44,7 +14,7 @@ export default function FaqClient() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            mainEntity: FAQS.map((faq) => ({
+            mainEntity: items.map((faq) => ({
               "@type": "Question",
               name: faq.q,
               acceptedAnswer: { "@type": "Answer", text: faq.a },
@@ -56,7 +26,7 @@ export default function FaqClient() {
       <h1 className="mt-3 font-serif text-4xl text-white">Frequently Asked Questions</h1>
 
       <div className="mt-12 divide-y divide-white/10 border-y border-white/10">
-        {FAQS.map((faq, i) => {
+        {items.map((faq, i) => {
           const open = openIndex === i;
           return (
             <div key={faq.q}>

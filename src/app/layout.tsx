@@ -6,6 +6,7 @@ import { CartProvider } from "@/lib/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { buildMetadata, SITE_NAME } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
+import { getContent, DEFAULT_SALE_BANNER } from "@/lib/site-content";
 
 const displayFont = Playfair_Display({
   variable: "--font-display",
@@ -26,7 +27,9 @@ export const metadata: Metadata = {
   }),
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const saleBanner = await getContent("sale_banner", DEFAULT_SALE_BANNER);
+
   return (
     <html
       lang="en"
@@ -35,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-black text-white">
         <AuthProvider>
           <CartProvider>
-            <SiteChrome>{children}</SiteChrome>
+            <SiteChrome saleBanner={saleBanner}>{children}</SiteChrome>
           </CartProvider>
         </AuthProvider>
       </body>

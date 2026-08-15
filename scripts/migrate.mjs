@@ -85,16 +85,79 @@ async function main() {
       primary_image_url TEXT,
       gallery_image_urls TEXT,
       sort_order INTEGER NOT NULL DEFAULT 0,
+      active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     )
   `;
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS rate_limits (
       bucket_key TEXT PRIMARY KEY,
       count INTEGER NOT NULL,
       window_start DOUBLE PRECISION NOT NULL
+    )
+  `;
+
+  // Promotions: codes + a per-order redemption ledger (usage/limit checks
+  // and "revenue attributed" stats are derived from the ledger, never from
+  // a mutable counter, so cancelled/rolled-back redemptions stay accurate).
+  await sql`
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      type TEXT NOT NULL,
+      value DOUBLE PRECISION NOT NULL DEFAULT 0,
+      min_order_amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+      usage_limit INTEGER,
+      per_customer_limit INTEGER,
+      starts_at TEXT,
+      ends_at TEXT,
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      restricted_product_slugs TEXT,
+      restricted_categories TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS promo_redemptions (
+      id TEXT PRIMARY KEY,
+      promo_code_id TEXT NOT NULL,
+      order_id TEXT NOT NULL UNIQUE,
+      customer_id TEXT,
+      discount_amount DOUBLE PRECISION NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  // Orders: promo/discount fields (added via ALTER since the table already
+  // exists in production).
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS promo_code_id TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount DOUBLE PRECISION NOT NULL DEFAULT 0`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS free_shipping BOOLEAN NOT NULL DEFAULT FALSE`;
+
+  // Generic key/value store for editable site copy (hero, about, faq,
+  // contact, policies, sale banner) — one JSON blob per key, no schema
+  // migration needed when new editable fields are added later.
+  await sql`
+    CREATE TABLE IF NOT EXISTS site_content (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  // One uploaded COA file (PDF/image) per batch number, in addition to the
+  // auto-generated text COA.
+  await sql`
+    CREATE TABLE IF NOT EXISTS coa_documents (
+      batch_number TEXT PRIMARY KEY,
+      file_url TEXT NOT NULL,
+      uploaded_at TEXT NOT NULL
     )
   `;
 

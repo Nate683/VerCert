@@ -65,7 +65,26 @@ export default async function OrderPage({
               </li>
             ))}
           </ul>
-          <div className="mt-6 flex justify-between border-t border-white/10 pt-4 font-serif text-lg">
+          <div className="mt-6 border-t border-white/10 pt-4 text-sm">
+            {order.discountAmount ? (
+              <>
+                <div className="flex justify-between text-white/60">
+                  <span>Subtotal</span>
+                  <span>${order.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="mt-1 flex justify-between text-white/60">
+                  <span>Discount{order.promoCode ? ` (${order.promoCode})` : ""}</span>
+                  <span className="text-gold">-${order.discountAmount.toFixed(2)}</span>
+                </div>
+              </>
+            ) : order.freeShipping ? (
+              <div className="flex justify-between text-white/60">
+                <span>Shipping</span>
+                <span className="text-gold">Free ({order.promoCode})</span>
+              </div>
+            ) : null}
+          </div>
+          <div className="flex justify-between border-t border-white/10 pt-4 font-serif text-lg">
             <span className="text-white">Total</span>
             <span className="text-gold">${order.total.toFixed(2)}</span>
           </div>

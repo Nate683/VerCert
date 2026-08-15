@@ -1,5 +1,6 @@
 import FaqClient from "./FaqClient";
 import { buildMetadata } from "@/lib/seo";
+import { getContent, DEFAULT_FAQ } from "@/lib/site-content";
 
 export const metadata = buildMetadata({
   title: "FAQ | VeriCert",
@@ -7,6 +8,9 @@ export const metadata = buildMetadata({
   path: "/faq",
 });
 
-export default function FaqPage() {
-  return <FaqClient />;
+export const dynamic = "force-dynamic";
+
+export default async function FaqPage() {
+  const items = await getContent("faq_items", DEFAULT_FAQ);
+  return <FaqClient items={items} />;
 }

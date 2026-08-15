@@ -13,16 +13,24 @@ import { OrderTable } from "./OrderTable";
 import { CustomersPanel } from "./CustomersPanel";
 import { AssistantChat } from "./AssistantChat";
 import { ProductsPanel } from "./ProductsPanel";
+import { PromotionsPanel } from "./PromotionsPanel";
+import { SiteContentPanel } from "./SiteContentPanel";
 
 type Variant = "command" | "office";
-type Tab = "overview" | "orders" | "products" | "customers" | "assistant";
+type Tab = "overview" | "orders" | "products" | "promotions" | "content" | "customers" | "assistant";
 
-const TABS: { id: Tab; label: string }[] = [
+const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "orders", label: "Orders" },
   { id: "products", label: "Products" },
   { id: "customers", label: "Customers" },
   { id: "assistant", label: "Assistant" },
+];
+
+// Promotions and Content editing are /command-only — /office never sees these tabs.
+const COMMAND_ONLY_TABS: { id: Tab; label: string }[] = [
+  { id: "promotions", label: "Promotions" },
+  { id: "content", label: "Content" },
 ];
 
 export function ExecutiveTerminal({
@@ -38,6 +46,7 @@ export function ExecutiveTerminal({
 }) {
   const router = useRouter();
   const isCommand = variant === "command";
+  const TABS = isCommand ? [...BASE_TABS, ...COMMAND_ONLY_TABS] : BASE_TABS;
   const [tab, setTab] = useState<Tab>("overview");
   const [overview, setOverview] = useState<ExecutiveOverview | null>(null);
   const [lowInventory, setLowInventory] = useState<LowInventoryAlert[]>([]);
@@ -100,7 +109,9 @@ export function ExecutiveTerminal({
           </button>
         </div>
 
-        <nav className={`relative mt-6 flex gap-2 border-b border-white/10 ${isCommand ? "" : "pb-px"}`}>
+        <nav
+          className={`relative mt-6 flex gap-2 overflow-x-auto border-b border-white/10 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isCommand ? "" : "pb-px"}`}
+        >
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -109,7 +120,7 @@ export function ExecutiveTerminal({
               }}
               type="button"
               onClick={() => setTab(t.id)}
-              className={`${isCommand ? "border-b-2 border-transparent" : "border-b-2"} px-4 py-2.5 text-xs uppercase tracking-[0.2em] transition-colors duration-300 ${
+              className={`shrink-0 whitespace-nowrap ${isCommand ? "border-b-2 border-transparent" : "border-b-2"} px-3 py-2.5 text-xs uppercase tracking-[0.2em] transition-colors duration-300 sm:px-4 ${
                 tab === t.id
                   ? isCommand
                     ? "text-gold"
@@ -158,6 +169,8 @@ export function ExecutiveTerminal({
 
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}
+          {tab === "promotions" && isCommand && <PromotionsPanel />}
+          {tab === "content" && isCommand && <SiteContentPanel />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
           {tab === "assistant" && <AssistantChat variant={variant} />}
         </div>

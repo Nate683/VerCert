@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listProducts, resolveUnitPrice } from "@/lib/products";
 import { createOrder, updateOrder } from "@/lib/orders/store";
+import { validatePromoCode } from "@/lib/promotions";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { getCurrentCustomer } from "@/lib/users/current-user";
@@ -31,7 +32,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, createOrderSchema);
   if ("error" in parsed) return parsed.error;
-  const { customer, items, paymentMethod } = parsed.data;
+  const { customer, items, paymentMethod, promoCode } = parsed.data;
 
   // Recompute pricing server-side from the product catalog — never trust client-sent prices.
   const products = await listProducts();
@@ -60,7 +61,32 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   }
 
   const subtotal = resolvedItems.reduce((sum, i) => sum + i.priceUsd * i.quantity, 0);
-  const total = subtotal;
+
+  let discountAmount = 0;
+  let freeShipping = false;
+  let appliedPromoCode: string | undefined;
+  let appliedPromoCodeId: string | undefined;
+  if (promoCode) {
+    const lineItems = resolvedItems.map((item) => {
+      const product = products.find((p) => p.slug === item.slug);
+      return { slug: item.slug, category: product?.category ?? "", lineTotal: item.priceUsd * item.quantity };
+    });
+    const result = await validatePromoCode({
+      code: promoCode,
+      subtotal,
+      lineItems,
+      customerId: currentCustomer.id,
+    });
+    if (!result.ok) {
+      return NextResponse.json({ error: result.message }, { status: 400 });
+    }
+    discountAmount = result.discountAmount;
+    freeShipping = result.freeShipping;
+    appliedPromoCode = result.promo.code;
+    appliedPromoCodeId = result.promo.id;
+  }
+
+  const total = Math.max(0, subtotal - discountAmount);
 
   const order = await createOrder({
     paymentMethod,
@@ -70,6 +96,10 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     subtotal,
     total,
     status: "awaiting_payment",
+    promoCode: appliedPromoCode,
+    promoCodeId: appliedPromoCodeId,
+    discountAmount,
+    freeShipping,
   });
 
   // Remember the shipping address used for next time.

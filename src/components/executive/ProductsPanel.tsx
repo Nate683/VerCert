@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { BulkPriceTier, Product, SizeOption } from "@/lib/types";
+import type { BulkPriceTier, CoaDocument, Product, SizeOption } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
 import { ProductImage } from "@/components/ProductImage";
 
@@ -28,6 +28,7 @@ type FormState = {
   batchNumbers: string; // comma separated
   sizes: SizeForm[];
   initialStock: string;
+  active: boolean;
 };
 
 const EMPTY_SIZE: SizeForm = { label: "", priceUsd: "", bulkTiers: "" };
@@ -48,6 +49,7 @@ function emptyForm(): FormState {
     batchNumbers: "",
     sizes: [{ ...EMPTY_SIZE }],
     initialStock: "0",
+    active: true,
   };
 }
 
@@ -71,6 +73,7 @@ function productToForm(p: ProductWithStock): FormState {
       bulkTiers: (s.bulkTiers ?? []).map((t) => `${t.minQuantity}:${t.priceUsd}`).join(", "),
     })),
     initialStock: String(p.stock?.quantity ?? 0),
+    active: p.active ?? true,
   };
 }
 
@@ -117,6 +120,7 @@ function formToPayload(form: FormState) {
       .filter(Boolean),
     sizes,
     initialStock: Number(form.initialStock) || 0,
+    active: form.active,
   };
 }
 
@@ -129,13 +133,25 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  const [dragTarget, setDragTarget] = useState<string | null>(null);
+  const [coaDocuments, setCoaDocuments] = useState<Record<string, CoaDocument>>({});
+  const [uploadingCoaFor, setUploadingCoaFor] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/executive/products", { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
+    const [productsRes, coaRes] = await Promise.all([
+      fetch("/api/executive/products", { cache: "no-store" }),
+      fetch("/api/executive/coa", { cache: "no-store" }),
+    ]);
+    if (productsRes.ok) {
+      const data = await productsRes.json();
       setProducts(data.products ?? []);
+    }
+    if (coaRes.ok) {
+      const data = await coaRes.json();
+      const byBatch: Record<string, CoaDocument> = {};
+      for (const doc of data.documents ?? []) byBatch[doc.batchNumber] = doc;
+      setCoaDocuments(byBatch);
     }
     setLoading(false);
   }, []);
@@ -220,6 +236,79 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     await load();
   }
 
+  // Inline edits from the catalog grid (price of the first size, stock,
+  // active/hidden) — saved immediately on blur/change, no full form needed.
+  async function handleInlinePatch(slug: string, patch: Record<string, unknown>) {
+    await fetch(`/api/executive/products/${slug}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    await load();
+  }
+
+  async function handleInlinePriceChange(product: ProductWithStock, value: string) {
+    const priceUsd = Number(value);
+    if (!Number.isFinite(priceUsd) || priceUsd < 0) return;
+    const sizes = product.sizes.map((s, i) => (i === 0 ? { ...s, priceUsd } : s));
+    await handleInlinePatch(product.slug, { sizes });
+  }
+
+  async function handleInlineStockChange(product: ProductWithStock, value: string) {
+    const initialStock = Number(value);
+    if (!Number.isFinite(initialStock) || initialStock < 0) return;
+    await handleInlinePatch(product.slug, { initialStock });
+  }
+
+  async function handleToggleActive(product: ProductWithStock) {
+    await handleInlinePatch(product.slug, { active: !(product.active ?? true) });
+  }
+
+  function handleDropUpload(e: React.DragEvent, slug: string, kind: "primary" | "gallery") {
+    e.preventDefault();
+    setDragTarget(null);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleUpload(slug, file, kind);
+  }
+
+  async function handleSetPrimary(product: ProductWithStock, url: string) {
+    const gallery = (product.galleryImageUrls ?? []).filter((u) => u !== url);
+    if (product.primaryImageUrl) gallery.push(product.primaryImageUrl);
+    await handleInlinePatch(product.slug, { primaryImageUrl: url, galleryImageUrls: gallery });
+  }
+
+  async function handleReorderGallery(product: ProductWithStock, index: number, direction: -1 | 1) {
+    const gallery = [...(product.galleryImageUrls ?? [])];
+    const target = index + direction;
+    if (target < 0 || target >= gallery.length) return;
+    [gallery[index], gallery[target]] = [gallery[target], gallery[index]];
+    await handleInlinePatch(product.slug, { galleryImageUrls: gallery });
+  }
+
+  async function handleUploadCoa(batch: string, file: File) {
+    setUploadingCoaFor(batch);
+    try {
+      const body = new FormData();
+      body.set("file", file);
+      const res = await fetch(`/api/executive/coa/${encodeURIComponent(batch)}`, {
+        method: "POST",
+        body,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "COA upload failed.");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "COA upload failed.");
+    } finally {
+      setUploadingCoaFor(null);
+    }
+  }
+
+  async function handleRemoveCoa(batch: string) {
+    await fetch(`/api/executive/coa/${encodeURIComponent(batch)}`, { method: "DELETE" });
+    await load();
+  }
+
   const cardClass = isCommand
     ? "border border-gold/20 bg-white/[0.02] p-6"
     : "rounded-md border border-white/10 bg-white/[0.03] p-5";
@@ -253,26 +342,66 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             <p className="text-sm text-white/30">No products yet.</p>
           ) : (
             products.map((p) => {
-              const minPrice = Math.min(...p.sizes.map((s) => s.priceUsd));
+              const active = p.active ?? true;
               return (
-                <div key={p.slug} className="border border-white/10 bg-black/40">
-                  <ProductImage src={p.primaryImageUrl} name={p.name} />
+                <div key={p.slug} className={`border bg-black/40 ${active ? "border-white/10" : "border-white/5 opacity-60"}`}>
+                  <div className="relative">
+                    <ProductImage src={p.primaryImageUrl} name={p.name} />
+                    <span
+                      className={`absolute left-2 top-2 border px-2 py-0.5 text-[9px] uppercase tracking-[0.15em] ${
+                        active
+                          ? "border-gold/50 bg-black/70 text-gold"
+                          : "border-white/30 bg-black/70 text-white/50"
+                      }`}
+                    >
+                      {active ? "Active" : "Hidden"}
+                    </span>
+                  </div>
                   <div className="p-4">
                     <p className="text-[10px] uppercase tracking-[0.15em] text-gold/70">{p.category}</p>
                     <p className="mt-1 font-serif text-lg text-white">{p.name}</p>
-                    <p className="mt-1 text-xs text-white/40">
-                      {p.purityPercent.toFixed(1)}% purity · from ${minPrice}
-                    </p>
-                    <p className="mt-1 text-xs text-white/40">
-                      Stock: {p.stock?.quantity ?? 0}
-                    </p>
-                    <div className="mt-3 flex gap-2">
+                    <p className="mt-1 text-xs text-white/40">{p.purityPercent.toFixed(1)}% purity</p>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <label className="block">
+                        <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">
+                          Price (1st size)
+                        </span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          defaultValue={p.sizes[0]?.priceUsd ?? 0}
+                          onBlur={(e) => handleInlinePriceChange(p, e.target.value)}
+                          className="input-field mt-1 py-1.5 text-xs"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">Stock</span>
+                        <input
+                          type="number"
+                          min="0"
+                          defaultValue={p.stock?.quantity ?? 0}
+                          onBlur={(e) => handleInlineStockChange(p, e.target.value)}
+                          className="input-field mt-1 py-1.5 text-xs"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => startEdit(p)}
                         className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
                       >
                         Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleActive(p)}
+                        className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+                      >
+                        {active ? "Hide" : "Unhide"}
                       </button>
                       <button
                         type="button"
@@ -328,6 +457,17 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                 </option>
               ))}
             </select>
+            <label className="input-field flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+                className="h-4 w-4 accent-[#c9a227]"
+              />
+              <span className="text-sm text-white/70">
+                {form.active ? "Active — visible in shop" : "Hidden — pulled from shop"}
+              </span>
+            </label>
             <input
               required
               value={form.casNumber}
@@ -407,6 +547,58 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             />
           </div>
 
+          {editingProduct && editingProduct.batchNumbers.length > 0 && (
+            <div className="mt-6">
+              <p className="text-xs uppercase tracking-[0.2em] text-gold">Certificates of Analysis</p>
+              <div className="mt-3 space-y-2">
+                {editingProduct.batchNumbers.map((batch) => {
+                  const doc = coaDocuments[batch];
+                  return (
+                    <div
+                      key={batch}
+                      className="flex flex-wrap items-center justify-between gap-3 border border-white/10 px-3 py-2"
+                    >
+                      <span className="font-mono text-xs text-white/70">{batch}</span>
+                      <div className="flex items-center gap-2">
+                        {doc && (
+                          <a
+                            href={doc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] uppercase tracking-[0.1em] text-gold hover:text-white"
+                          >
+                            View File
+                          </a>
+                        )}
+                        <label className="cursor-pointer border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold">
+                          {uploadingCoaFor === batch ? "Uploading..." : doc ? "Replace" : "Upload"}
+                          <input
+                            type="file"
+                            accept="application/pdf,image/jpeg,image/png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleUploadCoa(batch, file);
+                            }}
+                          />
+                        </label>
+                        {doc && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCoa(batch)}
+                            className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="mt-6">
             <p className="text-xs uppercase tracking-[0.2em] text-gold">Sizes & Pricing</p>
             <div className="mt-3 space-y-3">
@@ -461,10 +653,19 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
           {editingProduct && (
             <div className="mt-6">
               <p className="text-xs uppercase tracking-[0.2em] text-gold">Images</p>
+              <p className="mt-1 text-[10px] text-white/30">Drag and drop a photo onto a box, or use the buttons.</p>
               <div className="mt-3 flex flex-wrap gap-4">
                 <div>
                   <p className="mb-2 text-[10px] uppercase tracking-[0.15em] text-white/40">Primary</p>
-                  <div className="h-24 w-24">
+                  <div
+                    className={`h-24 w-24 ${dragTarget === "primary" ? "ring-2 ring-gold" : ""}`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragTarget("primary");
+                    }}
+                    onDragLeave={() => setDragTarget(null)}
+                    onDrop={(e) => handleDropUpload(e, editingProduct.slug, "primary")}
+                  >
                     <ProductImage src={editingProduct.primaryImageUrl} name={editingProduct.name} />
                   </div>
                   <div className="mt-2 flex gap-2">
@@ -493,9 +694,11 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                 </div>
 
                 <div>
-                  <p className="mb-2 text-[10px] uppercase tracking-[0.15em] text-white/40">Gallery</p>
+                  <p className="mb-2 text-[10px] uppercase tracking-[0.15em] text-white/40">
+                    Gallery (drag to reorder with the arrows, or set as primary)
+                  </p>
                   <div className="flex flex-wrap gap-2">
-                    {(editingProduct.galleryImageUrls ?? []).map((url) => (
+                    {(editingProduct.galleryImageUrls ?? []).map((url, i) => (
                       <div key={url} className="relative h-24 w-24">
                         <ProductImage src={url} name={editingProduct.name} />
                         <button
@@ -505,9 +708,47 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                         >
                           ×
                         </button>
+                        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/80 px-1 py-0.5">
+                          <button
+                            type="button"
+                            onClick={() => handleReorderGallery(editingProduct, i, -1)}
+                            disabled={i === 0}
+                            title="Move left"
+                            className="text-[10px] text-white/60 hover:text-gold disabled:opacity-20"
+                          >
+                            ←
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimary(editingProduct, url)}
+                            title="Set as primary"
+                            className="text-[9px] uppercase tracking-[0.05em] text-white/60 hover:text-gold"
+                          >
+                            ★
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleReorderGallery(editingProduct, i, 1)}
+                            disabled={i === (editingProduct.galleryImageUrls?.length ?? 1) - 1}
+                            title="Move right"
+                            className="text-[10px] text-white/60 hover:text-gold disabled:opacity-20"
+                          >
+                            →
+                          </button>
+                        </div>
                       </div>
                     ))}
-                    <label className="flex h-24 w-24 cursor-pointer items-center justify-center border border-dashed border-white/20 text-[10px] uppercase tracking-[0.1em] text-white/40 hover:border-gold hover:text-gold">
+                    <label
+                      className={`flex h-24 w-24 cursor-pointer items-center justify-center border border-dashed text-[10px] uppercase tracking-[0.1em] hover:border-gold hover:text-gold ${
+                        dragTarget === "gallery" ? "border-gold text-gold" : "border-white/20 text-white/40"
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragTarget("gallery");
+                      }}
+                      onDragLeave={() => setDragTarget(null)}
+                      onDrop={(e) => handleDropUpload(e, editingProduct.slug, "gallery")}
+                    >
                       {uploadingFor === editingProduct.slug ? "..." : "+ Add"}
                       <input
                         type="file"

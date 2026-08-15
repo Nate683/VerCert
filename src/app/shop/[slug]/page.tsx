@@ -19,7 +19,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) return buildMetadata({ title: "Product Not Found | VeriCert", noIndex: true });
+  if (!product || product.active === false)
+    return buildMetadata({ title: "Product Not Found | VeriCert", noIndex: true });
   return buildMetadata({
     title: `${product.name} | VeriCert`,
     description: product.summary,
@@ -34,7 +35,7 @@ export default async function ProductDetailPage({
 }) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product) notFound();
+  if (!product || product.active === false) notFound();
 
   const specs = [
     { label: "CAS Number", value: product.casNumber },

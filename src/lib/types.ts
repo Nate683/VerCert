@@ -26,8 +26,15 @@ export type Product = {
   primaryImageUrl?: string;
   galleryImageUrls?: string[];
   sortOrder?: number;
+  active?: boolean;
   createdAt?: string;
   updatedAt?: string;
+};
+
+export type CoaDocument = {
+  batchNumber: string;
+  fileUrl: string;
+  uploadedAt: string;
 };
 
 export type CoaResult = {
@@ -40,6 +47,7 @@ export type CoaResult = {
   dateIssued: string;
   lab: string;
   appearance: string;
+  fileUrl?: string;
   tests: {
     parameter: string;
     method: string;
@@ -120,6 +128,35 @@ export type Order = {
   // Tracks whether stock has already been decremented for this order, so
   // paid/cancel transitions never double-decrement or double-restore.
   stockDecremented?: boolean;
+  promoCode?: string;
+  promoCodeId?: string;
+  discountAmount?: number;
+  freeShipping?: boolean;
+};
+
+export type PromoType = "percent" | "fixed" | "free_shipping";
+
+export type PromoCode = {
+  id: string;
+  code: string;
+  type: PromoType;
+  value: number; // percent (0-100) or fixed dollar amount; ignored for free_shipping
+  minOrderAmount: number;
+  usageLimit?: number;
+  perCustomerLimit?: number;
+  startsAt?: string;
+  endsAt?: string;
+  active: boolean;
+  restrictedProductSlugs?: string[];
+  restrictedCategories?: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PromoCodeStats = PromoCode & {
+  redemptions: number;
+  revenueAttributed: number;
+  discountGiven: number;
 };
 
 export type SavedAddress = {

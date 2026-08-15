@@ -121,6 +121,17 @@ function CoaLookupForm() {
             This certificate reflects analysis of the referenced batch only.
             For laboratory research use. Not for human or veterinary use.
           </p>
+
+          {result.fileUrl && (
+            <a
+              href={result.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-block border border-gold px-6 py-2.5 text-xs uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black"
+            >
+              Download Signed Certificate
+            </a>
+          )}
         </div>
       )}
     </div>

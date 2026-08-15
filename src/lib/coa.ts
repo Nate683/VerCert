@@ -1,4 +1,5 @@
 import { getProductByBatchNumber } from "./products";
+import { getCoaDocument } from "./coa-documents";
 import type { CoaResult } from "./types";
 
 const LABS = [
@@ -27,6 +28,8 @@ export async function lookupCoa(batchNumber: string): Promise<CoaResult | null> 
   const product = await getProductByBatchNumber(batch);
   if (!product) return null;
 
+  const document = await getCoaDocument(batch);
+
   return {
     batchNumber: batch,
     productName: product.name,
@@ -37,6 +40,7 @@ export async function lookupCoa(batchNumber: string): Promise<CoaResult | null> 
     dateIssued: dateFromBatch(batch, 0),
     lab: pickLab(batch),
     appearance: "White to off-white lyophilized powder",
+    fileUrl: document?.fileUrl,
     tests: [
       {
         parameter: "Identity Confirmation",

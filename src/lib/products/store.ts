@@ -20,6 +20,7 @@ type ProductRow = {
   primary_image_url: string | null;
   gallery_image_urls: string | null;
   sort_order: number;
+  active: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -42,6 +43,7 @@ function rowToProduct(row: ProductRow): Product {
     primaryImageUrl: row.primary_image_url ?? undefined,
     galleryImageUrls: row.gallery_image_urls ? JSON.parse(row.gallery_image_urls) : undefined,
     sortOrder: row.sort_order,
+    active: row.active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -49,8 +51,12 @@ function rowToProduct(row: ProductRow): Product {
 
 const SELECT_ALL = "SELECT * FROM products";
 
-export async function listProducts(): Promise<Product[]> {
-  const rows = await query<ProductRow>(`${SELECT_ALL} ORDER BY sort_order ASC, name ASC`);
+// By default only active products are returned (storefront pages). Pass
+// includeInactive to also return hidden products (executive admin panel).
+export async function listProducts(options?: { includeInactive?: boolean }): Promise<Product[]> {
+  const rows = await query<ProductRow>(
+    `${SELECT_ALL} ${options?.includeInactive ? "" : "WHERE active = TRUE"} ORDER BY sort_order ASC, name ASC`
+  );
   return rows.map(rowToProduct);
 }
 
@@ -87,14 +93,15 @@ export type CreateProductInput = {
   summary: string;
   description: string[];
   sortOrder?: number;
+  active?: boolean;
 };
 
 export async function createProduct(input: CreateProductInput): Promise<Product> {
   const now = new Date().toISOString();
   await query(
     `INSERT INTO products
-      (slug, name, category, cas_number, molecular_formula, molecular_weight, purity_percent, sequence_or_form, storage, sizes, batch_numbers, summary, description, sort_order, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+      (slug, name, category, cas_number, molecular_formula, molecular_weight, purity_percent, sequence_or_form, storage, sizes, batch_numbers, summary, description, sort_order, active, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
     [
       input.slug,
       input.name,
@@ -110,6 +117,7 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
       input.summary,
       JSON.stringify(input.description),
       input.sortOrder ?? 0,
+      input.active ?? true,
       now,
       now,
     ]
@@ -135,6 +143,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   primaryImageUrl: "primary_image_url",
   galleryImageUrls: "gallery_image_urls",
   sortOrder: "sort_order",
+  active: "active",
 };
 
 const JSON_FIELDS = new Set(["sizes", "batchNumbers", "description", "galleryImageUrls"]);

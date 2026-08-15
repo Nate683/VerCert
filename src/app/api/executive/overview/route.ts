@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const [orders, products] = await Promise.all([listOrders(), listProducts()]);
+  const [orders, products] = await Promise.all([listOrders(), listProducts({ includeInactive: true })]);
   const overview = computeOverview(orders, products);
   const lowInventory = await getLowInventoryAlerts();
 

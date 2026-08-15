@@ -1,8 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { listProducts } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { VialGlyph } from "@/components/VialGlyph";
 import { buildMetadata } from "@/lib/seo";
+import { getContent, DEFAULT_HOME_HERO, DEFAULT_FEATURED } from "@/lib/site-content";
 
 export const metadata = buildMetadata({
   title: "VeriCert | Research Peptides, Verified",
@@ -31,8 +33,17 @@ const TRUST_POINTS = [
 ];
 
 export default async function Home() {
-  const products = await listProducts();
-  const featured = products.slice(0, 4);
+  const [products, hero, featuredContent] = await Promise.all([
+    listProducts(),
+    getContent("home_hero", DEFAULT_HOME_HERO),
+    getContent("featured_products", DEFAULT_FEATURED),
+  ]);
+  const featured =
+    featuredContent.slugs.length > 0
+      ? featuredContent.slugs
+          .map((slug) => products.find((p) => p.slug === slug))
+          .filter((p): p is (typeof products)[number] => Boolean(p))
+      : products.slice(0, 4);
 
   return (
     <div>
@@ -40,33 +51,34 @@ export default async function Home() {
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center px-6 py-28 text-center lg:px-10 lg:py-40">
           <p className="text-xs uppercase tracking-[0.4em] text-gold">
-            Research Use Only
+            {hero.badge}
           </p>
-          <h1 className="mt-8 max-w-3xl font-serif text-5xl leading-tight text-white text-balance lg:text-7xl">
-            Research Peptides,
-            <br />
-            Verified to the Batch.
+          <h1 className="mt-8 max-w-3xl whitespace-pre-line font-serif text-5xl leading-tight text-white text-balance lg:text-7xl">
+            {hero.headline}
           </h1>
           <div className="mt-8 h-px w-24 bg-gold/60" />
           <p className="mt-8 max-w-xl text-base leading-relaxed text-white/60">
-            VeriCert supplies high-purity synthetic peptides and reference
-            compounds for laboratory research, each accompanied by an
-            independent certificate of analysis.
+            {hero.subtext}
           </p>
           <div className="mt-12 flex flex-col gap-4 sm:flex-row">
             <Link
               href="/shop"
               className="border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold"
             >
-              Shop the Collection
+              {hero.ctaPrimaryLabel}
             </Link>
             <Link
               href="/coa"
               className="border border-white/20 px-8 py-3 text-sm uppercase tracking-[0.2em] text-white/80 transition-colors hover:border-gold hover:text-gold"
             >
-              Verify a COA
+              {hero.ctaSecondaryLabel}
             </Link>
           </div>
+          {hero.heroImageUrl && (
+            <div className="relative mt-16 aspect-[16/9] w-full max-w-3xl overflow-hidden border border-white/10">
+              <Image src={hero.heroImageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 768px" className="object-cover" />
+            </div>
+          )}
         </div>
       </section>
 

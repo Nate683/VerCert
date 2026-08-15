@@ -28,6 +28,10 @@ type OrderRow = {
   carrier: string | null;
   tracking_number: string | null;
   stock_decremented: boolean;
+  promo_code: string | null;
+  promo_code_id: string | null;
+  discount_amount: number;
+  free_shipping: boolean;
 };
 
 function rowToOrder(row: OrderRow): Order {
@@ -52,6 +56,10 @@ function rowToOrder(row: OrderRow): Order {
     carrier: row.carrier ?? undefined,
     trackingNumber: row.tracking_number ?? undefined,
     stockDecremented: Boolean(row.stock_decremented),
+    promoCode: row.promo_code ?? undefined,
+    promoCodeId: row.promo_code_id ?? undefined,
+    discountAmount: row.discount_amount,
+    freeShipping: Boolean(row.free_shipping),
   };
 }
 
@@ -65,6 +73,10 @@ export type CreateOrderInput = {
   subtotal: number;
   total: number;
   status: OrderStatus;
+  promoCode?: string;
+  promoCodeId?: string;
+  discountAmount?: number;
+  freeShipping?: boolean;
 };
 
 export async function createOrder(input: CreateOrderInput): Promise<Order> {
@@ -77,8 +89,8 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
 
   await query(
     `INSERT INTO orders
-      (id, reference, created_at, status, payment_method, customer_id, customer, items, subtotal, total)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      (id, reference, created_at, status, payment_method, customer_id, customer, items, subtotal, total, promo_code, promo_code_id, discount_amount, free_shipping)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       order.id,
       order.reference,
@@ -90,6 +102,10 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
       JSON.stringify(order.items),
       order.subtotal,
       order.total,
+      order.promoCode ?? null,
+      order.promoCodeId ?? null,
+      order.discountAmount ?? 0,
+      order.freeShipping ?? false,
     ]
   );
 
@@ -139,6 +155,10 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   carrier: "carrier",
   trackingNumber: "tracking_number",
   stockDecremented: "stock_decremented",
+  promoCode: "promo_code",
+  promoCodeId: "promo_code_id",
+  discountAmount: "discount_amount",
+  freeShipping: "free_shipping",
 };
 
 const JSON_FIELDS = new Set(["customer", "items", "crypto"]);

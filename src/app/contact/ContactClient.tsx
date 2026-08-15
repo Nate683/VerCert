@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import type { ContactContent } from "@/lib/site-content";
 
-export default function ContactClient() {
+export default function ContactClient({ content }: { content: ContactContent }) {
   const [sent, setSent] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
@@ -14,10 +15,7 @@ export default function ContactClient() {
     <div className="mx-auto max-w-5xl px-6 py-20 lg:px-10">
       <p className="text-xs uppercase tracking-[0.35em] text-gold">Contact</p>
       <h1 className="mt-3 font-serif text-4xl text-white">Get in Touch</h1>
-      <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/50">
-        Questions about a certificate of analysis, an order, or wholesale
-        research accounts? Send a message below.
-      </p>
+      <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/50">{content.intro}</p>
 
       <div className="mt-12 grid grid-cols-1 gap-16 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -54,18 +52,15 @@ export default function ContactClient() {
         <div className="space-y-8 border-t border-white/10 pt-8 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
           <div>
             <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Email</h3>
-            <p className="mt-2 text-sm text-white/70">research@vericert.example</p>
+            <p className="mt-2 text-sm text-white/70">{content.email}</p>
           </div>
           <div>
             <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Hours</h3>
-            <p className="mt-2 text-sm text-white/70">Monday – Friday, 9am – 5pm ET</p>
+            <p className="mt-2 text-sm text-white/70">{content.hours}</p>
           </div>
           <div>
             <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Wholesale</h3>
-            <p className="mt-2 text-sm text-white/70">
-              Research institutions and laboratories may request volume
-              pricing via the form.
-            </p>
+            <p className="mt-2 text-sm text-white/70">{content.wholesaleNote}</p>
           </div>
         </div>
       </div>
