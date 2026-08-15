@@ -11,6 +11,8 @@ function LoginForm() {
   const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isAffiliate, setIsAffiliate] = useState(false);
+  const [affiliateCode, setAffiliateCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,12 +26,17 @@ function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email,
+          password,
+          isAffiliate,
+          affiliateCode: isAffiliate ? affiliateCode : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Incorrect email or password.");
       await refresh();
-      router.push(next);
+      router.push(data.isAffiliate ? "/affiliate" : next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Incorrect email or password.");
       setSubmitting(false);
@@ -62,6 +69,24 @@ function LoginForm() {
           placeholder="Password"
           className="input-field"
         />
+        <label className="flex items-center gap-3 text-sm text-white/60">
+          <input
+            type="checkbox"
+            checked={isAffiliate}
+            onChange={(e) => setIsAffiliate(e.target.checked)}
+            className="h-4 w-4 accent-[#c9a227]"
+          />
+          I&apos;m an Affiliate
+        </label>
+        {isAffiliate && (
+          <input
+            required
+            value={affiliateCode}
+            onChange={(e) => setAffiliateCode(e.target.value)}
+            placeholder="Affiliate Code"
+            className="input-field"
+          />
+        )}
         {error && (
           <p className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
             {error}

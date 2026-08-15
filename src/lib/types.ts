@@ -214,6 +214,9 @@ export type Affiliate = {
   commissionRate: number; // percent (0-100), used when commissionType === "percent"
   commissionFlatAmount: number; // used when commissionType === "flat"
   promoCodeId?: string;
+  // Separate from the customer-facing promo code — an affiliate enters this
+  // at login (alongside their normal password) to reach their /affiliate page.
+  portalCode?: string;
   active: boolean;
   createdAt: string;
   updatedAt: string;

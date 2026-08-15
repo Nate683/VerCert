@@ -48,15 +48,16 @@ const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "ledger", label: "Ledger" },
   { id: "intelligence", label: "Intelligence" },
   { id: "customers", label: "Customers" },
+  { id: "affiliates", label: "Affiliates" },
   { id: "assistant", label: "Assistant" },
   { id: "admin", label: "Admin" },
 ];
 
-// Promotions, Affiliates, and Content editing are /command-only — /office
-// never sees these tabs.
+// Promotions and Content editing are /command-only — /office never sees
+// these tabs. Affiliates is shared (both realms), but /office gets a
+// read-only view — see AffiliatesPanel's `variant` prop.
 const COMMAND_ONLY_TABS: { id: Tab; label: string }[] = [
   { id: "promotions", label: "Promotions" },
-  { id: "affiliates", label: "Affiliates" },
   { id: "content", label: "Content" },
 ];
 
@@ -237,7 +238,7 @@ export function ExecutiveTerminal({
           {tab === "ledger" && <LedgerPanel variant={variant} />}
           {tab === "intelligence" && <IntelligencePanel variant={variant} />}
           {tab === "promotions" && isCommand && <PromotionsPanel />}
-          {tab === "affiliates" && isCommand && <AffiliatesPanel />}
+          {tab === "affiliates" && <AffiliatesPanel variant={variant} />}
           {tab === "content" && isCommand && <SiteContentPanel />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
           {tab === "assistant" && <AssistantChat variant={variant} />}

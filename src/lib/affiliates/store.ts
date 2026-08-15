@@ -18,10 +18,20 @@ type AffiliateRow = {
   commission_rate: number;
   commission_flat_amount: number;
   promo_code_id: string | null;
+  portal_code: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;
 };
+
+// Excludes visually ambiguous characters (0/O, 1/I) since affiliates read
+// this off a screen and type it back in at login.
+function generatePortalCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
 
 function rowToAffiliate(row: AffiliateRow): Affiliate {
   return {
@@ -35,6 +45,7 @@ function rowToAffiliate(row: AffiliateRow): Affiliate {
     commissionRate: row.commission_rate,
     commissionFlatAmount: row.commission_flat_amount,
     promoCodeId: row.promo_code_id ?? undefined,
+    portalCode: row.portal_code ?? undefined,
     active: row.active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -50,6 +61,11 @@ export async function listAffiliates(): Promise<Affiliate[]> {
 
 export async function getAffiliateById(id: string): Promise<Affiliate | null> {
   const rows = await query<AffiliateRow>(`${SELECT_ALL} WHERE id = $1`, [id]);
+  return rows[0] ? rowToAffiliate(rows[0]) : null;
+}
+
+export async function getAffiliateByEmail(email: string): Promise<Affiliate | null> {
+  const rows = await query<AffiliateRow>(`${SELECT_ALL} WHERE lower(email) = lower($1)`, [email]);
   return rows[0] ? rowToAffiliate(rows[0]) : null;
 }
 
@@ -85,8 +101,8 @@ export async function createAffiliate(input: CreateAffiliateInput): Promise<Affi
   const id = randomUUID();
   await query(
     `INSERT INTO affiliates
-      (id, name, email, phone, payment_method, notes, commission_type, commission_rate, commission_flat_amount, promo_code_id, active, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+      (id, name, email, phone, payment_method, notes, commission_type, commission_rate, commission_flat_amount, promo_code_id, portal_code, active, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
     [
       id,
       input.name,
@@ -98,6 +114,7 @@ export async function createAffiliate(input: CreateAffiliateInput): Promise<Affi
       input.commissionRate ?? 0,
       input.commissionFlatAmount ?? 0,
       promo.id,
+      generatePortalCode(),
       true,
       now,
       now,
@@ -119,6 +136,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   commissionType: "commission_type",
   commissionRate: "commission_rate",
   commissionFlatAmount: "commission_flat_amount",
+  portalCode: "portal_code",
   active: "active",
 };
 
@@ -141,6 +159,10 @@ export async function updateAffiliate(
     );
   }
   return getAffiliateById(id);
+}
+
+export async function regeneratePortalCode(id: string): Promise<Affiliate | null> {
+  return updateAffiliate(id, { portalCode: generatePortalCode() });
 }
 
 export async function deleteAffiliate(id: string): Promise<void> {

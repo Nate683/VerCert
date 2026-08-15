@@ -206,6 +206,10 @@ async function main() {
     )
   `;
 
+  // Self-service affiliate portal: a separate code (not the customer-facing
+  // promo code) an affiliate enters at login to reach their own /affiliate page.
+  await sql`ALTER TABLE affiliates ADD COLUMN IF NOT EXISTS portal_code TEXT`;
+
   // Lightweight funnel/analytics events (page_view, add_to_cart,
   // checkout_started, order_completed) — enough for conversion-funnel
   // reporting without a third-party analytics vendor.

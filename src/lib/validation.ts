@@ -7,6 +7,8 @@ import { NextResponse } from "next/server";
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1).max(200),
+  isAffiliate: z.boolean().optional(),
+  affiliateCode: z.string().trim().max(40).optional(),
 });
 
 export const signupSchema = z.object({

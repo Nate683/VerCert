@@ -32,9 +32,10 @@ function emptyForm(): FormState {
   };
 }
 
-// /command-only tab: affiliates, commissions, payouts, and the commission
-// structure notes.
-export function AffiliatesPanel() {
+// Shared tab (both realms) — /office gets a read-only view (no create,
+// payout, activate/deactivate, delete, or portal-code regeneration).
+export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) {
+  const isCommand = variant === "command";
   const [affiliates, setAffiliates] = useState<AffiliateSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -44,6 +45,7 @@ export function AffiliatesPanel() {
   const [payoutFor, setPayoutFor] = useState<string | null>(null);
   const [payoutAmount, setPayoutAmount] = useState("");
   const [payoutNote, setPayoutNote] = useState("");
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
   const [structure, setStructure] = useState<CommissionStructureContent | null>(null);
   const [structureSaving, setStructureSaving] = useState(false);
@@ -129,6 +131,16 @@ export function AffiliatesPanel() {
     await load();
   }
 
+  async function handleRegenerateCode(id: string) {
+    setRegeneratingId(id);
+    try {
+      await fetch(`/api/executive/affiliates/${id}/regenerate-code`, { method: "POST" });
+      await load();
+    } finally {
+      setRegeneratingId(null);
+    }
+  }
+
   async function handleSaveStructure() {
     if (!structure) return;
     setStructureSaving(true);
@@ -147,7 +159,7 @@ export function AffiliatesPanel() {
 
   return (
     <div className="space-y-6">
-      {structure && (
+      {structure && isCommand && (
         <div className={cardClass}>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">Commission Structure</p>
           <textarea
@@ -169,6 +181,14 @@ export function AffiliatesPanel() {
           </button>
         </div>
       )}
+      {structure && !isCommand && structure.paragraphs.length > 0 && (
+        <div className="office-card">
+          <p className="text-xs uppercase tracking-[0.2em] text-white/40">Commission Structure</p>
+          {structure.paragraphs.map((p, i) => (
+            <p key={i} className="mt-3 text-sm text-white/70">{p}</p>
+          ))}
+        </div>
+      )}
 
       <div className={cardClass}>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -181,13 +201,15 @@ export function AffiliatesPanel() {
             >
               Export CSV
             </a>
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
-            >
-              + New Affiliate
-            </button>
+            {isCommand && (
+              <button
+                type="button"
+                onClick={() => setCreating(true)}
+                className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+              >
+                + New Affiliate
+              </button>
+            )}
           </div>
         </div>
 
@@ -206,13 +228,14 @@ export function AffiliatesPanel() {
                 <tr className="border-b border-white/15 text-[10px] uppercase tracking-[0.1em] text-white/40">
                   <th className="pb-3 pr-4 font-normal">Affiliate</th>
                   <th className="pb-3 pr-4 font-normal">Code</th>
+                  <th className="pb-3 pr-4 font-normal">Portal Code</th>
                   <th className="pb-3 pr-4 font-normal">Orders</th>
                   <th className="pb-3 pr-4 font-normal">Gross Revenue</th>
                   <th className="pb-3 pr-4 font-normal">Commission Earned</th>
                   <th className="pb-3 pr-4 font-normal">Paid</th>
                   <th className="pb-3 pr-4 font-normal">Balance Owed</th>
                   <th className="pb-3 pr-4 font-normal">YTD Revenue</th>
-                  <th className="pb-3 font-normal">Actions</th>
+                  {isCommand && <th className="pb-3 font-normal">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -224,6 +247,19 @@ export function AffiliatesPanel() {
                       {!a.active && <p className="text-xs text-red-300">Inactive</p>}
                     </td>
                     <td className="py-3 pr-4 font-mono text-xs">{a.code ?? "—"}</td>
+                    <td className="py-3 pr-4">
+                      <p className="font-mono text-xs text-gold">{a.portalCode ?? "—"}</p>
+                      {isCommand && (
+                        <button
+                          type="button"
+                          onClick={() => handleRegenerateCode(a.id)}
+                          disabled={regeneratingId === a.id}
+                          className="mt-1 text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-gold disabled:opacity-40"
+                        >
+                          {regeneratingId === a.id ? "Regenerating..." : "Regenerate"}
+                        </button>
+                      )}
+                    </td>
                     <td className="py-3 pr-4">{a.ordersDriven}</td>
                     <td className="py-3 pr-4">${a.grossRevenue.toFixed(2)}</td>
                     <td className="py-3 pr-4">${a.commissionEarned.toFixed(2)}</td>
@@ -232,6 +268,7 @@ export function AffiliatesPanel() {
                     <td className="py-3 pr-4 text-xs text-white/50">
                       ${a.ytdRevenue.toFixed(2)} / ${a.ytdCommission.toFixed(2)} comm.
                     </td>
+                    {isCommand && (
                     <td className="py-3">
                       <div className="flex flex-wrap gap-2">
                         <button
@@ -292,6 +329,7 @@ export function AffiliatesPanel() {
                         </div>
                       )}
                     </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -300,7 +338,7 @@ export function AffiliatesPanel() {
         </div>
       </div>
 
-      {creating && (
+      {creating && isCommand && (
         <form onSubmit={handleCreate} className={cardClass}>
           <p className="text-xs uppercase tracking-[0.2em] text-gold">New Affiliate</p>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -1,8 +1,10 @@
 export {
   listAffiliates,
   getAffiliateById,
+  getAffiliateByEmail,
   createAffiliate,
   updateAffiliate,
+  regeneratePortalCode,
   deleteAffiliate,
   listPayouts,
   recordPayout,

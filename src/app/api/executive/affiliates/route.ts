@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireCommandSession } from "@/lib/executive/require-auth";
+import { requireCommandSession, requireExecutiveSession } from "@/lib/executive/require-auth";
 import {
   listAffiliates,
   createAffiliate,
@@ -32,9 +32,10 @@ const CSV_COLUMNS = [
   "ytdCommission",
 ];
 
-// Affiliates are /command-only — /office never sees or can call this.
+// Both realms can view affiliates (production/emails/codes); only /command
+// can create new ones (see POST below).
 export const GET = withApiErrorHandling(async (request: Request) => {
-  if (!(await requireCommandSession())) {
+  if (!(await requireExecutiveSession())) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
