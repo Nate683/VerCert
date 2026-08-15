@@ -1,5 +1,5 @@
 import { query } from "@/lib/db";
-import { products } from "@/lib/products";
+import { listProducts } from "@/lib/products";
 import type { CartItem } from "@/lib/types";
 
 export type LowInventoryAlert = {
@@ -12,7 +12,10 @@ export type LowInventoryAlert = {
 type InventoryRow = { slug: string; quantity: number; threshold: number };
 
 export async function getLowInventoryAlerts(): Promise<LowInventoryAlert[]> {
-  const rows = await query<InventoryRow>("SELECT * FROM inventory WHERE quantity <= threshold");
+  const [rows, products] = await Promise.all([
+    query<InventoryRow>("SELECT * FROM inventory WHERE quantity <= threshold"),
+    listProducts(),
+  ]);
 
   return rows
     .map((row) => {
@@ -33,6 +36,25 @@ export async function getInventoryLevel(
 
 export async function listInventory(): Promise<InventoryRow[]> {
   return query<InventoryRow>("SELECT * FROM inventory ORDER BY slug");
+}
+
+// Creates (or updates) the stock row for a product — used when a product is
+// added/edited from the executive Products tab.
+export async function upsertInventory(
+  slug: string,
+  quantity: number,
+  threshold = 10
+): Promise<void> {
+  await query(
+    `INSERT INTO inventory (slug, quantity, threshold)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (slug) DO UPDATE SET quantity = EXCLUDED.quantity, threshold = EXCLUDED.threshold`,
+    [slug, quantity, threshold]
+  );
+}
+
+export async function deleteInventory(slug: string): Promise<void> {
+  await query("DELETE FROM inventory WHERE slug = $1", [slug]);
 }
 
 // Returns the slugs that don't have enough stock to fulfill the given items —

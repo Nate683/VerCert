@@ -5,12 +5,26 @@ import { CATEGORIES } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { ProductCard } from "@/components/ProductCard";
 
+type SortOption = "name" | "price-asc" | "price-desc" | "purity";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "name", label: "Name" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "purity", label: "Purity" },
+];
+
+function minPrice(product: Product): number {
+  return Math.min(...product.sizes.map((s) => s.priceUsd));
+}
+
 export function ShopClient({ products }: { products: Product[] }) {
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>("All");
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<SortOption>("name");
 
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    const result = products.filter((p) => {
       const matchesCategory = category === "All" || p.category === category;
       const q = query.trim().toLowerCase();
       const matchesQuery =
@@ -20,7 +34,20 @@ export function ShopClient({ products }: { products: Product[] }) {
         p.category.toLowerCase().includes(q);
       return matchesCategory && matchesQuery;
     });
-  }, [products, category, query]);
+
+    return result.sort((a, b) => {
+      switch (sort) {
+        case "price-asc":
+          return minPrice(a) - minPrice(b);
+        case "price-desc":
+          return minPrice(b) - minPrice(a);
+        case "purity":
+          return b.purityPercent - a.purityPercent;
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+  }, [products, category, query, sort]);
 
   return (
     <div>
@@ -41,13 +68,26 @@ export function ShopClient({ products }: { products: Product[] }) {
             </button>
           ))}
         </div>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name or CAS number..."
-          className="w-full border border-white/15 bg-transparent px-4 py-2 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none sm:w-72"
-        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or CAS number..."
+            className="w-full border border-white/15 bg-transparent px-4 py-2 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none sm:w-72"
+          />
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortOption)}
+            className="border border-white/15 bg-black px-4 py-2 text-xs uppercase tracking-[0.1em] text-white/70 focus:border-gold focus:outline-none"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                Sort: {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <p className="mt-6 text-xs uppercase tracking-[0.2em] text-white/40">

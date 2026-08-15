@@ -12,13 +12,15 @@ import { ActivityFeed } from "./ActivityFeed";
 import { OrderTable } from "./OrderTable";
 import { CustomersPanel } from "./CustomersPanel";
 import { AssistantChat } from "./AssistantChat";
+import { ProductsPanel } from "./ProductsPanel";
 
 type Variant = "command" | "office";
-type Tab = "overview" | "orders" | "customers" | "assistant";
+type Tab = "overview" | "orders" | "products" | "customers" | "assistant";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "orders", label: "Orders" },
+  { id: "products", label: "Products" },
   { id: "customers", label: "Customers" },
   { id: "assistant", label: "Assistant" },
 ];
@@ -155,6 +157,7 @@ export function ExecutiveTerminal({
             ))}
 
           {tab === "orders" && <OrderTable variant={variant} />}
+          {tab === "products" && <ProductsPanel variant={variant} />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
           {tab === "assistant" && <AssistantChat variant={variant} />}
         </div>

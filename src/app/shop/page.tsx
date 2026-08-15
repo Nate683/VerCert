@@ -1,4 +1,4 @@
-import { products } from "@/lib/products";
+import { listProducts } from "@/lib/products";
 import { ShopClient } from "./ShopClient";
 import { buildMetadata } from "@/lib/seo";
 
@@ -8,7 +8,13 @@ export const metadata = buildMetadata({
   path: "/shop",
 });
 
-export default function ShopPage() {
+// Products live in Postgres and can change anytime via the executive
+// Products tab, so this page is rendered on demand rather than prebuilt.
+export const dynamic = "force-dynamic";
+
+export default async function ShopPage() {
+  const products = await listProducts();
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
       <div className="border-b border-white/10 pb-8">

@@ -2,8 +2,14 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { lookupCoa } from "@/lib/coa";
 import type { CoaResult } from "@/lib/types";
+
+async function fetchCoa(batch: string): Promise<CoaResult | null> {
+  const res = await fetch(`/api/coa?batch=${encodeURIComponent(batch)}`, { cache: "no-store" });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.result ?? null;
+}
 
 function CoaLookupForm() {
   const searchParams = useSearchParams();
@@ -15,13 +21,13 @@ function CoaLookupForm() {
     if (prefill) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from the URL query on mount
       setBatchInput(prefill);
-      setResult(lookupCoa(prefill));
+      fetchCoa(prefill).then(setResult);
     }
   }, [searchParams]);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setResult(lookupCoa(batchInput));
+    setResult(await fetchCoa(batchInput));
   }
 
   return (

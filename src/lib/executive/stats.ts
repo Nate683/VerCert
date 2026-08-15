@@ -1,5 +1,4 @@
-import type { Order } from "@/lib/types";
-import { products } from "@/lib/products";
+import type { Order, Product } from "@/lib/types";
 
 export type RevenuePoint = { date: string; revenue: number };
 
@@ -41,7 +40,7 @@ function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
-export function computeOverview(orders: Order[]): ExecutiveOverview {
+export function computeOverview(orders: Order[], products: Product[]): ExecutiveOverview {
   const now = new Date();
   // "Paid" for revenue purposes means the order has ever been paid and
   // wasn't subsequently cancelled — not just currently sitting in the

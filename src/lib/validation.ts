@@ -57,6 +57,42 @@ export const orderCancelSchema = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 
+const bulkTierSchema = z.object({
+  minQuantity: z.number().int().min(2).max(100000),
+  priceUsd: z.number().min(0).max(1000000),
+});
+
+const sizeOptionSchema = z.object({
+  label: z.string().trim().min(1).max(50),
+  priceUsd: z.number().min(0).max(1000000),
+  bulkTiers: z.array(bulkTierSchema).max(10).optional(),
+});
+
+export const productSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "slug must be lowercase letters, numbers, and hyphens"),
+  name: z.string().trim().min(1).max(200),
+  category: z.string().trim().min(1).max(100),
+  casNumber: z.string().trim().min(1).max(50),
+  molecularFormula: z.string().trim().min(1).max(100),
+  molecularWeight: z.string().trim().min(1).max(50),
+  purityPercent: z.number().min(0).max(100),
+  sequenceOrForm: z.string().trim().min(1).max(2000),
+  storage: z.string().trim().min(1).max(500),
+  sizes: z.array(sizeOptionSchema).min(1).max(20),
+  batchNumbers: z.array(z.string().trim().min(1).max(50)).max(50),
+  summary: z.string().trim().min(1).max(500),
+  description: z.array(z.string().trim().min(1).max(2000)).min(1).max(20),
+  initialStock: z.number().int().min(0).max(1000000).optional(),
+});
+
+export const productUpdateSchema = productSchema.partial().omit({ slug: true });
+
 export async function parseBody<T extends z.ZodTypeAny>(
   request: Request,
   schema: T

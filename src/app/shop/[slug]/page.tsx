@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { products, getProductBySlug } from "@/lib/products";
-import { VialGlyph } from "@/components/VialGlyph";
+import { getProductBySlug } from "@/lib/products";
+import { ProductGallery } from "@/components/ProductGallery";
 import { AddToCartPanel } from "./AddToCartPanel";
 import { buildMetadata } from "@/lib/seo";
 
 type Params = { slug: string };
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
-}
+// Products live in Postgres and can change anytime via the executive
+// Products tab, so this page is rendered on demand rather than prebuilt.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -18,7 +18,7 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) return buildMetadata({ title: "Product Not Found | VeriCert", noIndex: true });
   return buildMetadata({
     title: `${product.name} | VeriCert`,
@@ -33,7 +33,7 @@ export default async function ProductDetailPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
   const specs = [
@@ -81,9 +81,11 @@ export default async function ProductDetailPage({
       </p>
 
       <div className="mt-8 grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <div className="flex items-center justify-center border border-white/10 bg-white/[0.02] p-16">
-          <VialGlyph className="h-56 w-56 text-gold/70" />
-        </div>
+        <ProductGallery
+          name={product.name}
+          primaryImageUrl={product.primaryImageUrl}
+          galleryImageUrls={product.galleryImageUrls}
+        />
 
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-gold">

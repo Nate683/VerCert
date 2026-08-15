@@ -5,6 +5,7 @@ import { listUsers } from "@/lib/users/store";
 import { computeOverview } from "@/lib/executive/stats";
 import { computeCustomerSummaries } from "@/lib/executive/customers";
 import { getLowInventoryAlerts } from "@/lib/inventory";
+import { listProducts } from "@/lib/products";
 import { askStoreAssistant } from "@/lib/anthropic";
 
 export const dynamic = "force-dynamic";
@@ -24,8 +25,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "A question is required." }, { status: 400 });
   }
 
-  const [orders, users] = await Promise.all([listOrders(), listUsers()]);
-  const overview = computeOverview(orders);
+  const [orders, users, products] = await Promise.all([listOrders(), listUsers(), listProducts()]);
+  const overview = computeOverview(orders, products);
   const customers = computeCustomerSummaries(users, orders);
   const lowInventory = await getLowInventoryAlerts();
 

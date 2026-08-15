@@ -1,4 +1,4 @@
-import { products } from "./products";
+import { getProductByBatchNumber } from "./products";
 import type { CoaResult } from "./types";
 
 const LABS = [
@@ -15,12 +15,18 @@ function dateFromBatch(batch: string, offsetDays = 0) {
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
-function buildCoa(batch: string, index: number): CoaResult {
-  const product = products.find((p) => p.batchNumbers.includes(batch));
-  if (!product) {
-    throw new Error(`No product found for batch ${batch}`);
-  }
-  const lab = LABS[index % LABS.length];
+// Deterministic pseudo-random pick derived from the batch string itself, so
+// the same batch always resolves to the same lab without precomputing a table.
+function pickLab(batch: string): string {
+  const sum = [...batch].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return LABS[sum % LABS.length];
+}
+
+export async function lookupCoa(batchNumber: string): Promise<CoaResult | null> {
+  const batch = batchNumber.trim().toUpperCase();
+  const product = await getProductByBatchNumber(batch);
+  if (!product) return null;
+
   return {
     batchNumber: batch,
     productName: product.name,
@@ -29,7 +35,7 @@ function buildCoa(batch: string, index: number): CoaResult {
     testMethod: "Reverse-Phase HPLC / ESI Mass Spectrometry",
     dateTested: dateFromBatch(batch, -3),
     dateIssued: dateFromBatch(batch, 0),
-    lab,
+    lab: pickLab(batch),
     appearance: "White to off-white lyophilized powder",
     tests: [
       {
@@ -64,13 +70,4 @@ function buildCoa(batch: string, index: number): CoaResult {
       },
     ],
   };
-}
-
-export const coaDatabase: Record<string, CoaResult> = Object.fromEntries(
-  products.flatMap((p) => p.batchNumbers).map((batch, i) => [batch, buildCoa(batch, i)])
-);
-
-export function lookupCoa(batchNumber: string): CoaResult | null {
-  const key = batchNumber.trim().toUpperCase();
-  return coaDatabase[key] ?? null;
 }

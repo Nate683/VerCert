@@ -1,6 +1,12 @@
+export type BulkPriceTier = {
+  minQuantity: number;
+  priceUsd: number; // price per unit once minQuantity is reached
+};
+
 export type SizeOption = {
   label: string;
   priceUsd: number;
+  bulkTiers?: BulkPriceTier[];
 };
 
 export type Product = {
@@ -17,6 +23,11 @@ export type Product = {
   batchNumbers: string[];
   summary: string;
   description: string[];
+  primaryImageUrl?: string;
+  galleryImageUrls?: string[];
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type CoaResult = {

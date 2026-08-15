@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { products } from "@/lib/products";
+import { listProducts, resolveUnitPrice } from "@/lib/products";
 import { createOrder, updateOrder } from "@/lib/orders/store";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
 import { sendOrderConfirmationEmail } from "@/lib/email";
@@ -34,6 +34,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const { customer, items, paymentMethod } = parsed.data;
 
   // Recompute pricing server-side from the product catalog — never trust client-sent prices.
+  const products = await listProducts();
   const resolvedItems: CartItem[] = [];
   for (const item of items) {
     const product = products.find((p) => p.slug === item.slug);
@@ -45,7 +46,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       slug: product.slug,
       name: product.name,
       sizeLabel: size.label,
-      priceUsd: size.priceUsd,
+      priceUsd: resolveUnitPrice(size, item.quantity),
       quantity: item.quantity,
     });
   }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
+import { resolveUnitPrice } from "@/lib/products";
 import type { Product } from "@/lib/types";
 
 export function AddToCartPanel({ product }: { product: Product }) {
@@ -12,13 +13,14 @@ export function AddToCartPanel({ product }: { product: Product }) {
   const { addItem } = useCart();
 
   const size = product.sizes[sizeIndex];
+  const unitPrice = resolveUnitPrice(size, quantity);
 
   function handleAdd() {
     addItem({
       slug: product.slug,
       name: product.name,
       sizeLabel: size.label,
-      priceUsd: size.priceUsd,
+      priceUsd: unitPrice,
       quantity,
     });
     setAdded(true);
@@ -45,10 +47,26 @@ export function AddToCartPanel({ product }: { product: Product }) {
         ))}
       </div>
 
+      {size.bulkTiers && size.bulkTiers.length > 0 && (
+        <ul className="mt-3 space-y-1 text-xs text-white/40">
+          {size.bulkTiers
+            .slice()
+            .sort((a, b) => a.minQuantity - b.minQuantity)
+            .map((tier) => (
+              <li key={tier.minQuantity}>
+                Buy {tier.minQuantity}+: ${tier.priceUsd.toFixed(2)} each
+              </li>
+            ))}
+        </ul>
+      )}
+
       <div className="mt-6 flex items-end justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-gold">Price</p>
-          <p className="mt-2 font-serif text-3xl text-white">${size.priceUsd.toFixed(2)}</p>
+          <p className="mt-2 font-serif text-3xl text-white">${unitPrice.toFixed(2)}</p>
+          {unitPrice !== size.priceUsd && (
+            <p className="text-xs text-white/40 line-through">${size.priceUsd.toFixed(2)}</p>
+          )}
         </div>
         <div className="flex items-center border border-white/15">
           <button

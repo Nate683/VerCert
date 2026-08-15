@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { products } from "@/lib/products";
+import { listProducts } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { VialGlyph } from "@/components/VialGlyph";
 import { buildMetadata } from "@/lib/seo";
@@ -10,6 +10,10 @@ export const metadata = buildMetadata({
     "High-purity synthetic peptides and reference compounds for laboratory research, each accompanied by an independent certificate of analysis.",
   path: "/",
 });
+
+// Products live in Postgres and can change anytime via the executive
+// Products tab, so this page is rendered on demand rather than prebuilt.
+export const dynamic = "force-dynamic";
 
 const TRUST_POINTS = [
   {
@@ -26,7 +30,8 @@ const TRUST_POINTS = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const products = await listProducts();
   const featured = products.slice(0, 4);
 
   return (

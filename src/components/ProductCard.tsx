@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types";
-import { VialGlyph } from "./VialGlyph";
+import { ProductImage } from "./ProductImage";
 
 export function ProductCard({ product }: { product: Product }) {
   const minPrice = Math.min(...product.sizes.map((s) => s.priceUsd));
@@ -8,12 +8,10 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/shop/${product.slug}`}
-      className="group flex flex-col border border-white/10 bg-white/[0.02] p-6 transition-colors duration-300 hover:border-gold/50"
+      className="group flex flex-col border border-white/10 bg-white/[0.02] transition-colors duration-300 hover:border-gold/50"
     >
-      <div className="flex h-40 items-center justify-center text-white/25 transition-colors duration-300 group-hover:text-gold/70">
-        <VialGlyph className="h-28 w-28" />
-      </div>
-      <div className="mt-6 border-t border-white/10 pt-4">
+      <ProductImage src={product.primaryImageUrl} name={product.name} zoom sizes="(min-width: 1024px) 25vw, 50vw" />
+      <div className="border-t border-white/10 p-6">
         <p className="text-[11px] uppercase tracking-[0.2em] text-gold/80">
           {product.category}
         </p>

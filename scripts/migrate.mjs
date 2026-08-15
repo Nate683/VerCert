@@ -16,20 +16,6 @@ if (!connectionString) {
 
 const sql = neon(connectionString);
 
-// Initial stock levels — same illustrative values the app shipped with.
-const INITIAL_INVENTORY = {
-  "bpc-157": { quantity: 42, threshold: 20 },
-  "tb-500": { quantity: 18, threshold: 20 },
-  semaglutide: { quantity: 65, threshold: 25 },
-  tirzepatide: { quantity: 12, threshold: 20 },
-  epithalon: { quantity: 8, threshold: 15 },
-  selank: { quantity: 30, threshold: 15 },
-  "nad-plus": { quantity: 5, threshold: 15 },
-  "ghk-cu": { quantity: 50, threshold: 20 },
-  "aod-9604": { quantity: 22, threshold: 15 },
-  "ipamorelin-cjc-1295-blend": { quantity: 9, threshold: 15 },
-};
-
 async function main() {
   await sql`
     CREATE TABLE IF NOT EXISTS users (
@@ -82,6 +68,29 @@ async function main() {
   `;
 
   await sql`
+    CREATE TABLE IF NOT EXISTS products (
+      slug TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      cas_number TEXT NOT NULL,
+      molecular_formula TEXT NOT NULL,
+      molecular_weight TEXT NOT NULL,
+      purity_percent DOUBLE PRECISION NOT NULL,
+      sequence_or_form TEXT NOT NULL,
+      storage TEXT NOT NULL,
+      sizes TEXT NOT NULL,
+      batch_numbers TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      description TEXT NOT NULL,
+      primary_image_url TEXT,
+      gallery_image_urls TEXT,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
     CREATE TABLE IF NOT EXISTS rate_limits (
       bucket_key TEXT PRIMARY KEY,
       count INTEGER NOT NULL,
@@ -90,18 +99,6 @@ async function main() {
   `;
 
   console.log("[db:migrate] Schema is up to date.");
-
-  const [{ count }] = await sql`SELECT COUNT(*)::int as count FROM inventory`;
-  if (count === 0) {
-    for (const [slug, level] of Object.entries(INITIAL_INVENTORY)) {
-      await sql`
-        INSERT INTO inventory (slug, quantity, threshold)
-        VALUES (${slug}, ${level.quantity}, ${level.threshold})
-        ON CONFLICT DO NOTHING
-      `;
-    }
-    console.log(`[db:migrate] Seeded initial inventory (${Object.keys(INITIAL_INVENTORY).length} products).`);
-  }
 }
 
 main().catch((err) => {
