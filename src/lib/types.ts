@@ -191,6 +191,10 @@ export type Customer = {
   verificationTokenExpiresAt?: string;
   resetToken?: string;
   resetTokenExpiresAt?: string;
+  // Self-service email change — set while the new address awaits verification.
+  pendingEmail?: string;
+  pendingEmailToken?: string;
+  pendingEmailTokenExpiresAt?: string;
   // Grants access to the matching executive dashboard via the normal login.
   role?: "command" | "office";
   // Executive-facing only — never shown to the customer.
@@ -258,7 +262,12 @@ export type FunnelStats = {
 
 export type PublicCustomer = Omit<
   Customer,
-  "passwordHash" | "verificationToken" | "resetToken" | "resetTokenExpiresAt"
+  | "passwordHash"
+  | "verificationToken"
+  | "resetToken"
+  | "resetTokenExpiresAt"
+  | "pendingEmailToken"
+  | "pendingEmailTokenExpiresAt"
 >;
 
 // --- Financial ledger (manual bookkeeping) ---

@@ -234,6 +234,12 @@ async function main() {
   // Customer notes (executive-facing only, never shown to the customer).
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS notes TEXT`;
 
+  // Self-service email change — new address is verified before it replaces
+  // the account's email so login/notifications never break mid-change.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email_token TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email_token_expires_at TIMESTAMPTZ`;
+
   // Financial ledger — manual bookkeeping entries. All amounts are USD.
   await sql`
     CREATE TABLE IF NOT EXISTS expenses (

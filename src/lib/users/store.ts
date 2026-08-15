@@ -17,6 +17,9 @@ type UserRow = {
   verification_token_expires_at: string | null;
   reset_token: string | null;
   reset_token_expires_at: string | null;
+  pending_email: string | null;
+  pending_email_token: string | null;
+  pending_email_token_expires_at: string | null;
   role: string | null;
   notes: string | null;
 };
@@ -34,6 +37,9 @@ function rowToUser(row: UserRow): Customer {
     verificationTokenExpiresAt: row.verification_token_expires_at ?? undefined,
     resetToken: row.reset_token ?? undefined,
     resetTokenExpiresAt: row.reset_token_expires_at ?? undefined,
+    pendingEmail: row.pending_email ?? undefined,
+    pendingEmailToken: row.pending_email_token ?? undefined,
+    pendingEmailTokenExpiresAt: row.pending_email_token_expires_at ?? undefined,
     role: (row.role as Customer["role"]) ?? undefined,
     notes: row.notes ?? undefined,
   };
@@ -111,6 +117,11 @@ export async function getUserByVerificationToken(token: string): Promise<Custome
   return rows[0] ? rowToUser(rows[0]) : null;
 }
 
+export async function getUserByPendingEmailToken(token: string): Promise<Customer | null> {
+  const rows = await query<UserRow>(`${SELECT_ALL} WHERE pending_email_token = $1`, [token]);
+  return rows[0] ? rowToUser(rows[0]) : null;
+}
+
 // Maps Customer (camelCase) fields to their Postgres column names.
 const PATCHABLE_COLUMNS: Record<string, string> = {
   email: "email",
@@ -122,6 +133,9 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   verificationTokenExpiresAt: "verification_token_expires_at",
   resetToken: "reset_token",
   resetTokenExpiresAt: "reset_token_expires_at",
+  pendingEmail: "pending_email",
+  pendingEmailToken: "pending_email_token",
+  pendingEmailTokenExpiresAt: "pending_email_token_expires_at",
   role: "role",
   notes: "notes",
 };

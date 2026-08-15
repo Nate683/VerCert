@@ -20,6 +20,10 @@ import { IntelligencePanel } from "./IntelligencePanel";
 import { AffiliatesPanel } from "./AffiliatesPanel";
 import { AdminPanel } from "./AdminPanel";
 import { LedgerPanel } from "./LedgerPanel";
+import { LiveIndicator } from "./LiveIndicator";
+import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
+import { AnimatedNumber } from "./AnimatedNumber";
+import { ChangeBadge } from "./ChangeBadge";
 
 type Variant = "command" | "office";
 type Tab =
@@ -91,22 +95,11 @@ export function ExecutiveTerminal({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time fade-in trigger + mount-time fetch
     setMounted(true);
     loadOverview();
-
-    // Poll for fresh revenue/order/activity data so the dashboard reflects
-    // sales as they happen, without requiring a manual page reload.
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") loadOverview();
-    }, 20000);
-    function handleVisibility() {
-      if (document.visibilityState === "visible") loadOverview();
-    }
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
   }, [loadOverview]);
+
+  // Poll for fresh revenue/order/activity data so the dashboard reflects
+  // sales as they happen, without requiring a manual page reload.
+  useLiveRefresh(loadOverview);
 
   useEffect(() => {
     if (!isCommand) return;
@@ -185,29 +178,40 @@ export function ExecutiveTerminal({
         <div className="mt-8">
           {tab === "overview" && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`h-2 w-2 rounded-full animate-pulse ${
-                    isCommand ? "bg-gold" : "bg-[var(--office-gold)]"
-                  }`}
-                />
-                <span
-                  className={`text-[11px] uppercase tracking-[0.25em] ${
-                    isCommand ? "text-white/40" : "text-[var(--office-fg)]/50"
-                  }`}
-                >
-                  Live — refreshes every 20s
-                </span>
-              </div>
+              <LiveIndicator variant={variant} asOf={overview?.computedAt} />
               {isCommand ? (
                 <CommandOverview overview={overview} lowInventory={lowInventory} />
               ) : (
                 <div className="space-y-8">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <StatCard variant={variant} label="Revenue — Today" value={`$${(overview?.revenueToday ?? 0).toFixed(2)}`} />
-                  <StatCard variant={variant} label="Revenue — MTD" value={`$${(overview?.revenueMtd ?? 0).toFixed(2)}`} />
-                  <StatCard variant={variant} label="Revenue — All Time" value={`$${(overview?.revenueAllTime ?? 0).toFixed(2)}`} />
-                  <StatCard variant={variant} label="Average Order Value" value={`$${(overview?.averageOrderValue ?? 0).toFixed(2)}`} />
+                  <StatCard
+                    variant={variant}
+                    label="Revenue — Today"
+                    value={`$${(overview?.revenueToday ?? 0).toFixed(2)}`}
+                    animate={{ value: overview?.revenueToday ?? 0, format: (n) => `$${n.toFixed(2)}` }}
+                    changePercent={overview?.revenueTodayChangePercent ?? null}
+                    changeLabel="vs yesterday"
+                  />
+                  <StatCard
+                    variant={variant}
+                    label="Revenue — MTD"
+                    value={`$${(overview?.revenueMtd ?? 0).toFixed(2)}`}
+                    animate={{ value: overview?.revenueMtd ?? 0, format: (n) => `$${n.toFixed(2)}` }}
+                    changePercent={overview?.revenueMtdChangePercent ?? null}
+                    changeLabel="vs same period last month"
+                  />
+                  <StatCard
+                    variant={variant}
+                    label="Revenue — All Time"
+                    value={`$${(overview?.revenueAllTime ?? 0).toFixed(2)}`}
+                    animate={{ value: overview?.revenueAllTime ?? 0, format: (n) => `$${n.toFixed(2)}` }}
+                  />
+                  <StatCard
+                    variant={variant}
+                    label="Average Order Value"
+                    value={`$${(overview?.averageOrderValue ?? 0).toFixed(2)}`}
+                    animate={{ value: overview?.averageOrderValue ?? 0, format: (n) => `$${n.toFixed(2)}` }}
+                  />
                   <StatCard variant={variant} label="Total Orders" value={String(overview?.orderCount ?? 0)} />
                   <StatCard
                     variant={variant}
@@ -253,11 +257,23 @@ function CommandOverview({
   overview: ExecutiveOverview | null;
   lowInventory: LowInventoryAlert[];
 }) {
-  const secondaryStats = [
-    { label: "Revenue — MTD", value: `$${(overview?.revenueMtd ?? 0).toFixed(2)}` },
-    { label: "Revenue — All Time", value: `$${(overview?.revenueAllTime ?? 0).toFixed(2)}` },
-    { label: "Average Order Value", value: `$${(overview?.averageOrderValue ?? 0).toFixed(2)}` },
-    { label: "Total Orders", value: String(overview?.orderCount ?? 0) },
+  const secondaryStats: {
+    label: string;
+    value: number;
+    isCurrency: boolean;
+    changePercent?: number | null;
+    changeLabel?: string;
+  }[] = [
+    {
+      label: "Revenue — MTD",
+      value: overview?.revenueMtd ?? 0,
+      isCurrency: true,
+      changePercent: overview?.revenueMtdChangePercent ?? null,
+      changeLabel: "vs last month",
+    },
+    { label: "Revenue — All Time", value: overview?.revenueAllTime ?? 0, isCurrency: true },
+    { label: "Average Order Value", value: overview?.averageOrderValue ?? 0, isCurrency: true },
+    { label: "Total Orders", value: overview?.orderCount ?? 0, isCurrency: false },
   ];
 
   return (
@@ -269,9 +285,13 @@ function CommandOverview({
         <div className="border-b border-white/10 pb-6 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-8">
           <p className="text-[11px] uppercase tracking-[0.3em] text-gold">Revenue — Today</p>
           <p className="command-hero-figure mt-4 font-serif text-6xl text-white">
-            ${(overview?.revenueToday ?? 0).toFixed(2)}
+            <AnimatedNumber value={overview?.revenueToday ?? 0} format={(n) => `$${n.toFixed(2)}`} />
           </p>
-          <p className="mt-3 text-xs text-white/40">
+          <p className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+            <ChangeBadge changePercent={overview?.revenueTodayChangePercent ?? null} />
+            <span className="text-white/30">vs yesterday</span>
+          </p>
+          <p className="mt-2 text-xs text-white/40">
             {overview?.pendingPaymentsCount ?? 0} payment(s) awaiting confirmation — $
             {(overview?.pendingPaymentsAmount ?? 0).toFixed(2)} outstanding
           </p>
@@ -280,7 +300,19 @@ function CommandOverview({
           {secondaryStats.map((stat) => (
             <div key={stat.label}>
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">{stat.label}</p>
-              <p className="command-hero-figure mt-2 font-mono text-xl text-gold">{stat.value}</p>
+              <p className="command-hero-figure mt-2 font-mono text-xl text-gold">
+                {stat.isCurrency ? (
+                  <AnimatedNumber value={stat.value} format={(n) => `$${n.toFixed(2)}`} />
+                ) : (
+                  <AnimatedNumber value={stat.value} format={(n) => String(Math.round(n))} />
+                )}
+              </p>
+              {stat.changePercent !== undefined && (
+                <p className="mt-1 text-[11px]">
+                  <ChangeBadge changePercent={stat.changePercent ?? null} />{" "}
+                  <span className="text-white/30">{stat.changeLabel}</span>
+                </p>
+              )}
             </div>
           ))}
         </div>

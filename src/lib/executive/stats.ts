@@ -17,7 +17,11 @@ export type ActivityEvent = {
 
 export type ExecutiveOverview = {
   revenueToday: number;
+  revenueYesterday: number;
+  revenueTodayChangePercent: number | null;
   revenueMtd: number;
+  revenueMtdPriorPeriod: number;
+  revenueMtdChangePercent: number | null;
   revenueAllTime: number;
   orderCount: number;
   averageOrderValue: number;
@@ -26,6 +30,7 @@ export type ExecutiveOverview = {
   chartSeries: RevenuePoint[];
   topProducts: TopProduct[];
   recentActivity: ActivityEvent[];
+  computedAt: string;
 };
 
 function isSameDay(a: Date, b: Date) {
@@ -40,6 +45,11 @@ function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
+function changePercent(current: number, prior: number): number | null {
+  if (prior <= 0) return null;
+  return ((current - prior) / prior) * 100;
+}
+
 export function computeOverview(orders: Order[], products: Product[]): ExecutiveOverview {
   const now = new Date();
   // "Paid" for revenue purposes means the order has ever been paid and
@@ -48,14 +58,24 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
   const paidOrders = orders.filter((o) => o.paidAt && o.status !== "cancelled" && !o.refundedAt);
 
   let revenueToday = 0;
+  let revenueYesterday = 0;
   let revenueMtd = 0;
+  let revenueMtdPriorPeriod = 0;
   let revenueAllTime = 0;
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const priorMonthSameDay = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
 
   for (const order of paidOrders) {
     const paidAt = new Date(order.paidAt!);
     revenueAllTime += order.total;
     if (isSameMonth(paidAt, now)) revenueMtd += order.total;
     if (isSameDay(paidAt, now)) revenueToday += order.total;
+    if (isSameDay(paidAt, yesterday)) revenueYesterday += order.total;
+    if (isSameMonth(paidAt, priorMonthSameDay) && paidAt.getDate() <= priorMonthSameDay.getDate()) {
+      revenueMtdPriorPeriod += order.total;
+    }
   }
 
   const pending = orders.filter((o) => o.status === "awaiting_payment");
@@ -120,7 +140,11 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
 
   return {
     revenueToday,
+    revenueYesterday,
+    revenueTodayChangePercent: changePercent(revenueToday, revenueYesterday),
     revenueMtd,
+    revenueMtdPriorPeriod,
+    revenueMtdChangePercent: changePercent(revenueMtd, revenueMtdPriorPeriod),
     revenueAllTime,
     orderCount: orders.length,
     averageOrderValue,
@@ -129,6 +153,7 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
     chartSeries,
     topProducts,
     recentActivity,
+    computedAt: now.toISOString(),
   };
 }
 

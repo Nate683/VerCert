@@ -2,34 +2,24 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { FinancialSummary } from "@/lib/executive/financials";
+import { LiveIndicator } from "./LiveIndicator";
+import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
+import { ChangeBadge } from "./ChangeBadge";
 
 function fmt(n: number) {
   return `$${n.toFixed(2)}`;
 }
 
-function ChangeBadge({ changePercent }: { changePercent: number | null }) {
-  if (changePercent === null) return <span className="text-white/30">—</span>;
-  const positive = changePercent >= 0;
-  return (
-    <span className={positive ? "text-emerald-400" : "text-red-300"}>
-      {positive ? "▲" : "▼"} {Math.abs(changePercent).toFixed(1)}%
-    </span>
-  );
-}
-
 export function FinancialsPanel({ variant }: { variant: "command" | "office" }) {
   const isCommand = variant === "command";
   const [financials, setFinancials] = useState<FinancialSummary | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    setLoading(true);
     const res = await fetch("/api/executive/financials", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setFinancials(data.financials);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -37,9 +27,11 @@ export function FinancialsPanel({ variant }: { variant: "command" | "office" }) 
     load();
   }, [load]);
 
+  useLiveRefresh(load);
+
   const cardClass = isCommand ? "border border-gold/20 bg-white/[0.02] p-6" : "office-card";
 
-  if (loading || !financials) {
+  if (!financials) {
     return <p className="text-sm text-white/30">Loading...</p>;
   }
 
@@ -53,6 +45,7 @@ export function FinancialsPanel({ variant }: { variant: "command" | "office" }) 
 
   return (
     <div className="space-y-6">
+      <LiveIndicator variant={variant} />
       <div className={cardClass}>
         <div className="flex items-center justify-between">
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">Revenue by Period</p>

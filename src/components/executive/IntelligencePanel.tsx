@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { RevenuePoint } from "@/lib/executive/stats";
 import type { FunnelStats } from "@/lib/types";
 import type { CustomerSummary } from "@/lib/executive/customers";
+import { LiveIndicator } from "./LiveIndicator";
+import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
 
 const RANGES = [7, 30, 90, 365];
 
@@ -31,10 +33,9 @@ export function IntelligencePanel({ variant }: { variant: "command" | "office" }
   const [funnel, setFunnel] = useState<FunnelStats | null>(null);
   const [topCustomers, setTopCustomers] = useState<CustomerSummary[]>([]);
   const [topAffiliates, setTopAffiliates] = useState<TopAffiliate[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true);
     const res = await fetch(`/api/executive/intelligence?days=${days}`, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
@@ -43,7 +44,7 @@ export function IntelligencePanel({ variant }: { variant: "command" | "office" }
       setTopCustomers(data.topCustomers ?? []);
       setTopAffiliates(data.topAffiliates ?? []);
     }
-    setLoading(false);
+    setHasLoaded(true);
   }, [days]);
 
   useEffect(() => {
@@ -51,11 +52,14 @@ export function IntelligencePanel({ variant }: { variant: "command" | "office" }
     load();
   }, [load]);
 
+  useLiveRefresh(load);
+
   const cardClass = isCommand ? "border border-gold/20 bg-white/[0.02] p-6" : "office-card";
   const maxRevenue = Math.max(1, ...trendSeries.map((p) => p.revenue));
 
   return (
     <div className="space-y-6">
+      <LiveIndicator variant={variant} />
       <div className={cardClass}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">Sales Trend</p>
@@ -74,7 +78,7 @@ export function IntelligencePanel({ variant }: { variant: "command" | "office" }
             ))}
           </div>
         </div>
-        {loading ? (
+        {!hasLoaded ? (
           <p className="mt-6 text-sm text-white/30">Loading...</p>
         ) : (
           <div className="mt-6 flex h-40 items-end gap-[2px] overflow-x-auto">

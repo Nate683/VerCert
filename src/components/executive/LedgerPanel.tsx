@@ -13,6 +13,8 @@ import type {
   RecurringFrequency,
 } from "@/lib/types";
 import type { LedgerReports } from "@/lib/ledger/reports";
+import { LiveIndicator } from "./LiveIndicator";
+import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
 
 type RangePreset = "mtd" | "qtd" | "ytd" | "all" | "custom";
 
@@ -58,7 +60,6 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
   const [assets, setAssets] = useState<LedgerAsset[]>([]);
   const [liabilities, setLiabilities] = useState<LedgerLiability[]>([]);
   const [ownerTransactions, setOwnerTransactions] = useState<OwnerTransaction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [drillOpen, setDrillOpen] = useState<string | null>(null);
 
   const [expenseForm, setExpenseForm] = useState({
@@ -108,7 +109,6 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
   const range = preset === "custom" ? { start: customStart, end: customEnd } : presetToRange(preset);
 
   const load = useCallback(async () => {
-    setLoading(true);
     const params = new URLSearchParams();
     if (range.start) params.set("start", range.start);
     if (range.end) params.set("end", range.end);
@@ -122,7 +122,6 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
       setLiabilities(data.liabilities ?? []);
       setOwnerTransactions(data.ownerTransactions ?? []);
     }
-    setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- range is derived from preset/custom fields already in deps
   }, [preset, customStart, customEnd]);
 
@@ -130,6 +129,8 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- refetch when the range changes
     load();
   }, [load]);
+
+  useLiveRefresh(load, 20000, uploadingReceipt);
 
   async function handleAddExpense(e: React.FormEvent) {
     e.preventDefault();
@@ -267,7 +268,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
     await load();
   }
 
-  if (loading || !reports) {
+  if (!reports) {
     return <p className="text-sm text-white/30">Loading...</p>;
   }
 
@@ -276,6 +277,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
 
   return (
     <div className="space-y-6">
+      <LiveIndicator variant={variant} />
       <div className={cardClass}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">Date Range</p>

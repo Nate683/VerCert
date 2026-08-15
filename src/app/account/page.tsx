@@ -6,6 +6,7 @@ import { AddressForm } from "./AddressForm";
 import { MarketingToggle } from "./MarketingToggle";
 import { ResendVerification } from "./ResendVerification";
 import { AccountLogoutButton } from "./AccountLogoutButton";
+import { EmailChangeForm } from "./EmailChangeForm";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My Account | VeriCert", robots: { index: false, follow: false } };
@@ -43,6 +44,13 @@ export default async function AccountPage() {
       </div>
 
       <section className="mt-10">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Email Address</h2>
+        <div className="mt-4">
+          <EmailChangeForm pendingEmail={customer.pendingEmail} />
+        </div>
+      </section>
+
+      <section className="mt-10 border-t border-white/10 pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Saved Shipping Address</h2>
         <div className="mt-4">
           <AddressForm initialAddress={customer.savedAddress} />

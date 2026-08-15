@@ -1,11 +1,17 @@
+import { AnimatedNumber } from "./AnimatedNumber";
+import { ChangeBadge } from "./ChangeBadge";
+
 type Props = {
   label: string;
   value: string;
   variant: "command" | "office";
   hint?: string;
+  changePercent?: number | null;
+  changeLabel?: string;
+  animate?: { value: number; format: (n: number) => string };
 };
 
-export function StatCard({ label, value, variant, hint }: Props) {
+export function StatCard({ label, value, variant, hint, changePercent, changeLabel, animate }: Props) {
   const isCommand = variant === "command";
   return (
     <div
@@ -23,8 +29,14 @@ export function StatCard({ label, value, variant, hint }: Props) {
             : "mt-2 text-2xl font-semibold office-gold"
         }
       >
-        {value}
+        {animate ? <AnimatedNumber value={animate.value} format={animate.format} /> : value}
       </p>
+      {changePercent !== undefined && (
+        <p className="mt-1 text-xs">
+          <ChangeBadge changePercent={changePercent} />{" "}
+          <span className="text-white/30">{changeLabel ?? "vs prior period"}</span>
+        </p>
+      )}
       {hint && <p className="mt-1 text-xs text-white/30">{hint}</p>}
     </div>
   );

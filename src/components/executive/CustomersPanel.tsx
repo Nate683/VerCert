@@ -1,7 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import type { CustomerSummary } from "@/lib/executive/customers";
+import { LiveIndicator } from "./LiveIndicator";
+import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
 
 export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
   const isCommand = variant === "command";
@@ -17,12 +19,19 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
   const [notesDraft, setNotesDraft] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/executive/customers", { cache: "no-store" })
+  const load = useCallback(() => {
+    return fetch("/api/executive/customers", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => setCustomers(data.customers ?? []))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount-time fetch
+    load();
+  }, [load]);
+
+  useLiveRefresh(load, 20000, Boolean(expandedId) || sending);
 
   function toggleExpanded(c: CustomerSummary) {
     if (expandedId === c.id) {
@@ -89,6 +98,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
 
   return (
     <div className="space-y-8">
+      <LiveIndicator variant={variant} />
       <div className={cardClass}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">
@@ -116,7 +126,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {loading && customers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-6 text-center text-white/30">
                     Loading...
