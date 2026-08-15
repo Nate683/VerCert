@@ -161,6 +161,79 @@ async function main() {
     )
   `;
 
+  // Cost of goods per product, for margin reporting (nullable — margin is
+  // simply omitted for products where cost hasn't been entered yet).
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_usd DOUBLE PRECISION`;
+
+  // Refunds are tracked separately from cancellation (which is pre-fulfillment) —
+  // a refund can happen on an already-shipped/delivered order.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS refunded_at TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS refund_reason TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS refund_amount DOUBLE PRECISION`;
+
+  // Affiliates can optionally be linked to a promo code for attribution —
+  // when a customer uses that code, the order counts toward the affiliate.
+  await sql`ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS affiliate_id TEXT`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS affiliates (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      payment_method TEXT,
+      notes TEXT,
+      commission_type TEXT NOT NULL DEFAULT 'percent',
+      commission_rate DOUBLE PRECISION NOT NULL DEFAULT 0,
+      commission_flat_amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+      promo_code_id TEXT,
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  // Commission payment ledger — balance owed is always derived as
+  // (commission earned from qualifying orders) - (sum of payouts here).
+  await sql`
+    CREATE TABLE IF NOT EXISTS affiliate_payouts (
+      id TEXT PRIMARY KEY,
+      affiliate_id TEXT NOT NULL,
+      amount DOUBLE PRECISION NOT NULL,
+      paid_at TEXT NOT NULL,
+      note TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  // Lightweight funnel/analytics events (page_view, add_to_cart,
+  // checkout_started, order_completed) — enough for conversion-funnel
+  // reporting without a third-party analytics vendor.
+  await sql`
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id TEXT PRIMARY KEY,
+      event_type TEXT NOT NULL,
+      session_id TEXT NOT NULL,
+      metadata TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  // Executive activity log — /command-only visibility, but any executive
+  // action (either realm) can be logged here.
+  await sql`
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id TEXT PRIMARY KEY,
+      actor_email TEXT NOT NULL,
+      action TEXT NOT NULL,
+      details TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  // Customer notes (executive-facing only, never shown to the customer).
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS notes TEXT`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

@@ -28,7 +28,9 @@ export async function GET(request: Request) {
   if (searchParams.get("format") === "csv") {
     const csv = toCsv(
       customers.map((c) => ({
-        ...c,
+        email: c.email,
+        signupDate: c.signupDate,
+        orderCount: c.orderCount,
         lifetimeValue: c.lifetimeValue.toFixed(2),
         marketingOptIn: c.marketingOptIn ? "yes" : "no",
         emailVerified: c.emailVerified ? "yes" : "no",

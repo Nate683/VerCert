@@ -32,6 +32,9 @@ type OrderRow = {
   promo_code_id: string | null;
   discount_amount: number;
   free_shipping: boolean;
+  refunded_at: string | null;
+  refund_reason: string | null;
+  refund_amount: number | null;
 };
 
 function rowToOrder(row: OrderRow): Order {
@@ -60,6 +63,9 @@ function rowToOrder(row: OrderRow): Order {
     promoCodeId: row.promo_code_id ?? undefined,
     discountAmount: row.discount_amount,
     freeShipping: Boolean(row.free_shipping),
+    refundedAt: row.refunded_at ?? undefined,
+    refundReason: (row.refund_reason as Order["refundReason"]) ?? undefined,
+    refundAmount: row.refund_amount ?? undefined,
   };
 }
 
@@ -159,6 +165,9 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   promoCodeId: "promo_code_id",
   discountAmount: "discount_amount",
   freeShipping: "free_shipping",
+  refundedAt: "refunded_at",
+  refundReason: "refund_reason",
+  refundAmount: "refund_amount",
 };
 
 const JSON_FIELDS = new Set(["customer", "items", "crypto"]);

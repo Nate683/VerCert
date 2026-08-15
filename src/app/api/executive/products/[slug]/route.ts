@@ -4,6 +4,8 @@ import { getProductBySlug, updateProduct, deleteProduct } from "@/lib/products";
 import { upsertInventory, deleteInventory } from "@/lib/inventory";
 import { productUpdateSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
+import { logActivity } from "@/lib/activity-log";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,9 @@ export const PATCH = withApiErrorHandling(async (
   const product = await updateProduct(slug, patch);
   if (initialStock !== undefined) await upsertInventory(slug, initialStock);
 
+  const actor = await getCurrentCustomer();
+  if (actor) await logActivity(actor.email, "product.updated", slug);
+
   return NextResponse.json({ product });
 });
 
@@ -41,6 +46,9 @@ export const DELETE = withApiErrorHandling(async (
   const { slug } = await params;
   await deleteProduct(slug);
   await deleteInventory(slug);
+
+  const actor = await getCurrentCustomer();
+  if (actor) await logActivity(actor.email, "product.deleted", slug);
 
   return NextResponse.json({ ok: true });
 });

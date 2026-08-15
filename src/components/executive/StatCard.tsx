@@ -12,7 +12,7 @@ export function StatCard({ label, value, variant, hint }: Props) {
       className={
         isCommand
           ? "command-card border border-gold/20 bg-white/[0.02] p-6"
-          : "rounded-md border border-white/10 bg-white/[0.03] p-5"
+          : "office-card"
       }
     >
       <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">{label}</p>
@@ -20,7 +20,7 @@ export function StatCard({ label, value, variant, hint }: Props) {
         className={
           isCommand
             ? "command-hero-figure mt-3 font-mono text-3xl text-gold"
-            : "mt-2 text-2xl font-semibold text-gold"
+            : "mt-2 text-2xl font-semibold office-gold"
         }
       >
         {value}

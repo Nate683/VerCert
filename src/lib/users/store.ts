@@ -18,6 +18,7 @@ type UserRow = {
   reset_token: string | null;
   reset_token_expires_at: string | null;
   role: string | null;
+  notes: string | null;
 };
 
 function rowToUser(row: UserRow): Customer {
@@ -34,6 +35,7 @@ function rowToUser(row: UserRow): Customer {
     resetToken: row.reset_token ?? undefined,
     resetTokenExpiresAt: row.reset_token_expires_at ?? undefined,
     role: (row.role as Customer["role"]) ?? undefined,
+    notes: row.notes ?? undefined,
   };
 }
 
@@ -121,6 +123,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   resetToken: "reset_token",
   resetTokenExpiresAt: "reset_token_expires_at",
   role: "role",
+  notes: "notes",
 };
 
 const JSON_FIELDS = new Set(["savedAddress"]);

@@ -91,6 +91,7 @@ export const productSchema = z.object({
   description: z.array(z.string().trim().min(1).max(2000)).min(1).max(20),
   initialStock: z.number().int().min(0).max(1000000).optional(),
   active: z.boolean().optional(),
+  costUsd: z.number().min(0).max(1000000).optional(),
 });
 
 export const productUpdateSchema = productSchema.partial().omit({ slug: true });
@@ -125,6 +126,52 @@ export const promoValidateSchema = z.object({
 export const siteContentUpdateSchema = z.object({
   key: z.string().trim().min(1).max(100),
   value: z.unknown(),
+});
+
+export const affiliateSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  email: z.string().trim().toLowerCase().email(),
+  phone: z.string().trim().max(50).optional(),
+  paymentMethod: z.string().trim().max(100).optional(),
+  notes: z.string().trim().max(2000).optional(),
+  commissionType: z.enum(["percent", "flat"]),
+  commissionRate: z.number().min(0).max(100).optional(),
+  commissionFlatAmount: z.number().min(0).max(1000000).optional(),
+  code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .min(3)
+    .max(40)
+    .regex(/^[A-Z0-9_-]+$/, "code must be letters, numbers, hyphens, or underscores"),
+  customerDiscountPercent: z.number().min(0).max(100).optional(),
+  active: z.boolean().optional(),
+});
+
+export const affiliateUpdateSchema = affiliateSchema
+  .omit({ code: true, customerDiscountPercent: true })
+  .partial();
+
+export const affiliatePayoutSchema = z.object({
+  amount: z.number().min(0.01).max(1000000),
+  paidAt: z.string().trim().min(1).max(40),
+  note: z.string().trim().max(500).optional(),
+});
+
+export const refundOrderSchema = z.object({
+  reason: z.enum(["customer_request", "quality_issue", "duplicate_order", "shipping_issue", "other"]),
+  amount: z.number().min(0).max(1000000).optional(),
+  note: z.string().trim().max(500).optional(),
+});
+
+export const customerNotesSchema = z.object({
+  notes: z.string().trim().max(5000),
+});
+
+export const trackEventSchema = z.object({
+  event: z.enum(["page_view", "add_to_cart", "checkout_started", "order_completed"]),
+  sessionId: z.string().trim().min(1).max(100),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export async function parseBody<T extends z.ZodTypeAny>(

@@ -15,21 +15,41 @@ import { AssistantChat } from "./AssistantChat";
 import { ProductsPanel } from "./ProductsPanel";
 import { PromotionsPanel } from "./PromotionsPanel";
 import { SiteContentPanel } from "./SiteContentPanel";
+import { FinancialsPanel } from "./FinancialsPanel";
+import { IntelligencePanel } from "./IntelligencePanel";
+import { AffiliatesPanel } from "./AffiliatesPanel";
+import { AdminPanel } from "./AdminPanel";
 
 type Variant = "command" | "office";
-type Tab = "overview" | "orders" | "products" | "promotions" | "content" | "customers" | "assistant";
+type Tab =
+  | "overview"
+  | "orders"
+  | "products"
+  | "financials"
+  | "intelligence"
+  | "customers"
+  | "assistant"
+  | "admin"
+  | "promotions"
+  | "affiliates"
+  | "content";
 
 const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "orders", label: "Orders" },
   { id: "products", label: "Products" },
+  { id: "financials", label: "Financials" },
+  { id: "intelligence", label: "Intelligence" },
   { id: "customers", label: "Customers" },
   { id: "assistant", label: "Assistant" },
+  { id: "admin", label: "Admin" },
 ];
 
-// Promotions and Content editing are /command-only — /office never sees these tabs.
+// Promotions, Affiliates, and Content editing are /command-only — /office
+// never sees these tabs.
 const COMMAND_ONLY_TABS: { id: Tab; label: string }[] = [
   { id: "promotions", label: "Promotions" },
+  { id: "affiliates", label: "Affiliates" },
   { id: "content", label: "Content" },
 ];
 
@@ -79,24 +99,24 @@ export function ExecutiveTerminal({
 
   const shellClass = isCommand
     ? `command-grain min-h-screen bg-black text-white ${mounted ? "command-fade-in" : "opacity-0"}`
-    : "min-h-screen bg-black text-white";
+    : "office-shell min-h-screen";
 
   const headingClass = isCommand
     ? "font-serif text-3xl tracking-tight text-white"
-    : "text-xl font-semibold text-white";
+    : "text-2xl font-semibold tracking-tight text-[var(--office-fg)]";
 
   return (
     <div className={shellClass}>
-      <div className={`relative z-10 mx-auto max-w-7xl px-6 lg:px-10 ${isCommand ? "py-12" : "py-10"}`}>
+      <div className={`relative z-10 mx-auto max-w-7xl px-6 lg:px-10 ${isCommand ? "py-12" : "py-14"}`}>
         <div
           className={`flex flex-wrap items-start justify-between gap-6 pb-6 ${
-            isCommand ? "border-b border-gold/25" : "border-b border-gold/20"
+            isCommand ? "border-b border-gold/25" : "border-b border-[var(--office-border)]"
           }`}
         >
           <div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-gold">{terminalName}</p>
+            <p className={isCommand ? "text-[11px] uppercase tracking-[0.35em] text-gold" : "text-[11px] uppercase tracking-[0.3em] office-gold"}>{terminalName}</p>
             <h1 className={`mt-3 ${headingClass}`}>{executiveName}</h1>
-            <p className={isCommand ? "mt-1 text-xs uppercase tracking-[0.15em] text-white/40" : "mt-1 text-xs text-white/40"}>
+            <p className={isCommand ? "mt-1 text-xs uppercase tracking-[0.15em] text-white/40" : "mt-1 text-xs text-white/50"}>
               {executiveTitle}
             </p>
           </div>
@@ -110,7 +130,7 @@ export function ExecutiveTerminal({
         </div>
 
         <nav
-          className={`relative mt-6 flex gap-2 overflow-x-auto border-b border-white/10 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isCommand ? "" : "pb-px"}`}
+          className={`relative mt-6 flex gap-2 overflow-x-auto border-b ${isCommand ? "border-white/10" : "border-[var(--office-border)]"} [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isCommand ? "" : "pb-px"}`}
         >
           {TABS.map((t) => (
             <button
@@ -124,7 +144,7 @@ export function ExecutiveTerminal({
                 tab === t.id
                   ? isCommand
                     ? "text-gold"
-                    : "border-gold text-gold"
+                    : "border-[var(--office-gold)] office-gold"
                   : "text-white/50 hover:text-white " + (isCommand ? "" : "border-transparent")
               }`}
             >
@@ -169,10 +189,14 @@ export function ExecutiveTerminal({
 
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}
+          {tab === "financials" && <FinancialsPanel variant={variant} />}
+          {tab === "intelligence" && <IntelligencePanel variant={variant} />}
           {tab === "promotions" && isCommand && <PromotionsPanel />}
+          {tab === "affiliates" && isCommand && <AffiliatesPanel />}
           {tab === "content" && isCommand && <SiteContentPanel />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
           {tab === "assistant" && <AssistantChat variant={variant} />}
+          {tab === "admin" && <AdminPanel variant={variant} />}
         </div>
       </div>
     </div>

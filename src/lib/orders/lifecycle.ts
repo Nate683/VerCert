@@ -1,8 +1,9 @@
-import type { Order, OrderStatus } from "@/lib/types";
+import type { Order, OrderStatus, RefundReasonCode } from "@/lib/types";
 import { updateOrder } from "./store";
-import { decrementStock, restoreStock } from "@/lib/inventory";
+import { decrementStock, restoreStock, getLowInventoryAlerts } from "@/lib/inventory";
 import { recordRedemption, removeRedemptionForOrder } from "@/lib/promotions";
-import { sendPaymentConfirmedEmail, sendShippingNotificationEmail } from "@/lib/email";
+import { sendPaymentConfirmedEmail, sendShippingNotificationEmail, sendAdminNotification } from "@/lib/email";
+import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 
 // Centralizes every order status transition so stock decrements/restocks and
 // customer emails always happen together and exactly once, no matter which
@@ -37,6 +38,9 @@ export async function markOrderPaid(order: Order): Promise<Order | null> {
         discountAmount: updated.discountAmount ?? 0,
       });
     }
+    notifyLowStockIfNeeded().catch((err) =>
+      console.error("Failed to send low-stock admin notification:", err)
+    );
   }
   return updated;
 }
@@ -104,4 +108,53 @@ export async function cancelOrder(order: Order, reason?: string): Promise<Order 
     cancelReason: reason,
     stockDecremented: false,
   });
+}
+
+// Refunds a paid order — distinct from cancellation, since a refund can
+// happen after shipment/delivery. Restores any decremented stock and
+// reverses the promo redemption (and therefore any affiliate commission,
+// which is always computed live and excludes refunded orders).
+export async function refundOrder(
+  order: Order,
+  reason: RefundReasonCode,
+  opts: { amount?: number; note?: string } = {}
+): Promise<Order | null> {
+  if (!order.paidAt) {
+    throw new Error("Only paid orders can be refunded.");
+  }
+  if (order.refundedAt) {
+    throw new Error("This order has already been refunded.");
+  }
+
+  if (order.stockDecremented) {
+    await restoreStock(order.items);
+  }
+  if (order.promoCodeId) {
+    await removeRedemptionForOrder(order.id);
+  }
+
+  return updateOrder(order.id, {
+    refundedAt: new Date().toISOString(),
+    refundReason: reason,
+    refundAmount: opts.amount ?? order.total,
+    stockDecremented: false,
+  });
+}
+
+// Best-effort: after stock moves, check whether anything crossed its
+// reorder threshold and email the configured admin address if so.
+async function notifyLowStockIfNeeded(): Promise<void> {
+  const settings = await getContent("notification_settings", DEFAULT_NOTIFICATION_SETTINGS);
+  if (!settings.notifyLowStock || !settings.emailAddress) return;
+
+  const alerts = await getLowInventoryAlerts();
+  if (alerts.length === 0) return;
+
+  await sendAdminNotification(
+    settings.emailAddress,
+    "Low Stock Alert",
+    `The following products are at or below their reorder threshold:\n\n${alerts
+      .map((a) => `- ${a.name}: ${a.quantity} left`)
+      .join("\n")}`
+  );
 }

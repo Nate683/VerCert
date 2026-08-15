@@ -17,6 +17,7 @@ type PromoCodeRow = {
   active: boolean;
   restricted_product_slugs: string | null;
   restricted_categories: string | null;
+  affiliate_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -39,6 +40,7 @@ function rowToPromoCode(row: PromoCodeRow): PromoCode {
     restrictedCategories: row.restricted_categories
       ? JSON.parse(row.restricted_categories)
       : undefined,
+    affiliateId: row.affiliate_id ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -116,6 +118,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   active: "active",
   restrictedProductSlugs: "restricted_product_slugs",
   restrictedCategories: "restricted_categories",
+  affiliateId: "affiliate_id",
 };
 
 const JSON_FIELDS = new Set(["restrictedProductSlugs", "restrictedCategories"]);

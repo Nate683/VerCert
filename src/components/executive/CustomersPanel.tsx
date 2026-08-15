@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import type { CustomerSummary } from "@/lib/executive/customers";
 
 export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
@@ -13,6 +13,9 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [notesSaving, setNotesSaving] = useState(false);
 
   useEffect(() => {
     fetch("/api/executive/customers", { cache: "no-store" })
@@ -20,6 +23,29 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
       .then((data) => setCustomers(data.customers ?? []))
       .finally(() => setLoading(false));
   }, []);
+
+  function toggleExpanded(c: CustomerSummary) {
+    if (expandedId === c.id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(c.id);
+    setNotesDraft(c.notes ?? "");
+  }
+
+  async function handleSaveNotes(id: string) {
+    setNotesSaving(true);
+    try {
+      await fetch(`/api/executive/customers/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: notesDraft }),
+      });
+      setCustomers((prev) => prev.map((c) => (c.id === id ? { ...c, notes: notesDraft } : c)));
+    } finally {
+      setNotesSaving(false);
+    }
+  }
 
   function toggleSelected(email: string) {
     setSelected((prev) => {
@@ -58,7 +84,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
 
   const cardClass = isCommand
     ? "border border-gold/20 bg-white/[0.02] p-6"
-    : "rounded-md border border-white/10 bg-white/[0.03] p-5";
+    : "office-card";
   const optedInCount = customers.filter((c) => c.marketingOptIn).length;
 
   return (
@@ -68,6 +94,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
           <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">
             Customers ({customers.length})
           </p>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route */}
           <a
             href="/api/executive/customers?format=csv"
             className="border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-gold hover:text-gold"
@@ -103,32 +130,79 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                 </tr>
               ) : (
                 customers.map((c) => (
-                  <tr key={c.id} className="border-b border-white/5 text-white/80">
-                    <td className="py-3">
-                      <input
-                        type="checkbox"
-                        disabled={!c.marketingOptIn}
-                        checked={selected.has(c.email)}
-                        onChange={() => toggleSelected(c.email)}
-                        className="h-4 w-4 accent-[#c9a227] disabled:opacity-20"
-                      />
-                    </td>
-                    <td className="py-3 pr-4 text-white">{c.email}</td>
-                    <td className="py-3 pr-4 text-xs text-white/50">
-                      {new Date(c.signupDate).toLocaleDateString()}
-                    </td>
-                    <td className="py-3 pr-4">{c.orderCount}</td>
-                    <td className={isCommand ? "py-3 pr-4 font-mono" : "py-3 pr-4"}>
-                      ${c.lifetimeValue.toFixed(2)}
-                    </td>
-                    <td className="py-3 text-xs">
-                      {c.marketingOptIn ? (
-                        <span className="text-gold">Opted In</span>
-                      ) : (
-                        <span className="text-white/30">Opted Out</span>
-                      )}
-                    </td>
-                  </tr>
+                  <Fragment key={c.id}>
+                    <tr className="border-b border-white/5 text-white/80">
+                      <td className="py-3">
+                        <input
+                          type="checkbox"
+                          disabled={!c.marketingOptIn}
+                          checked={selected.has(c.email)}
+                          onChange={() => toggleSelected(c.email)}
+                          className="h-4 w-4 accent-[#c9a227] disabled:opacity-20"
+                        />
+                      </td>
+                      <td className="py-3 pr-4 text-white">
+                        <button type="button" onClick={() => toggleExpanded(c)} className="hover:text-gold">
+                          {c.email}
+                        </button>
+                      </td>
+                      <td className="py-3 pr-4 text-xs text-white/50">
+                        {new Date(c.signupDate).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 pr-4">{c.orderCount}</td>
+                      <td className={isCommand ? "py-3 pr-4 font-mono" : "py-3 pr-4"}>
+                        ${c.lifetimeValue.toFixed(2)}
+                      </td>
+                      <td className="py-3 text-xs">
+                        {c.marketingOptIn ? (
+                          <span className="text-gold">Opted In</span>
+                        ) : (
+                          <span className="text-white/30">Opted Out</span>
+                        )}
+                      </td>
+                    </tr>
+                    {expandedId === c.id && (
+                      <tr className="border-b border-white/5 bg-white/[0.02]">
+                        <td colSpan={6} className="p-4">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.1em] text-white/40">Recent Orders</p>
+                              {c.recentOrders.length === 0 ? (
+                                <p className="mt-2 text-xs text-white/30">No orders yet.</p>
+                              ) : (
+                                <ul className="mt-2 space-y-1 text-xs text-white/70">
+                                  {c.recentOrders.map((o) => (
+                                    <li key={o.reference} className="flex justify-between">
+                                      <span>{o.reference} — {o.status.replace("_", " ")}</span>
+                                      <span>${o.total.toFixed(2)}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.1em] text-white/40">Notes</p>
+                              <textarea
+                                value={notesDraft}
+                                onChange={(e) => setNotesDraft(e.target.value)}
+                                rows={3}
+                                placeholder="Internal notes about this customer..."
+                                className="input-field mt-2 text-xs"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleSaveNotes(c.id)}
+                                disabled={notesSaving}
+                                className="mt-2 border border-gold px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-gold hover:bg-gold hover:text-black disabled:opacity-40"
+                              >
+                                {notesSaving ? "Saving..." : "Save Notes"}
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))
               )}
             </tbody>

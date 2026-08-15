@@ -27,6 +27,7 @@ export type Product = {
   galleryImageUrls?: string[];
   sortOrder?: number;
   active?: boolean;
+  costUsd?: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -132,7 +133,17 @@ export type Order = {
   promoCodeId?: string;
   discountAmount?: number;
   freeShipping?: boolean;
+  refundedAt?: string;
+  refundReason?: RefundReasonCode;
+  refundAmount?: number;
 };
+
+export type RefundReasonCode =
+  | "customer_request"
+  | "quality_issue"
+  | "duplicate_order"
+  | "shipping_issue"
+  | "other";
 
 export type PromoType = "percent" | "fixed" | "free_shipping";
 
@@ -149,6 +160,7 @@ export type PromoCode = {
   active: boolean;
   restrictedProductSlugs?: string[];
   restrictedCategories?: string[];
+  affiliateId?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -181,6 +193,67 @@ export type Customer = {
   resetTokenExpiresAt?: string;
   // Grants access to the matching executive dashboard via the normal login.
   role?: "command" | "office";
+  // Executive-facing only — never shown to the customer.
+  notes?: string;
+};
+
+export type CommissionType = "percent" | "flat";
+
+export type Affiliate = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  paymentMethod?: string;
+  notes?: string;
+  commissionType: CommissionType;
+  commissionRate: number; // percent (0-100), used when commissionType === "percent"
+  commissionFlatAmount: number; // used when commissionType === "flat"
+  promoCodeId?: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AffiliatePayout = {
+  id: string;
+  affiliateId: string;
+  amount: number;
+  paidAt: string;
+  note?: string;
+  createdAt: string;
+};
+
+export type AffiliateSummary = Affiliate & {
+  code?: string;
+  ordersDriven: number;
+  grossRevenue: number;
+  commissionEarned: number;
+  commissionPaid: number;
+  balanceOwed: number;
+  ytdRevenue: number;
+  ytdCommission: number;
+};
+
+export type ActivityLogEntry = {
+  id: string;
+  actorEmail: string;
+  action: string;
+  details?: string;
+  createdAt: string;
+};
+
+export type AnalyticsEventType =
+  | "page_view"
+  | "add_to_cart"
+  | "checkout_started"
+  | "order_completed";
+
+export type FunnelStats = {
+  pageViews: number;
+  addToCart: number;
+  checkoutStarted: number;
+  orderCompleted: number;
 };
 
 export type PublicCustomer = Omit<

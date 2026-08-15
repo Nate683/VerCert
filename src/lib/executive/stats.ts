@@ -43,9 +43,9 @@ function isSameMonth(a: Date, b: Date) {
 export function computeOverview(orders: Order[], products: Product[]): ExecutiveOverview {
   const now = new Date();
   // "Paid" for revenue purposes means the order has ever been paid and
-  // wasn't subsequently cancelled — not just currently sitting in the
-  // "paid" status, since paid orders move on to processing/shipped/delivered.
-  const paidOrders = orders.filter((o) => o.paidAt && o.status !== "cancelled");
+  // wasn't subsequently cancelled or refunded — not just currently sitting in
+  // the "paid" status, since paid orders move on to processing/shipped/delivered.
+  const paidOrders = orders.filter((o) => o.paidAt && o.status !== "cancelled" && !o.refundedAt);
 
   let revenueToday = 0;
   let revenueMtd = 0;
@@ -130,4 +130,24 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
     topProducts,
     recentActivity,
   };
+}
+
+// Daily revenue series over a selectable window — used by the Intelligence
+// tab's trend chart (separate from the fixed 14-day chart on the Overview tab).
+export function computeRevenueSeries(orders: Order[], days: number): RevenuePoint[] {
+  const now = new Date();
+  const paidOrders = orders.filter((o) => o.paidAt && o.status !== "cancelled" && !o.refundedAt);
+  const series: RevenuePoint[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const day = new Date(now);
+    day.setDate(day.getDate() - i);
+    const dayRevenue = paidOrders
+      .filter((o) => isSameDay(new Date(o.paidAt!), day))
+      .reduce((sum, o) => sum + o.total, 0);
+    series.push({
+      date: day.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      revenue: dayRevenue,
+    });
+  }
+  return series;
 }

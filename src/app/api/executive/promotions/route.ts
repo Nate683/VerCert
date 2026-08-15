@@ -3,6 +3,8 @@ import { requireCommandSession } from "@/lib/executive/require-auth";
 import { listPromoCodesWithStats, createPromoCode, getPromoCodeByCode } from "@/lib/promotions";
 import { promoCodeSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
+import { logActivity } from "@/lib/activity-log";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -29,5 +31,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   }
 
   const promoCode = await createPromoCode(parsed.data);
+  const actor = await getCurrentCustomer();
+  if (actor) await logActivity(actor.email, "promo.created", promoCode.code);
   return NextResponse.json({ promoCode });
 });

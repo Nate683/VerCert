@@ -42,7 +42,7 @@ export function AssistantChat({ variant }: { variant: "command" | "office" }) {
 
   const cardClass = isCommand
     ? "border border-gold/20 bg-white/[0.02] p-6"
-    : "rounded-md border border-white/10 bg-white/[0.03] p-5";
+    : "office-card";
 
   return (
     <div className={cardClass}>

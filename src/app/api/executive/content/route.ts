@@ -9,6 +9,7 @@ import {
   DEFAULT_CONTACT,
   DEFAULT_POLICIES,
   DEFAULT_SALE_BANNER,
+  DEFAULT_COMMISSION_STRUCTURE,
 } from "@/lib/site-content";
 import { siteContentUpdateSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -21,7 +22,7 @@ export const GET = withApiErrorHandling(async () => {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const [homeHero, featuredProducts, aboutPage, faqItems, contactPage, policies, saleBanner] =
+  const [homeHero, featuredProducts, aboutPage, faqItems, contactPage, policies, saleBanner, commissionStructure] =
     await Promise.all([
       getContent("home_hero", DEFAULT_HOME_HERO),
       getContent("featured_products", DEFAULT_FEATURED),
@@ -30,6 +31,7 @@ export const GET = withApiErrorHandling(async () => {
       getContent("contact_page", DEFAULT_CONTACT),
       getContent("policies", DEFAULT_POLICIES),
       getContent("sale_banner", DEFAULT_SALE_BANNER),
+      getContent("commission_structure", DEFAULT_COMMISSION_STRUCTURE),
     ]);
 
   return NextResponse.json({
@@ -40,6 +42,7 @@ export const GET = withApiErrorHandling(async () => {
     contactPage,
     policies,
     saleBanner,
+    commissionStructure,
   });
 });
 

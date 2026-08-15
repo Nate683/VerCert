@@ -4,6 +4,8 @@ import { listProducts, createProduct, getProductBySlug } from "@/lib/products";
 import { upsertInventory, listInventory } from "@/lib/inventory";
 import { productSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
+import { logActivity } from "@/lib/activity-log";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const product = await createProduct(input);
   await upsertInventory(product.slug, initialStock ?? 0);
+
+  const actor = await getCurrentCustomer();
+  if (actor) await logActivity(actor.email, "product.created", product.name);
 
   return NextResponse.json({ product });
 });

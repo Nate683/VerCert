@@ -4,6 +4,12 @@
   --background: #000000;
   --foreground: #f5f5f0;
   --gold: #c9a227;
+  --command-accent-2: #2f6f5e;
+  --office-bg: #1a1a1c;
+  --office-panel: #232326;
+  --office-border: #37373b;
+  --office-fg: #e8e6e0;
+  --office-gold: #b9975b;
 }
 
 @theme inline {
@@ -103,6 +109,34 @@ body {
 
 .command-hero-figure {
   font-variant-numeric: tabular-nums;
+}
+
+.command-accent-2 {
+  color: var(--command-accent-2);
+}
+
+.command-border-2 {
+  border-color: color-mix(in srgb, var(--command-accent-2) 45%, transparent);
+}
+
+/* VeriCert Executive Office: charcoal + platinum, restrained gold, more
+   whitespace and conventional rounded cards — deliberately a different
+   room from Command's obsidian/gold war-room. */
+.office-shell {
+  background: var(--office-bg);
+  color: var(--office-fg);
+}
+
+.office-card {
+  border-radius: 0.75rem;
+  border: 1px solid var(--office-border);
+  background: var(--office-panel);
+  padding: 1.75rem;
+  box-shadow: 0 12px 32px -20px rgba(0, 0, 0, 0.6);
+}
+
+.office-gold {
+  color: var(--office-gold);
 }
 
 

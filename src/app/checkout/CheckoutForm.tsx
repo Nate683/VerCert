@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-context";
+import { track } from "@/lib/track-client";
 import type { PaymentMethod, SavedAddress } from "@/lib/types";
 
 const PAYMENT_OPTIONS: { value: PaymentMethod; title: string; body: string }[] = [
@@ -32,6 +33,11 @@ export function CheckoutForm({
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (items.length > 0) track("checkout_started");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once per mount, not on every cart change
+  }, []);
   const [promoInput, setPromoInput] = useState("");
   const [promoChecking, setPromoChecking] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -126,6 +132,7 @@ export function CheckoutForm({
       }
 
       clearCart();
+      track("order_completed", { reference: data.reference });
       router.push(`/order/${data.reference}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong placing your order.");

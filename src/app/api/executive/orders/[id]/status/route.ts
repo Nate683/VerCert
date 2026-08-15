@@ -3,6 +3,8 @@ import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { getOrderById } from "@/lib/orders/store";
 import { advanceOrderStatus } from "@/lib/orders/lifecycle";
 import { orderStatusUpdateSchema, parseBody } from "@/lib/validation";
+import { logActivity } from "@/lib/activity-log";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +12,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await requireExecutiveSession())) {
+  const actor = await getCurrentCustomer();
+  if (!actor || (actor.role !== "command" && actor.role !== "office")) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
@@ -26,6 +29,7 @@ export async function PATCH(
 
   try {
     const updated = await advanceOrderStatus(order, status, { carrier, trackingNumber });
+    await logActivity(actor.email, "order.status_updated", `${order.reference} → ${status}`);
     return NextResponse.json({ order: updated });
   } catch (err) {
     return NextResponse.json(

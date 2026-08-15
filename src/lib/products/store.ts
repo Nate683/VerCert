@@ -21,6 +21,7 @@ type ProductRow = {
   gallery_image_urls: string | null;
   sort_order: number;
   active: boolean;
+  cost_usd: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -44,6 +45,7 @@ function rowToProduct(row: ProductRow): Product {
     galleryImageUrls: row.gallery_image_urls ? JSON.parse(row.gallery_image_urls) : undefined,
     sortOrder: row.sort_order,
     active: row.active,
+    costUsd: row.cost_usd ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -94,14 +96,15 @@ export type CreateProductInput = {
   description: string[];
   sortOrder?: number;
   active?: boolean;
+  costUsd?: number;
 };
 
 export async function createProduct(input: CreateProductInput): Promise<Product> {
   const now = new Date().toISOString();
   await query(
     `INSERT INTO products
-      (slug, name, category, cas_number, molecular_formula, molecular_weight, purity_percent, sequence_or_form, storage, sizes, batch_numbers, summary, description, sort_order, active, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+      (slug, name, category, cas_number, molecular_formula, molecular_weight, purity_percent, sequence_or_form, storage, sizes, batch_numbers, summary, description, sort_order, active, cost_usd, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
     [
       input.slug,
       input.name,
@@ -118,6 +121,7 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
       JSON.stringify(input.description),
       input.sortOrder ?? 0,
       input.active ?? true,
+      input.costUsd ?? null,
       now,
       now,
     ]
@@ -144,6 +148,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   galleryImageUrls: "gallery_image_urls",
   sortOrder: "sort_order",
   active: "active",
+  costUsd: "cost_usd",
 };
 
 const JSON_FIELDS = new Set(["sizes", "batchNumbers", "description", "galleryImageUrls"]);

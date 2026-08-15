@@ -54,6 +54,13 @@ export async function sendShippingNotificationEmail(order: Order): Promise<void>
   await sendMail(order.customer.email, subject, buildShippingBody(order));
 }
 
+// Internal admin alerts (new order / low stock) — sent to whatever address
+// is configured in the executive Notification Settings, not to the customer.
+export async function sendAdminNotification(to: string, subject: string, text: string): Promise<void> {
+  if (!to.trim()) return;
+  await sendMail(to, `[VeriCert Admin] ${subject}`, text);
+}
+
 function buildItemLines(order: Order): string {
   return order.items
     .map((item) => `  - ${item.name} (${item.sizeLabel}) x${item.quantity} — $${(item.priceUsd * item.quantity).toFixed(2)}`)

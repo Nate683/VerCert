@@ -29,6 +29,7 @@ type FormState = {
   sizes: SizeForm[];
   initialStock: string;
   active: boolean;
+  costUsd: string;
 };
 
 const EMPTY_SIZE: SizeForm = { label: "", priceUsd: "", bulkTiers: "" };
@@ -50,6 +51,7 @@ function emptyForm(): FormState {
     sizes: [{ ...EMPTY_SIZE }],
     initialStock: "0",
     active: true,
+    costUsd: "",
   };
 }
 
@@ -74,6 +76,7 @@ function productToForm(p: ProductWithStock): FormState {
     })),
     initialStock: String(p.stock?.quantity ?? 0),
     active: p.active ?? true,
+    costUsd: p.costUsd !== undefined ? String(p.costUsd) : "",
   };
 }
 
@@ -121,6 +124,7 @@ function formToPayload(form: FormState) {
     sizes,
     initialStock: Number(form.initialStock) || 0,
     active: form.active,
+    costUsd: form.costUsd.trim() ? Number(form.costUsd) : undefined,
   };
 }
 
@@ -311,7 +315,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
   const cardClass = isCommand
     ? "border border-gold/20 bg-white/[0.02] p-6"
-    : "rounded-md border border-white/10 bg-white/[0.03] p-5";
+    : "office-card";
 
   const editingProduct = products.find((p) => p.slug === editing) ?? null;
 
@@ -507,6 +511,15 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               value={form.initialStock}
               onChange={(e) => setForm((f) => ({ ...f, initialStock: e.target.value }))}
               placeholder="Stock quantity"
+              className="input-field"
+            />
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.costUsd}
+              onChange={(e) => setForm((f) => ({ ...f, costUsd: e.target.value }))}
+              placeholder="Cost of goods (USD, optional — for margin reporting)"
               className="input-field"
             />
             <input

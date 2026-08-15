@@ -3,7 +3,8 @@ import { listProducts, resolveUnitPrice } from "@/lib/products";
 import { createOrder, updateOrder } from "@/lib/orders/store";
 import { validatePromoCode } from "@/lib/promotions";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationEmail, sendAdminNotification } from "@/lib/email";
+import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { updateUser } from "@/lib/users/store";
 import { findInsufficientStock } from "@/lib/inventory";
@@ -135,6 +136,19 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     await sendOrderConfirmationEmail(order);
   } catch (err) {
     console.error("Failed to send order confirmation email:", err);
+  }
+
+  try {
+    const settings = await getContent("notification_settings", DEFAULT_NOTIFICATION_SETTINGS);
+    if (settings.notifyNewOrder) {
+      await sendAdminNotification(
+        settings.emailAddress,
+        `New Order ${order.reference}`,
+        `A new order was placed.\n\nReference: ${order.reference}\nTotal: $${order.total.toFixed(2)}\nPayment method: ${order.paymentMethod}\nCustomer: ${order.customer.firstName} ${order.customer.lastName} (${order.customer.email})`
+      );
+    }
+  } catch (err) {
+    console.error("Failed to send new-order admin notification:", err);
   }
 
   return NextResponse.json({ reference: order.reference });

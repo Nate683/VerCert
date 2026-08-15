@@ -3,6 +3,8 @@ import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { getOrderById } from "@/lib/orders/store";
 import { cancelOrder } from "@/lib/orders/lifecycle";
 import { orderCancelSchema, parseBody } from "@/lib/validation";
+import { logActivity } from "@/lib/activity-log";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,8 @@ export async function POST(
 
   try {
     const updated = await cancelOrder(order, parsed.data.reason);
+    const actor = await getCurrentCustomer();
+    if (actor) await logActivity(actor.email, "order.cancelled", order.reference);
     return NextResponse.json({ order: updated });
   } catch (err) {
     return NextResponse.json(

@@ -150,3 +150,26 @@ export const DEFAULT_SALE_BANNER: SaleBannerContent = {
   message: "",
   linkHref: "",
 };
+
+export type NotificationSettings = {
+  emailAddress: string;
+  notifyNewOrder: boolean;
+  notifyLowStock: boolean;
+};
+
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  emailAddress: "",
+  notifyNewOrder: false,
+  notifyLowStock: false,
+};
+
+export type CommissionStructureContent = {
+  paragraphs: string[];
+};
+
+export const DEFAULT_COMMISSION_STRUCTURE: CommissionStructureContent = {
+  paragraphs: [
+    "Standard affiliate commission is 10% of the order subtotal, paid monthly once the balance owed exceeds $50.",
+    "Custom rates can be set per affiliate below — either a percentage of each sale or a flat amount per order.",
+  ],
+};

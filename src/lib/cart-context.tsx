@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import type { CartItem } from "./types";
+import { track } from "./track-client";
 
 type CartContextValue = {
   items: CartItem[];
@@ -55,6 +56,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, item];
     });
+    track("add_to_cart", { slug: item.slug });
   }, []);
 
   const removeItem = useCallback((slug: string, sizeLabel: string) => {
