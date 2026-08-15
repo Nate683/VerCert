@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ExecutiveOverview } from "@/lib/executive/stats";
 import type { LowInventoryAlert } from "@/lib/inventory";
@@ -77,16 +77,36 @@ export function ExecutiveTerminal({
   const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time fade-in trigger + mount-time fetch
-    setMounted(true);
-    fetch("/api/executive/overview", { cache: "no-store" })
+  const loadOverview = useCallback(() => {
+    return fetch("/api/executive/overview", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         setOverview(data.overview ?? null);
         setLowInventory(data.lowInventory ?? []);
-      });
+      })
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time fade-in trigger + mount-time fetch
+    setMounted(true);
+    loadOverview();
+
+    // Poll for fresh revenue/order/activity data so the dashboard reflects
+    // sales as they happen, without requiring a manual page reload.
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") loadOverview();
+    }, 20000);
+    function handleVisibility() {
+      if (document.visibilityState === "visible") loadOverview();
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [loadOverview]);
 
   useEffect(() => {
     if (!isCommand) return;
@@ -163,11 +183,26 @@ export function ExecutiveTerminal({
         </nav>
 
         <div className="mt-8">
-          {tab === "overview" &&
-            (isCommand ? (
-              <CommandOverview overview={overview} lowInventory={lowInventory} />
-            ) : (
-              <div className="space-y-8">
+          {tab === "overview" && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`h-2 w-2 rounded-full animate-pulse ${
+                    isCommand ? "bg-gold" : "bg-[var(--office-gold)]"
+                  }`}
+                />
+                <span
+                  className={`text-[11px] uppercase tracking-[0.25em] ${
+                    isCommand ? "text-white/40" : "text-[var(--office-fg)]/50"
+                  }`}
+                >
+                  Live — refreshes every 20s
+                </span>
+              </div>
+              {isCommand ? (
+                <CommandOverview overview={overview} lowInventory={lowInventory} />
+              ) : (
+                <div className="space-y-8">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <StatCard variant={variant} label="Revenue — Today" value={`$${(overview?.revenueToday ?? 0).toFixed(2)}`} />
                   <StatCard variant={variant} label="Revenue — MTD" value={`$${(overview?.revenueMtd ?? 0).toFixed(2)}`} />
@@ -188,7 +223,9 @@ export function ExecutiveTerminal({
                   <ActivityFeed events={overview?.recentActivity ?? []} variant={variant} />
                 </div>
               </div>
-            ))}
+              )}
+            </div>
+          )}
 
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}

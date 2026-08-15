@@ -84,6 +84,23 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
     load();
   }, [load]);
 
+  useEffect(() => {
+    // Poll for new/updated orders so the board reflects sales as they happen.
+    // Skip while an inline form is open or a bulk action is running so we
+    // don't clobber in-progress input.
+    const interval = setInterval(() => {
+      if (
+        document.visibilityState === "visible" &&
+        !shippingFormId &&
+        !refundFormId &&
+        !bulkRunning
+      ) {
+        load();
+      }
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [load, shippingFormId, refundFormId, bulkRunning]);
+
   async function handleMarkPaid(id: string) {
     setBusyId(id);
     setActionError(null);
@@ -235,6 +252,18 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
 
   return (
     <div className={cardClass}>
+      <div className="mb-3 flex items-center gap-2">
+        <span
+          className={`h-2 w-2 rounded-full animate-pulse ${isCommand ? "bg-gold" : "bg-[var(--office-gold)]"}`}
+        />
+        <span
+          className={`text-[11px] uppercase tracking-[0.25em] ${
+            isCommand ? "text-white/40" : "text-[var(--office-fg)]/50"
+          }`}
+        >
+          Live — refreshes every 20s
+        </span>
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         <select
           value={status}
