@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ExecutiveOverview } from "@/lib/executive/stats";
 import type { LowInventoryAlert } from "@/lib/inventory";
@@ -107,8 +107,6 @@ export function ExecutiveTerminal({
   const [lowInventory, setLowInventory] = useState<LowInventoryAlert[]>([]);
   const [hqMember, setHqMember] = useState<HqMember | null>(null);
   const [mounted, setMounted] = useState(false);
-  const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
-  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
   const loadOverview = useCallback(() => {
     return fetch("/api/executive/overview", { cache: "no-store" })
@@ -133,12 +131,6 @@ export function ExecutiveTerminal({
   // Poll for fresh revenue/order/activity data so the dashboard reflects
   // sales as they happen, without requiring a manual page reload.
   useLiveRefresh(loadOverview);
-
-  useEffect(() => {
-    if (!isCommand) return;
-    const el = tabRefs.current[tab];
-    if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
-  }, [tab, isCommand, mounted]);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -180,33 +172,26 @@ export function ExecutiveTerminal({
         </div>
 
         <nav
-          className={`relative mt-6 flex gap-2 overflow-x-auto border-b ${isCommand ? "border-gold/15" : "border-[var(--office-border)]"} [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isCommand ? "" : "pb-px"}`}
+          className={`mt-6 flex flex-wrap gap-x-1 gap-y-2 border-b pb-3 ${isCommand ? "border-gold/15" : "border-[var(--office-border)]"}`}
         >
           {TABS.map((t) => (
             <button
               key={t.id}
-              ref={(el) => {
-                tabRefs.current[t.id] = el;
-              }}
               type="button"
               onClick={() => setTab(t.id)}
-              className={`shrink-0 whitespace-nowrap ${isCommand ? "border-b-2 border-transparent" : "border-b-2"} px-3 py-2.5 text-xs uppercase tracking-[0.2em] transition-colors duration-300 sm:px-4 ${
+              className={`whitespace-nowrap border px-3 py-2 text-xs uppercase tracking-[0.2em] transition-colors duration-300 sm:px-4 ${
                 tab === t.id
                   ? isCommand
-                    ? "text-gold"
+                    ? "border-gold text-gold"
                     : "border-[var(--office-gold)] office-gold"
-                  : "text-white/50 hover:text-white " + (isCommand ? "" : "border-transparent")
+                  : isCommand
+                    ? "border-transparent text-white/50 hover:border-gold/30 hover:text-white"
+                    : "border-transparent text-white/50 hover:text-white"
               }`}
             >
               {t.label}
             </button>
           ))}
-          {isCommand && (
-            <span
-              className="absolute bottom-[-1px] h-[2px] bg-gold transition-all duration-500 ease-out"
-              style={{ left: indicator.left, width: indicator.width }}
-            />
-          )}
         </nav>
 
         <div className="mt-8">
