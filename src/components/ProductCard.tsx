@@ -49,17 +49,17 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className={`flex flex-col border bg-white/[0.02] transition-colors duration-300 ${active ? "border-white/10 hover:border-gold/50" : "border-white/5 opacity-50"}`}>
+    <div className={`card-elevate flex flex-col border bg-white/[0.02] transition-colors duration-300 ${active ? "border-gold/20 hover:border-gold/60" : "border-white/5 opacity-50"}`}>
       <Link href={`/shop/${product.slug}`} className="group flex flex-1 flex-col">
         <ProductImage src={product.primaryImageUrl} name={product.name} zoom sizes="(min-width: 1024px) 25vw, 50vw" />
-        <div className="border-t border-white/10 p-6">
+        <div className="border-t border-gold/10 p-6">
           <p className="text-[11px] uppercase tracking-[0.2em] text-gold/80">
             {product.category}
           </p>
-          <h3 className="mt-2 font-serif text-xl text-white">{product.name}</h3>
+          <h3 className="underline-draw mt-2 font-serif text-xl text-white">{product.name}</h3>
           <p className="mt-1 font-mono text-xs text-white/40">CAS {product.casNumber}</p>
           <div className="mt-4 flex items-center justify-between text-sm">
-            <span className="text-white/60">{product.purityPercent.toFixed(1)}% purity</span>
+            <span className="purity-badge">{product.purityPercent.toFixed(1)}% Purity</span>
             <span className="text-white">from ${minPrice}</span>
           </div>
         </div>

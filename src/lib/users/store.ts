@@ -23,6 +23,8 @@ type UserRow = {
   pending_email_token_expires_at: string | null;
   role: string | null;
   notes: string | null;
+  phone: string | null;
+  sms_opt_in: boolean;
 };
 
 function rowToUser(row: UserRow): Customer {
@@ -44,6 +46,8 @@ function rowToUser(row: UserRow): Customer {
     pendingEmailTokenExpiresAt: row.pending_email_token_expires_at ?? undefined,
     role: (row.role as Customer["role"]) ?? undefined,
     notes: row.notes ?? undefined,
+    phone: row.phone ?? undefined,
+    smsOptIn: Boolean(row.sms_opt_in),
   };
 }
 
@@ -54,6 +58,8 @@ export type CreateUserInput = {
   name?: string;
   passwordHash: string;
   marketingOptIn: boolean;
+  smsOptIn?: boolean;
+  phone?: string;
   verificationToken: string;
   verificationTokenExpiresAt: string;
 };
@@ -71,6 +77,8 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
     name: input.name,
     passwordHash: input.passwordHash,
     marketingOptIn: input.marketingOptIn,
+    smsOptIn: input.smsOptIn ?? false,
+    phone: input.phone,
     emailVerified: false,
     createdAt: new Date().toISOString(),
     verificationToken: input.verificationToken,
@@ -79,14 +87,16 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
 
   await query(
     `INSERT INTO users
-      (id, email, name, password_hash, marketing_opt_in, email_verified, created_at, verification_token, verification_token_expires_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      (id, email, name, password_hash, marketing_opt_in, sms_opt_in, phone, email_verified, created_at, verification_token, verification_token_expires_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
     [
       user.id,
       user.email,
       user.name ?? null,
       user.passwordHash,
       user.marketingOptIn,
+      user.smsOptIn,
+      user.phone ?? null,
       false,
       user.createdAt,
       user.verificationToken ?? null,
@@ -151,6 +161,8 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   pendingEmailTokenExpiresAt: "pending_email_token_expires_at",
   role: "role",
   notes: "notes",
+  phone: "phone",
+  smsOptIn: "sms_opt_in",
 };
 
 const JSON_FIELDS = new Set(["savedAddress"]);

@@ -13,6 +13,8 @@ function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [smsOptIn, setSmsOptIn] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(searchParams.get("affiliate") === "1");
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,8 @@ function SignupForm() {
           email,
           password,
           marketingOptIn,
+          phone: smsOptIn ? phone : undefined,
+          smsOptIn,
           isAffiliate: asAffiliate,
           inviteCode: asAffiliate ? inviteCode : undefined,
         }),
@@ -107,6 +111,25 @@ function SignupForm() {
           />
           Send me occasional updates about new compounds and testing results.
         </label>
+        <label className="flex items-start gap-3 text-xs leading-relaxed text-white/50">
+          <input
+            type="checkbox"
+            checked={smsOptIn}
+            onChange={(e) => setSmsOptIn(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-[#c9a227]"
+          />
+          Text me order and shipping updates by SMS. Message and data rates may apply. Reply STOP to unsubscribe at any time.
+        </label>
+        {smsOptIn && (
+          <input
+            required
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Phone number"
+            className="input-field"
+          />
+        )}
         <label className="flex items-center gap-3 text-sm text-white/60">
           <input
             type="checkbox"

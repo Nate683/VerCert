@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useState } from "react";
 import type { CustomerSummary } from "@/lib/executive/customers";
+import type { MessageTemplate } from "@/lib/types";
 import { LiveIndicator } from "./LiveIndicator";
 import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
 
@@ -10,7 +11,8 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [mode, setMode] = useState<"all-optin" | "selected">("all-optin");
+  const [mode, setMode] = useState<"all-optin" | "all-affiliates" | "selected">("all-optin");
+  const [channel, setChannel] = useState<"email" | "sms">("email");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
@@ -18,6 +20,9 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [notesDraft, setNotesDraft] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
+  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const [templateName, setTemplateName] = useState("");
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   const load = useCallback(() => {
     return fetch("/api/executive/customers", { cache: "no-store" })
@@ -26,10 +31,18 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
       .finally(() => setLoading(false));
   }, []);
 
+  const loadTemplates = useCallback(() => {
+    return fetch("/api/executive/templates", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => setTemplates(data.templates ?? []))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount-time fetch
     load();
-  }, [load]);
+    loadTemplates();
+  }, [load, loadTemplates]);
 
   useLiveRefresh(load, 20000, Boolean(expandedId) || sending);
 
@@ -70,14 +83,13 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
     setSending(true);
     setResult(null);
     try {
-      const res = await fetch("/api/executive/email/send", {
+      const recipients = mode === "selected" ? Array.from(selected) : mode;
+      const res = await fetch(channel === "email" ? "/api/executive/email/send" : "/api/executive/sms/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipients: mode === "all-optin" ? "all-optin" : Array.from(selected),
-          subject,
-          body,
-        }),
+        body: JSON.stringify(
+          channel === "email" ? { recipients, subject, body } : { recipients, body }
+        ),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to send.");
@@ -89,6 +101,35 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
     } finally {
       setSending(false);
     }
+  }
+
+  async function handleSaveTemplate() {
+    if (!templateName.trim() || !body.trim()) return;
+    setSavingTemplate(true);
+    try {
+      await fetch("/api/executive/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: templateName, channel, subject: channel === "email" ? subject : undefined, body }),
+      });
+      setTemplateName("");
+      await loadTemplates();
+    } finally {
+      setSavingTemplate(false);
+    }
+  }
+
+  function handleLoadTemplate(id: string) {
+    const t = templates.find((tpl) => tpl.id === id);
+    if (!t) return;
+    setChannel(t.channel);
+    setSubject(t.subject ?? "");
+    setBody(t.body);
+  }
+
+  async function handleDeleteTemplate(id: string) {
+    await fetch(`/api/executive/templates/${id}`, { method: "DELETE" });
+    await loadTemplates();
   }
 
   const cardClass = isCommand
@@ -221,8 +262,28 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
       </div>
 
       <div className={cardClass}>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">Compose Email</p>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">Compose {channel === "email" ? "Email" : "SMS"}</p>
         <form onSubmit={handleSend} className="mt-4 space-y-4">
+          <div className="flex flex-wrap gap-4 text-sm text-white/70">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                checked={channel === "email"}
+                onChange={() => setChannel("email")}
+                className="h-4 w-4 accent-[#c9a227]"
+              />
+              Email
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                checked={channel === "sms"}
+                onChange={() => setChannel("sms")}
+                className="h-4 w-4 accent-[#c9a227]"
+              />
+              SMS
+            </label>
+          </div>
           <div className="flex flex-wrap gap-4 text-sm text-white/70">
             <label className="flex items-center gap-2">
               <input
@@ -236,6 +297,15 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
             <label className="flex items-center gap-2">
               <input
                 type="radio"
+                checked={mode === "all-affiliates"}
+                onChange={() => setMode("all-affiliates")}
+                className="h-4 w-4 accent-[#c9a227]"
+              />
+              All affiliates
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
                 checked={mode === "selected"}
                 onChange={() => setMode("selected")}
                 className="h-4 w-4 accent-[#c9a227]"
@@ -243,14 +313,36 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
               Selected only ({selected.size})
             </label>
           </div>
-          <input
-            required
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder="Subject"
-            className="input-field"
-          />
+          {templates.filter((t) => t.channel === channel).length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                onChange={(e) => e.target.value && handleLoadTemplate(e.target.value)}
+                defaultValue=""
+                className="input-field w-auto"
+              >
+                <option value="" disabled>
+                  Load a saved template...
+                </option>
+                {templates
+                  .filter((t) => t.channel === channel)
+                  .map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
+          {channel === "email" && (
+            <input
+              required
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Subject"
+              className="input-field"
+            />
+          )}
           <textarea
             required
             value={body}
@@ -260,16 +352,55 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
             className="input-field resize-none"
           />
           <p className="text-xs text-white/30">
-            An unsubscribe link is automatically appended. Only opted-in customers ever receive these emails.
+            {channel === "email"
+              ? "An unsubscribe link is automatically appended. Only opted-in customers ever receive these emails."
+              : "STOP instructions are automatically appended. Only customers/affiliates who explicitly opted in with a phone number ever receive these texts."}
           </p>
           {result && <p className="text-sm text-gold">{result}</p>}
-          <button
-            type="submit"
-            disabled={sending || (mode === "selected" && selected.size === 0)}
-            className="border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
-          >
-            {sending ? "Sending..." : "Send Email"}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              disabled={sending || (mode === "selected" && selected.size === 0)}
+              className="border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+            >
+              {sending ? "Sending..." : `Send ${channel === "email" ? "Email" : "SMS"}`}
+            </button>
+            <input
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              placeholder="Template name"
+              className="input-field w-auto"
+            />
+            <button
+              type="button"
+              onClick={handleSaveTemplate}
+              disabled={savingTemplate || !templateName.trim() || !body.trim()}
+              className="border border-white/15 px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
+            >
+              Save as Template
+            </button>
+          </div>
+          {templates.filter((t) => t.channel === channel).length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {templates
+                .filter((t) => t.channel === channel)
+                .map((t) => (
+                  <span
+                    key={t.id}
+                    className="flex items-center gap-2 border border-white/10 px-3 py-1.5 text-xs text-white/50"
+                  >
+                    {t.name}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTemplate(t.id)}
+                      className="text-white/30 hover:text-red-300"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+            </div>
+          )}
         </form>
       </div>
     </div>

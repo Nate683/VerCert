@@ -6,16 +6,18 @@ import { useEffect } from "react";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ExecModeToggle } from "./ExecModeToggle";
-import type { SaleBannerContent } from "@/lib/site-content";
+import type { SaleBannerContent, ContactContent } from "@/lib/site-content";
 import { track } from "@/lib/track-client";
 
 // The executive terminals (/command, /office) and the /hq shared workspace
 // render their own dedicated shell instead of the storefront header/footer.
 export function SiteChrome({
   saleBanner,
+  contact,
   children,
 }: {
   saleBanner: SaleBannerContent;
+  contact: ContactContent;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -44,7 +46,7 @@ export function SiteChrome({
       )}
       <Header />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer contact={contact} />
     </>
   );
 }

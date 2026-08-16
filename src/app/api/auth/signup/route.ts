@@ -23,7 +23,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, signupSchema);
   if ("error" in parsed) return parsed.error;
-  const { name, email, password, marketingOptIn, isAffiliate, inviteCode } = parsed.data;
+  const { name, email, password, marketingOptIn, smsOptIn, phone, isAffiliate, inviteCode } = parsed.data;
 
   if (getRealmForEmail(email)) {
     return NextResponse.json(
@@ -72,6 +72,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     name,
     passwordHash,
     marketingOptIn: Boolean(marketingOptIn),
+    // Opt-in requires a phone number to be meaningful — never text without both.
+    smsOptIn: Boolean(smsOptIn) && Boolean(phone?.trim()),
+    phone: phone?.trim() || undefined,
     verificationToken,
     verificationTokenExpiresAt,
   });

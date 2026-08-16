@@ -14,6 +14,8 @@ export const signupSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8).max(200),
   marketingOptIn: z.boolean().optional(),
+  smsOptIn: z.boolean().optional(),
+  phone: z.string().trim().max(30).optional(),
   isAffiliate: z.boolean().optional(),
   inviteCode: z.string().trim().max(40).optional(),
 });

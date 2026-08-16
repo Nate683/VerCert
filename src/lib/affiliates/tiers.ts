@@ -14,3 +14,15 @@ export const AFFILIATE_TIERS: { id: AffiliateTier; label: string; commissionRate
 export function getTierInfo(tier: AffiliateTier) {
   return AFFILIATE_TIERS.find((t) => t.id === tier);
 }
+
+// Index in AFFILIATE_TIERS doubles as rank (higher = better) since the
+// array is already ordered lowest to highest.
+export function getTierRank(tier: AffiliateTier): number {
+  return AFFILIATE_TIERS.findIndex((t) => t.id === tier);
+}
+
+export function getNextTier(tier: AffiliateTier) {
+  const rank = getTierRank(tier);
+  return rank >= 0 && rank < AFFILIATE_TIERS.length - 1 ? AFFILIATE_TIERS[rank + 1] : undefined;
+}
+

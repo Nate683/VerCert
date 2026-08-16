@@ -3,8 +3,17 @@
 import { useState } from "react";
 import type { ContactContent } from "@/lib/site-content";
 import { EditableText } from "@/components/EditableText";
+import { useExecMode } from "@/lib/exec-mode-context";
+
+// Placeholder values aren't real contact details yet — never show them to
+// real visitors, only to an executive in Live Edit Mode (who needs the hint
+// to know what to fill in).
+function isUnset(value: string): boolean {
+  return value.includes("edit in EXEC MODE");
+}
 
 export default function ContactClient({ content }: { content: ContactContent }) {
+  const { execMode } = useExecMode();
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,18 +89,24 @@ export default function ContactClient({ content }: { content: ContactContent }) 
         </div>
 
         <div className="space-y-8 border-t border-white/10 pt-8 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
-          <div>
-            <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Email</h3>
-            <EditableText value={content.email} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="email" />
-          </div>
-          <div>
-            <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Phone</h3>
-            <EditableText value={content.phone} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="phone" />
-          </div>
-          <div>
-            <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Address</h3>
-            <EditableText value={content.address} as="p" multiline className="mt-2 text-sm text-white/70" contentKey="contact_page" field="address" />
-          </div>
+          {(execMode || !isUnset(content.email)) && (
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Email</h3>
+              <EditableText value={content.email} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="email" />
+            </div>
+          )}
+          {(execMode || !isUnset(content.phone)) && (
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Phone</h3>
+              <EditableText value={content.phone} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="phone" />
+            </div>
+          )}
+          {(execMode || !isUnset(content.address)) && (
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Address</h3>
+              <EditableText value={content.address} as="p" multiline className="mt-2 text-sm text-white/70" contentKey="contact_page" field="address" />
+            </div>
+          )}
           <div>
             <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Hours</h3>
             <EditableText value={content.hours} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="hours" />

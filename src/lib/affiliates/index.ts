@@ -12,7 +12,7 @@ export {
   type CreateAffiliateInput,
 } from "./store";
 export { computeAffiliateSummaries } from "./stats";
-export { AFFILIATE_TIERS, getTierInfo } from "./tiers";
+export { AFFILIATE_TIERS, getTierInfo, getTierRank, getNextTier } from "./tiers";
 export { issueAffiliateSetPasswordToken } from "./access";
 export {
   listInviteCodes,

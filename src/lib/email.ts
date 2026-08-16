@@ -188,6 +188,76 @@ export async function sendContactFormEmail(input: {
   await sendMail(input.to, subject, text, { replyTo: input.fromEmail });
 }
 
+// Auto-acknowledgment sent to the visitor themselves, confirming receipt.
+export async function sendContactAutoAckEmail(input: { toName: string; toEmail: string }): Promise<void> {
+  const subject = "We've Received Your Message — VeriCert";
+  const text = [
+    `Hi ${input.toName},`,
+    "",
+    "Thanks for reaching out to VeriCert. We've received your message and will respond as soon as possible.",
+    "",
+    "— VeriCert Research",
+  ].join("\n");
+  await sendMail(input.toEmail, subject, text);
+}
+
+// Sent when an executive raises an affiliate to a higher tier (detected by
+// comparing tier rank on PATCH) — never sent on a lateral/downward change.
+export async function sendAffiliateTierPromotionEmail(
+  affiliate: Affiliate,
+  newTierLabel: string,
+  newCommissionRate: number
+): Promise<void> {
+  const subject = `You've Been Promoted to ${newTierLabel} — VeriCert Partner Program`;
+  const partnerUrl = `${siteUrl()}/partner`;
+  const text = [
+    `Hi ${affiliate.name},`,
+    "",
+    `Congratulations — you've been promoted to ${newTierLabel} in the VeriCert Partner Program.`,
+    "",
+    `Your new commission rate: ${newCommissionRate}% of each qualifying order.`,
+    "",
+    `Sign in any time at ${partnerUrl} to see your updated rate reflected on your dashboard.`,
+    "",
+    "— VeriCert Research",
+  ].join("\n");
+
+  await sendMailWithHtml(
+    affiliate.email,
+    subject,
+    text,
+    `<p>Hi ${affiliate.name},</p>
+     <p>Congratulations — you've been promoted to <strong>${newTierLabel}</strong> in the VeriCert Partner Program.</p>
+     ${renderCalloutBox("New Commission Rate", `${newCommissionRate}%`)}
+     ${renderButton("View Your Dashboard", partnerUrl)}`
+  );
+}
+
+// Sent whenever a payout is recorded against an affiliate's commission balance.
+export async function sendAffiliateCommissionPaidEmail(affiliate: Affiliate, amount: number): Promise<void> {
+  const subject = `Commission Paid — $${amount.toFixed(2)}`;
+  const partnerUrl = `${siteUrl()}/partner`;
+  const text = [
+    `Hi ${affiliate.name},`,
+    "",
+    `A commission payment of $${amount.toFixed(2)} has been recorded to your account.`,
+    "",
+    `View your full payout history any time at ${partnerUrl}`,
+    "",
+    "— VeriCert Research",
+  ].join("\n");
+
+  await sendMailWithHtml(
+    affiliate.email,
+    subject,
+    text,
+    `<p>Hi ${affiliate.name},</p>
+     <p>A commission payment has been recorded to your account.</p>
+     ${renderCalloutBox("Amount Paid", `$${amount.toFixed(2)}`)}
+     ${renderButton("View Payout History", partnerUrl)}`
+  );
+}
+
 function renderInlineLink(href: string): string {
   return `<a href="${href}" style="color:#c9a227;text-decoration:underline;">${href}</a>`;
 }

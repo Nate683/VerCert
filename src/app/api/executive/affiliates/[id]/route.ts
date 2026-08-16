@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireCommandSession } from "@/lib/executive/require-auth";
-import { getAffiliateById, updateAffiliate, deleteAffiliate } from "@/lib/affiliates";
+import { getAffiliateById, updateAffiliate, deleteAffiliate, getTierInfo, getTierRank } from "@/lib/affiliates";
 import { updatePromoCode } from "@/lib/promotions";
 import { affiliateUpdateSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
 import { getCurrentCustomer } from "@/lib/users/current-user";
+import { sendAffiliateTierPromotionEmail } from "@/lib/email";
+import type { AffiliateTier } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +33,16 @@ export const PATCH = withApiErrorHandling(async (
   // deactivated affiliate can't still be used at checkout.
   if (affiliate?.promoCodeId && parsed.data.active !== undefined) {
     await updatePromoCode(affiliate.promoCodeId, { active: parsed.data.active });
+  }
+
+  // Only ever notify on an actual promotion (higher rank) — never on a
+  // lateral change or downgrade.
+  const newTier = parsed.data.tier as AffiliateTier | undefined;
+  if (affiliate && newTier && existing.tier && getTierRank(newTier) > getTierRank(existing.tier)) {
+    const tierInfo = getTierInfo(newTier);
+    if (tierInfo) {
+      await sendAffiliateTierPromotionEmail(affiliate, tierInfo.label, tierInfo.commissionRate).catch(() => {});
+    }
   }
 
   const actor = await getCurrentCustomer();

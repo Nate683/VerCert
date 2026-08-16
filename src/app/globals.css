@@ -8,12 +8,21 @@
   --navy: #1b2a4a;
   --navy-deep: #0d1626;
   --gold: #c9a227;
-  --command-accent-2: #2f6f5e;
+  /* Command system: obsidian (near-black) + oxblood (deep, dried-blood red)
+     + gold. Nothing else on the site uses this palette. */
+  --obsidian: #0a0708;
+  --obsidian-deep: #000000;
+  --oxblood: #3d0f16;
+  --oxblood-deep: #1a0508;
+  --command-accent-2: #7a2430;
+  /* Office system: navy + platinum + gold — same family as the storefront,
+     brighter and more open than Command. */
   --office-bg: #1b2a4a;
   --office-panel: #23345c;
   --office-border: #3a4d7a;
   --office-fg: #f3ecdd;
   --office-gold: #c9a227;
+  --office-platinum: #cdd3dd;
 }
 
 @theme inline {
@@ -59,6 +68,80 @@ body {
   @apply w-full border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none;
 }
 
+/* Storefront "pop" system: layered depth, hover motion, gold underline draw. */
+
+/* Card elevation on hover — subtle lift + deepened shadow, gold hairline glow. */
+.card-elevate {
+  transition: transform 0.35s cubic-bezier(0.2, 0.65, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.card-elevate:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.55);
+}
+
+/* Gold underline that draws in from the left on hover. Apply to an inline
+   element; pair with `relative` on the parent if it needs positioning. */
+.underline-draw {
+  position: relative;
+  display: inline-block;
+}
+
+.underline-draw::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.2, 0.65, 0.3, 1);
+}
+
+.underline-draw:hover::after {
+  transform: scaleX(1);
+}
+
+/* Small pill badge for purity/verification callouts on product cards. */
+.purity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* Scroll-triggered fade-in, toggled by the `is-visible` class from an
+   IntersectionObserver (see ScrollReveal.tsx). Restrained: short distance. */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s cubic-bezier(0.2, 0.65, 0.3, 1), transform 0.6s cubic-bezier(0.2, 0.65, 0.3, 1);
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Subtle repeating diagonal texture for dense navy blocks (trust band, etc.) */
+.texture-diagonal {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.015) 0px,
+    rgba(255, 255, 255, 0.015) 1px,
+    transparent 1px,
+    transparent 10px
+  );
+}
+
 /* Subtle V-mark watermark — large, low-opacity, non-interactive. */
 .v-watermark {
   position: absolute;
@@ -68,12 +151,13 @@ body {
 }
 
 
-/* VeriCert Executive Command: old-money power — deep navy-into-black
-   blend, film grain, thin gold structure. Not a SaaS dashboard. */
+/* VeriCert Executive Command: obsidian and oxblood with gold — private,
+   powerful, slightly intimidating. Nothing else on the site looks like
+   this. */
 .command-grain {
   position: relative;
   isolation: isolate;
-  background: radial-gradient(120% 100% at 50% -10%, #16233f 0%, #0a1120 42%, #000000 100%);
+  background: radial-gradient(120% 100% at 50% -10%, #2a1013 0%, #140708 40%, #000000 100%);
 }
 
 .command-grain::before {
@@ -84,6 +168,24 @@ body {
   pointer-events: none;
   opacity: 0.045;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Faint scanline texture — a private-terminal cue, restrained enough to
+   never interfere with reading figures. */
+.command-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.5) 0px,
+    rgba(255, 255, 255, 0.5) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
 .command-fade-in {
@@ -142,12 +244,12 @@ body {
   border-color: color-mix(in srgb, var(--command-accent-2) 45%, transparent);
 }
 
-/* Dense trading-floor panel: navy-glass surface, thin gold top rule, deep
-   shadow — the base unit of the Command layout. */
+/* Dense trading-floor panel: obsidian/oxblood-glass surface, thin gold top
+   rule, deep shadow — the base unit of the Command layout. */
 .command-panel {
   position: relative;
   border: 1px solid rgba(201, 162, 39, 0.18);
-  background: linear-gradient(180deg, rgba(27, 42, 74, 0.55) 0%, rgba(5, 8, 15, 0.55) 100%);
+  background: linear-gradient(180deg, rgba(61, 15, 22, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
   box-shadow: 0 30px 60px -32px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
@@ -168,11 +270,10 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* VeriCert Executive Office: same navy/gold system as the storefront, but
-   cleaner and lighter than Command — a different room, not a different
-   brand. */
+/* VeriCert Executive Office: navy + platinum + gold — same brand family as
+   the storefront, but cleaner, brighter, and more open than Command. */
 .office-shell {
-  background: linear-gradient(180deg, var(--office-bg) 0%, #223357 100%);
+  background: linear-gradient(180deg, var(--office-bg) 0%, #2a3d68 100%);
   color: var(--office-fg);
 }
 
@@ -181,11 +282,15 @@ body {
   border: 1px solid var(--office-border);
   background: var(--office-panel);
   padding: 1.75rem;
-  box-shadow: 0 12px 32px -20px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 12px 32px -20px rgba(0, 0, 0, 0.4);
 }
 
 .office-gold {
   color: var(--office-gold);
+}
+
+.office-platinum {
+  color: var(--office-platinum);
 }
 
 

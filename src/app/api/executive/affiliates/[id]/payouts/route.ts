@@ -5,6 +5,9 @@ import { affiliatePayoutSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
 import { getCurrentCustomer } from "@/lib/users/current-user";
+import { getUserByEmail } from "@/lib/users/store";
+import { sendAffiliateCommissionPaidEmail } from "@/lib/email";
+import { sendCommissionPaidSms } from "@/lib/sms";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +42,12 @@ export const POST = withApiErrorHandling(async (
   if ("error" in parsed) return parsed.error;
 
   const payout = await recordPayout({ affiliateId: id, ...parsed.data });
+
+  await sendAffiliateCommissionPaidEmail(affiliate, parsed.data.amount).catch(() => {});
+  const affiliateUser = await getUserByEmail(affiliate.email);
+  if (affiliateUser?.smsOptIn && affiliateUser.phone) {
+    await sendCommissionPaidSms(affiliateUser.phone, parsed.data.amount).catch(() => {});
+  }
 
   const actor = await getCurrentCustomer();
   if (actor) {

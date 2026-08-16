@@ -406,6 +406,61 @@ async function main() {
     )
   `;
 
+  // SMS opt-in (explicit, unchecked by default at signup) + phone number.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS sms_opt_in BOOLEAN NOT NULL DEFAULT FALSE`;
+
+  // Monthly/quarterly revenue targets — pace is always computed live against
+  // computeOverview()'s revenue figures, never stored.
+  await sql`
+    CREATE TABLE IF NOT EXISTS revenue_goals (
+      id TEXT PRIMARY KEY,
+      period TEXT NOT NULL UNIQUE,
+      period_type TEXT NOT NULL,
+      target_usd DOUBLE PRECISION NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
+  // Documents tab: contracts, COAs, licenses, formation docs — uploaded via
+  // Vercel Blob (same mechanism as site-content images).
+  await sql`
+    CREATE TABLE IF NOT EXISTS documents (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      file_url TEXT NOT NULL,
+      uploaded_by TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  // Calendar tab: launches, restocks, payout dates.
+  await sql`
+    CREATE TABLE IF NOT EXISTS calendar_events (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      type TEXT NOT NULL,
+      date TEXT NOT NULL,
+      notes TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  // Saved/reusable email + SMS templates for the /command compose tool.
+  await sql`
+    CREATE TABLE IF NOT EXISTS message_templates (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      channel TEXT NOT NULL,
+      subject TEXT,
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

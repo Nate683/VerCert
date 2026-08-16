@@ -24,6 +24,12 @@ import { AffiliatesPanel } from "./AffiliatesPanel";
 import { InviteCodesPanel } from "./InviteCodesPanel";
 import { AdminPanel } from "./AdminPanel";
 import { LedgerPanel } from "./LedgerPanel";
+import { BriefingPanel } from "./BriefingPanel";
+import { GoalsPanel } from "./GoalsPanel";
+import { ForecastingPanel } from "./ForecastingPanel";
+import { AlertsPanel } from "./AlertsPanel";
+import { DocumentsPanel } from "./DocumentsPanel";
+import { CalendarPanel } from "./CalendarPanel";
 import { LiveIndicator } from "./LiveIndicator";
 import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
 import { AnimatedNumber } from "./AnimatedNumber";
@@ -32,10 +38,14 @@ import { ChangeBadge } from "./ChangeBadge";
 type Variant = "command" | "office";
 type Tab =
   | "overview"
+  | "briefing"
   | "orders"
   | "products"
   | "financials"
   | "ledger"
+  | "goals"
+  | "forecasting"
+  | "alerts"
   | "intelligence"
   | "customers"
   | "assistant"
@@ -44,17 +54,25 @@ type Tab =
   | "affiliates"
   | "invite-codes"
   | "content"
+  | "documents"
+  | "calendar"
   | "chat";
 
 const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
+  { id: "briefing", label: "Briefing" },
   { id: "orders", label: "Orders" },
   { id: "products", label: "Products" },
   { id: "financials", label: "Financials" },
   { id: "ledger", label: "Ledger" },
+  { id: "goals", label: "Goals" },
+  { id: "forecasting", label: "Forecasting" },
+  { id: "alerts", label: "Alerts" },
   { id: "intelligence", label: "Intelligence" },
   { id: "customers", label: "Customers" },
   { id: "affiliates", label: "Affiliates" },
+  { id: "documents", label: "Documents" },
+  { id: "calendar", label: "Calendar" },
   { id: "chat", label: "Affiliate Chat" },
   { id: "assistant", label: "Assistant" },
   { id: "admin", label: "Admin" },
@@ -148,7 +166,7 @@ export function ExecutiveTerminal({
           <div>
             <p className={isCommand ? "text-[11px] uppercase tracking-[0.4em] text-gold" : "text-[11px] uppercase tracking-[0.3em] office-gold"}>{terminalName}</p>
             <h1 className={`mt-3 ${headingClass}`}>{executiveName}</h1>
-            <p className={isCommand ? "mt-1 font-mono text-xs uppercase tracking-[0.15em] text-white/40" : "mt-1 text-xs text-white/50"}>
+            <p className={isCommand ? "mt-1 font-mono text-xs uppercase tracking-[0.15em] text-white/40" : "mt-1 text-xs uppercase tracking-[0.1em] office-platinum"}>
               {executiveTitle}
             </p>
           </div>
@@ -247,15 +265,21 @@ export function ExecutiveTerminal({
             </div>
           )}
 
+          {tab === "briefing" && <BriefingPanel variant={variant} />}
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}
           {tab === "financials" && <FinancialsPanel variant={variant} />}
           {tab === "ledger" && <LedgerPanel variant={variant} />}
+          {tab === "goals" && <GoalsPanel variant={variant} />}
+          {tab === "forecasting" && <ForecastingPanel variant={variant} />}
+          {tab === "alerts" && <AlertsPanel variant={variant} />}
           {tab === "intelligence" && <IntelligencePanel variant={variant} />}
           {tab === "promotions" && isCommand && <PromotionsPanel />}
           {tab === "affiliates" && <AffiliatesPanel variant={variant} />}
           {tab === "invite-codes" && isCommand && <InviteCodesPanel />}
           {tab === "content" && isCommand && <SiteContentPanel />}
+          {tab === "documents" && <DocumentsPanel variant={variant} />}
+          {tab === "calendar" && <CalendarPanel variant={variant} />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
           {tab === "chat" &&
             (hqMember ? (

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getContent, DEFAULT_CONTACT } from "@/lib/site-content";
-import { sendContactFormEmail } from "@/lib/email";
+import { sendContactFormEmail, sendContactAutoAckEmail } from "@/lib/email";
 import { contactFormSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -33,6 +33,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     subject: subject ?? "",
     message,
   });
+  sendContactAutoAckEmail({ toName: name, toEmail: email }).catch((err) =>
+    console.error("Failed to send contact auto-acknowledgment:", err)
+  );
 
   return NextResponse.json({ ok: true });
 });

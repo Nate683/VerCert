@@ -200,6 +200,9 @@ export type Customer = {
   role?: "command" | "office";
   // Executive-facing only — never shown to the customer.
   notes?: string;
+  // Explicit opt-in, unchecked by default at signup — never text without it.
+  phone?: string;
+  smsOptIn: boolean;
 };
 
 export type CommissionType = "percent" | "flat";
@@ -418,3 +421,63 @@ export type OwnerTransaction = {
   notes?: string;
   createdAt: string;
 };
+
+// Revenue goals (Goals & Targets tab) — pace is always computed live
+// against existing revenue figures, never stored.
+export type GoalPeriodType = "monthly" | "quarterly";
+
+export type RevenueGoal = {
+  id: string;
+  period: string; // "2026-08" for monthly, "2026-Q3" for quarterly
+  periodType: GoalPeriodType;
+  targetUsd: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Documents tab — contracts, COAs, licenses, formation docs.
+export type CompanyDocument = {
+  id: string;
+  name: string;
+  category: string;
+  fileUrl: string;
+  uploadedBy?: string;
+  createdAt: string;
+};
+
+// Calendar tab — launches, restocks, payout dates.
+export type CalendarEventType = "launch" | "restock" | "payout" | "other";
+
+export type CalendarEvent = {
+  id: string;
+  title: string;
+  type: CalendarEventType;
+  date: string;
+  notes?: string;
+  createdAt: string;
+};
+
+// Saved/reusable email + SMS templates for the /command compose tool.
+export type MessageChannel = "email" | "sms";
+
+export type MessageTemplate = {
+  id: string;
+  name: string;
+  channel: MessageChannel;
+  subject?: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Alerts Center — computed live from existing data, never persisted.
+export type AlertSeverity = "info" | "warning" | "critical";
+
+export type Alert = {
+  id: string;
+  severity: AlertSeverity;
+  category: "low_stock" | "failed_payment" | "pending_payout" | "unusual_activity";
+  message: string;
+  createdAt: string;
+};
+

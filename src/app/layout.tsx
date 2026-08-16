@@ -7,7 +7,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { ExecModeProvider } from "@/lib/exec-mode-context";
 import { buildMetadata, SITE_NAME } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
-import { getContent, DEFAULT_SALE_BANNER } from "@/lib/site-content";
+import { getContent, DEFAULT_SALE_BANNER, DEFAULT_CONTACT } from "@/lib/site-content";
 
 const displayFont = Playfair_Display({
   variable: "--font-display",
@@ -40,6 +40,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const saleBanner = await getContent("sale_banner", DEFAULT_SALE_BANNER);
+  const contact = await getContent("contact_page", DEFAULT_CONTACT);
 
   return (
     <html
@@ -50,7 +51,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <AuthProvider>
           <ExecModeProvider>
             <CartProvider>
-              <SiteChrome saleBanner={saleBanner}>{children}</SiteChrome>
+              <SiteChrome saleBanner={saleBanner} contact={contact}>{children}</SiteChrome>
             </CartProvider>
           </ExecModeProvider>
         </AuthProvider>

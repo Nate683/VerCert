@@ -2,14 +2,27 @@ import Link from "next/link";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { VeriCertLogo } from "./VeriCertLogo";
 import { Watermark } from "./Watermark";
+import type { ContactContent } from "@/lib/site-content";
 
-export function Footer() {
+// Placeholder values aren't real contact details yet — don't show them to customers.
+function isUnset(value: string): boolean {
+  return value.includes("edit in EXEC MODE");
+}
+
+export function Footer({ contact }: { contact: ContactContent }) {
+  const contactLines = [
+    !isUnset(contact.email) && { label: contact.email, href: `mailto:${contact.email}` },
+    !isUnset(contact.phone) && { label: contact.phone, href: `tel:${contact.phone.replace(/[^\d+]/g, "")}` },
+    !isUnset(contact.address) && { label: contact.address },
+    contact.hours && { label: contact.hours },
+  ].filter((v): v is { label: string; href?: string } => Boolean(v));
+
   return (
     <footer className="relative overflow-hidden border-t border-gold/15 bg-black">
       <Watermark className="-bottom-24 -right-24 h-72 w-72" />
       <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-10">
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
+        <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="lg:col-span-1">
             <VeriCertLogo className="h-9 w-auto" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/50">
               Third-party verified research compounds for laboratory use.
@@ -44,6 +57,25 @@ export function Footer() {
               <li><Link href="/shipping-policy" className="hover:text-white">Shipping Policy</Link></li>
             </ul>
           </div>
+
+          {contactLines.length > 0 && (
+            <div>
+              <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Contact</h4>
+              <ul className="mt-4 space-y-3 text-sm text-white/60">
+                {contactLines.map((line) =>
+                  line.href ? (
+                    <li key={line.label}>
+                      <a href={line.href} className="hover:text-white">
+                        {line.label}
+                      </a>
+                    </li>
+                  ) : (
+                    <li key={line.label}>{line.label}</li>
+                  )
+                )}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="mt-16 border-t border-white/10 pt-10">

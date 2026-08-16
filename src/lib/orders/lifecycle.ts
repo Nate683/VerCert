@@ -3,6 +3,8 @@ import { updateOrder } from "./store";
 import { decrementStock, restoreStock, getLowInventoryAlerts } from "@/lib/inventory";
 import { recordRedemption, removeRedemptionForOrder } from "@/lib/promotions";
 import { sendPaymentConfirmedEmail, sendShippingNotificationEmail, sendAdminNotification } from "@/lib/email";
+import { sendPaymentReceivedSms, sendOrderShippedSms } from "@/lib/sms";
+import { getUserById } from "@/lib/users/store";
 import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 
 // Centralizes every order status transition so stock decrements/restocks and
@@ -28,6 +30,9 @@ export async function markOrderPaid(order: Order): Promise<Order | null> {
   if (updated) {
     sendPaymentConfirmedEmail(updated).catch((err) =>
       console.error("Failed to send payment confirmation email:", err)
+    );
+    notifyOrderSms(updated, (phone) => sendPaymentReceivedSms(phone, updated.reference, updated.total)).catch((err) =>
+      console.error("Failed to send payment received SMS:", err)
     );
     // Only counted against usage/per-customer limits once payment is confirmed.
     if (updated.promoCodeId) {
@@ -83,8 +88,18 @@ export async function advanceOrderStatus(
     sendShippingNotificationEmail(updated).catch((err) =>
       console.error("Failed to send shipping notification email:", err)
     );
+    notifyOrderSms(updated, (phone) => sendOrderShippedSms(phone, updated.reference)).catch((err) =>
+      console.error("Failed to send shipping notification SMS:", err)
+    );
   }
   return updated;
+}
+
+// Only ever texts a customer who explicitly opted in with a phone number.
+async function notifyOrderSms(order: Order, send: (phone: string) => Promise<void>): Promise<void> {
+  if (!order.customerId) return;
+  const user = await getUserById(order.customerId);
+  if (user?.smsOptIn && user.phone) await send(user.phone);
 }
 
 const CANCELLABLE_STATUSES: OrderStatus[] = ["awaiting_payment", "paid", "processing"];
