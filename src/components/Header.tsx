@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import { VeriCertLogo } from "./VeriCertLogo";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -21,15 +22,10 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/90 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
-        <Link href="/" className="flex flex-col leading-none" onClick={() => setMenuOpen(false)}>
-          <span className="font-serif text-2xl tracking-wide text-white">
-            VERI<span className="text-gold">CERT</span>
-          </span>
-          <span className="mt-1 text-[10px] uppercase tracking-[0.35em] text-white/40">
-            Research Peptides
-          </span>
+    <header className="sticky top-0 z-50 border-b border-gold/15 bg-navy/95 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
+        <Link href="/" className="flex items-center" onClick={() => setMenuOpen(false)}>
+          <VeriCertLogo className="h-9 w-auto sm:h-10" priority />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">

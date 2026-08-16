@@ -69,7 +69,7 @@ export function InviteCodesPanel() {
     await load();
   }
 
-  const cardClass = "border border-gold/20 bg-white/[0.02] p-6";
+  const cardClass = "command-panel p-6";
 
   return (
     <div className="space-y-6">

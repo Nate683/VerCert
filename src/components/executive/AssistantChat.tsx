@@ -41,7 +41,7 @@ export function AssistantChat({ variant }: { variant: "command" | "office" }) {
   }
 
   const cardClass = isCommand
-    ? "border border-gold/20 bg-white/[0.02] p-6"
+    ? "command-panel p-6"
     : "office-card";
 
   return (

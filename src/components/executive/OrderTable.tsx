@@ -237,7 +237,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
   }
 
   const cardClass = isCommand
-    ? "border border-gold/20 bg-white/[0.02] p-6"
+    ? "command-panel p-6"
     : "office-card";
 
   return (
@@ -344,7 +344,9 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                       <p className="mt-1 text-white/50">
                         {order.customer.firstName} {order.customer.lastName}
                       </p>
-                      <p className="mt-1 text-gold">${order.total.toFixed(2)}</p>
+                      <p className={isCommand ? "mt-1 font-mono text-gold" : "mt-1 text-gold"}>
+                        ${order.total.toFixed(2)}
+                      </p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {order.paymentMethod === "bank_transfer" && order.status === "awaiting_payment" && (
                           <button

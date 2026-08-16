@@ -43,7 +43,7 @@ export function AdminPanel({ variant }: { variant: "command" | "office" }) {
     }
   }
 
-  const cardClass = isCommand ? "border border-gold/20 bg-white/[0.02] p-6" : "office-card";
+  const cardClass = isCommand ? "command-panel p-6" : "office-card";
 
   if (loading || !settings) {
     return <p className="text-sm text-white/30">Loading...</p>;

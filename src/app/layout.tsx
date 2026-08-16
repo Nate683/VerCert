@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter } from "next/font/google";
+import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { SiteChrome } from "@/components/SiteChrome";
 import { CartProvider } from "@/lib/cart-context";
@@ -20,8 +20,18 @@ const bodyFont = Inter({
   subsets: ["latin"],
 });
 
+const monoFont = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
   ...buildMetadata({
     title: `${SITE_NAME} | Research Peptides, Verified`,
     path: "/",
@@ -34,9 +44,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}
+      className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-black text-white">
+      <body className="min-h-full flex flex-col bg-navy text-white">
         <AuthProvider>
           <ExecModeProvider>
             <CartProvider>

@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ExecutiveOverview } from "@/lib/executive/stats";
 import type { LowInventoryAlert } from "@/lib/inventory";
+import type { HqMember } from "@/lib/hq";
+import { ChatPanel } from "@/components/hq/ChatPanel";
+import { Watermark } from "@/components/Watermark";
 import { StatCard } from "./StatCard";
 import { RevenueChart } from "./RevenueChart";
 import { TopProducts } from "./TopProducts";
@@ -40,7 +43,8 @@ type Tab =
   | "promotions"
   | "affiliates"
   | "invite-codes"
-  | "content";
+  | "content"
+  | "chat";
 
 const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -51,6 +55,7 @@ const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "intelligence", label: "Intelligence" },
   { id: "customers", label: "Customers" },
   { id: "affiliates", label: "Affiliates" },
+  { id: "chat", label: "Affiliate Chat" },
   { id: "assistant", label: "Assistant" },
   { id: "admin", label: "Admin" },
 ];
@@ -82,6 +87,7 @@ export function ExecutiveTerminal({
   const [tab, setTab] = useState<Tab>("overview");
   const [overview, setOverview] = useState<ExecutiveOverview | null>(null);
   const [lowInventory, setLowInventory] = useState<LowInventoryAlert[]>([]);
+  const [hqMember, setHqMember] = useState<HqMember | null>(null);
   const [mounted, setMounted] = useState(false);
   const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
@@ -100,6 +106,10 @@ export function ExecutiveTerminal({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time fade-in trigger + mount-time fetch
     setMounted(true);
     loadOverview();
+    fetch("/api/hq/me", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setHqMember(data?.member ?? null))
+      .catch(() => {});
   }, [loadOverview]);
 
   // Poll for fresh revenue/order/activity data so the dashboard reflects
@@ -119,25 +129,26 @@ export function ExecutiveTerminal({
   }
 
   const shellClass = isCommand
-    ? `command-grain min-h-screen bg-black text-white ${mounted ? "command-fade-in" : "opacity-0"}`
+    ? `command-grain relative min-h-screen bg-black text-white ${mounted ? "command-fade-in" : "opacity-0"}`
     : "office-shell min-h-screen";
 
   const headingClass = isCommand
-    ? "font-serif text-3xl tracking-tight text-white"
+    ? "font-serif text-4xl tracking-tight text-white"
     : "text-2xl font-semibold tracking-tight text-[var(--office-fg)]";
 
   return (
     <div className={shellClass}>
+      {isCommand && <Watermark className="pointer-events-none absolute -top-24 right-0 h-[28rem] w-[28rem]" />}
       <div className={`relative z-10 mx-auto max-w-7xl px-6 lg:px-10 ${isCommand ? "py-12" : "py-14"}`}>
         <div
           className={`flex flex-wrap items-start justify-between gap-6 pb-6 ${
-            isCommand ? "border-b border-gold/25" : "border-b border-[var(--office-border)]"
+            isCommand ? "border-b border-gold/30" : "border-b border-[var(--office-border)]"
           }`}
         >
           <div>
-            <p className={isCommand ? "text-[11px] uppercase tracking-[0.35em] text-gold" : "text-[11px] uppercase tracking-[0.3em] office-gold"}>{terminalName}</p>
+            <p className={isCommand ? "text-[11px] uppercase tracking-[0.4em] text-gold" : "text-[11px] uppercase tracking-[0.3em] office-gold"}>{terminalName}</p>
             <h1 className={`mt-3 ${headingClass}`}>{executiveName}</h1>
-            <p className={isCommand ? "mt-1 text-xs uppercase tracking-[0.15em] text-white/40" : "mt-1 text-xs text-white/50"}>
+            <p className={isCommand ? "mt-1 font-mono text-xs uppercase tracking-[0.15em] text-white/40" : "mt-1 text-xs text-white/50"}>
               {executiveTitle}
             </p>
           </div>
@@ -151,7 +162,7 @@ export function ExecutiveTerminal({
         </div>
 
         <nav
-          className={`relative mt-6 flex gap-2 overflow-x-auto border-b ${isCommand ? "border-white/10" : "border-[var(--office-border)]"} [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isCommand ? "" : "pb-px"}`}
+          className={`relative mt-6 flex gap-2 overflow-x-auto border-b ${isCommand ? "border-gold/15" : "border-[var(--office-border)]"} [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isCommand ? "" : "pb-px"}`}
         >
           {TABS.map((t) => (
             <button
@@ -246,6 +257,12 @@ export function ExecutiveTerminal({
           {tab === "invite-codes" && isCommand && <InviteCodesPanel />}
           {tab === "content" && isCommand && <SiteContentPanel />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
+          {tab === "chat" &&
+            (hqMember ? (
+              <ChatPanel member={hqMember} />
+            ) : (
+              <p className="text-sm text-white/40">Loading affiliate chat…</p>
+            ))}
           {tab === "assistant" && <AssistantChat variant={variant} />}
           {tab === "admin" && <AdminPanel variant={variant} />}
         </div>
@@ -285,7 +302,7 @@ function CommandOverview({
   return (
     <div className="space-y-8">
       <div
-        className="command-reveal command-card grid grid-cols-1 gap-8 border border-gold/25 bg-white/[0.02] p-8 lg:grid-cols-[1.3fr_1fr]"
+        className="command-reveal command-panel grid grid-cols-1 gap-8 p-8 lg:grid-cols-[1.3fr_1fr]"
         style={{ ["--reveal-delay" as string]: "0ms" }}
       >
         <div className="border-b border-white/10 pb-6 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-8">

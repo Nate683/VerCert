@@ -15,7 +15,7 @@ export function RevenueChart({
     <div
       className={
         isCommand
-          ? "command-card border border-gold/20 bg-white/[0.02] p-6"
+          ? "command-card command-panel p-6"
           : "office-card"
       }
     >

@@ -49,7 +49,7 @@ const EXPENSE_CATEGORIES = [
 
 export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
   const isCommand = variant === "command";
-  const cardClass = isCommand ? "border border-gold/20 bg-white/[0.02] p-6" : "office-card";
+  const cardClass = isCommand ? "command-panel p-6" : "office-card";
 
   const [preset, setPreset] = useState<RangePreset>("mtd");
   const [customStart, setCustomStart] = useState("");

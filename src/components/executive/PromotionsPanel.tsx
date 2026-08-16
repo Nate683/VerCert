@@ -178,7 +178,7 @@ export function PromotionsPanel() {
     return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
   }
 
-  const cardClass = "border border-gold/20 bg-white/[0.02] p-6";
+  const cardClass = "command-panel p-6";
 
   return (
     <div className="space-y-6">

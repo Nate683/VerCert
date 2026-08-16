@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { NewsletterSignup } from "./NewsletterSignup";
+import { VeriCertLogo } from "./VeriCertLogo";
+import { Watermark } from "./Watermark";
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-black">
-      <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10">
+    <footer className="relative overflow-hidden border-t border-gold/15 bg-black">
+      <Watermark className="-bottom-24 -right-24 h-72 w-72" />
+      <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <span className="font-serif text-xl tracking-wide text-white">
-              VERI<span className="text-gold">CERT</span>
-            </span>
+            <VeriCertLogo className="h-9 w-auto" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/50">
               Third-party verified research compounds for laboratory use.
               Every batch, certified.

@@ -1,21 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --background: #000000;
-  --foreground: #f5f5f0;
+  /* Brand system: deep navy primary, gold accent, black as a secondary
+     depth layer (insets/panels/tooltips), warm off-white for all text. */
+  --background: #1b2a4a;
+  --foreground: #f3ecdd;
+  --navy: #1b2a4a;
+  --navy-deep: #0d1626;
   --gold: #c9a227;
   --command-accent-2: #2f6f5e;
-  --office-bg: #1a1a1c;
-  --office-panel: #232326;
-  --office-border: #37373b;
-  --office-fg: #e8e6e0;
-  --office-gold: #b9975b;
+  --office-bg: #1b2a4a;
+  --office-panel: #23345c;
+  --office-border: #3a4d7a;
+  --office-fg: #f3ecdd;
+  --office-gold: #c9a227;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-gold: var(--gold);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  /* Overrides Tailwind's default white/black so every existing text-white,
+     bg-black, border-white/X utility across the site inherits the new
+     warm-off-white / true-black brand values with no per-file changes. */
+  --color-white: var(--foreground);
+  --color-black: #000000;
   --font-serif: var(--font-display);
   --font-sans: var(--font-body);
 }
@@ -45,13 +56,24 @@ body {
 }
 
 .input-field {
-  @apply w-full border border-white/15 bg-transparent px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none;
+  @apply w-full border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none;
 }
 
-/* VeriCert Executive Command: subtle film-grain texture over the terminal background */
+/* Subtle V-mark watermark — large, low-opacity, non-interactive. */
+.v-watermark {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.04;
+  user-select: none;
+}
+
+
+/* VeriCert Executive Command: old-money power — deep navy-into-black
+   blend, film grain, thin gold structure. Not a SaaS dashboard. */
 .command-grain {
   position: relative;
   isolation: isolate;
+  background: radial-gradient(120% 100% at 50% -10%, #16233f 0%, #0a1120 42%, #000000 100%);
 }
 
 .command-grain::before {
@@ -60,7 +82,7 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.045;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -80,16 +102,17 @@ body {
 }
 
 /* Staggered section reveal used across the Command overview — pair with an
-   inline `--reveal-delay` custom property per section. */
+   inline `--reveal-delay` custom property per section. Restrained: short
+   distance, no overshoot/bounce. */
 .command-reveal {
-  animation: command-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: command-reveal 0.7s cubic-bezier(0.2, 0.65, 0.3, 1) both;
   animation-delay: var(--reveal-delay, 0s);
 }
 
 @keyframes command-reveal {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -99,12 +122,12 @@ body {
 
 /* Command hover lift for cards + the hero stat */
 .command-card {
-  transition: border-color 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .command-card:hover {
   border-color: color-mix(in srgb, var(--gold) 55%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 15%, transparent), 0 18px 40px -20px rgba(201, 162, 39, 0.35);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 15%, transparent), 0 24px 48px -24px rgba(0, 0, 0, 0.8);
 }
 
 .command-hero-figure {
@@ -119,11 +142,37 @@ body {
   border-color: color-mix(in srgb, var(--command-accent-2) 45%, transparent);
 }
 
-/* VeriCert Executive Office: charcoal + platinum, restrained gold, more
-   whitespace and conventional rounded cards — deliberately a different
-   room from Command's obsidian/gold war-room. */
+/* Dense trading-floor panel: navy-glass surface, thin gold top rule, deep
+   shadow — the base unit of the Command layout. */
+.command-panel {
+  position: relative;
+  border: 1px solid rgba(201, 162, 39, 0.18);
+  background: linear-gradient(180deg, rgba(27, 42, 74, 0.55) 0%, rgba(5, 8, 15, 0.55) 100%);
+  box-shadow: 0 30px 60px -32px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.command-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.55), transparent);
+}
+
+/* Every figure in Command reads as consequential: tabular monospace. */
+.command-figure {
+  font-family: var(--font-mono, "Courier New", monospace);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* VeriCert Executive Office: same navy/gold system as the storefront, but
+   cleaner and lighter than Command — a different room, not a different
+   brand. */
 .office-shell {
-  background: var(--office-bg);
+  background: linear-gradient(180deg, var(--office-bg) 0%, #223357 100%);
   color: var(--office-fg);
 }
 
@@ -132,7 +181,7 @@ body {
   border: 1px solid var(--office-border);
   background: var(--office-panel);
   padding: 1.75rem;
-  box-shadow: 0 12px 32px -20px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 32px -20px rgba(0, 0, 0, 0.45);
 }
 
 .office-gold {

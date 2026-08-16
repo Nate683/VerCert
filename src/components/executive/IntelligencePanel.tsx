@@ -54,7 +54,7 @@ export function IntelligencePanel({ variant }: { variant: "command" | "office" }
 
   useLiveRefresh(load);
 
-  const cardClass = isCommand ? "border border-gold/20 bg-white/[0.02] p-6" : "office-card";
+  const cardClass = isCommand ? "command-panel p-6" : "office-card";
   const maxRevenue = Math.max(1, ...trendSeries.map((p) => p.revenue));
 
   return (

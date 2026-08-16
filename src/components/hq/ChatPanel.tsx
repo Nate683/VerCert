@@ -163,11 +163,18 @@ export function ChatPanel({ member }: { member: HqMember }) {
               <div key={m.id} className={`flex ${m.senderId === member.id ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`group max-w-[80%] border px-3 py-2 text-sm ${
-                    m.senderId === member.id ? "border-gold/40 bg-gold/5 text-white" : "border-white/10 text-white/80"
+                    m.senderId === member.id
+                      ? "border-gold/40 bg-gold/5 text-white"
+                      : m.senderKind === "executive"
+                        ? "border-l-2 border-l-gold border-y-white/10 border-r-white/10 bg-white/[0.03] text-white/80"
+                        : "border-white/10 text-white/80"
                   }`}
                 >
                   {m.senderId !== member.id && (
-                    <p className="text-[10px] uppercase tracking-[0.1em] text-white/40">{m.senderName}</p>
+                    <p className="text-[10px] uppercase tracking-[0.1em] text-white/40">
+                      {m.senderName}
+                      {m.senderKind === "executive" && <span className="ml-2 text-gold">Executive</span>}
+                    </p>
                   )}
                   <p className="whitespace-pre-wrap break-words">{m.body}</p>
                   <div className="mt-1 flex items-center justify-between gap-3">

@@ -168,7 +168,7 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
     }
   }
 
-  const cardClass = "border border-gold/20 bg-white/[0.02] p-6";
+  const cardClass = isCommand ? "command-panel p-6" : "office-card";
 
   return (
     <div className="space-y-6">

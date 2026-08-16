@@ -12,7 +12,7 @@ import type {
 
 type ProductOption = { slug: string; name: string };
 
-const SECTION_CARD = "border border-gold/20 bg-white/[0.02] p-6";
+const SECTION_CARD = "command-panel p-6";
 
 function SaveButton({ saving, onClick }: { saving: boolean; onClick: () => void }) {
   return (

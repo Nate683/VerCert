@@ -1,7 +1,11 @@
-// Wraps every transactional email in a consistent black-and-gold branded
+// Wraps every transactional email in a consistent navy-and-gold branded
 // HTML shell matching the storefront. Plain-text bodies are auto-linkified
 // and line-break-preserved, so existing call sites don't need their own HTML.
+import { getSiteUrl } from "@/lib/site-url";
+
 const GOLD = "#c9a227";
+const NAVY = "#1b2a4a";
+const OFFWHITE = "#f3ecdd";
 
 function escapeHtml(s: string): string {
   return s
@@ -21,8 +25,9 @@ function linkifyAndBreak(text: string): string {
   return withLinks.replace(/\n/g, "<br />");
 }
 
-// The shared shell: wordmark header, body content, disclaimer footer.
+// The shared shell: logo header, body content, disclaimer footer.
 export function renderEmailShell(subject: string, bodyHtml: string): string {
+  const logoUrl = `${getSiteUrl()}/logo.png`;
   return `<!DOCTYPE html>
 <html>
   <head>
@@ -34,20 +39,19 @@ export function renderEmailShell(subject: string, bodyHtml: string): string {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#000000;padding:32px 16px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" style="max-width:560px;" cellpadding="0" cellspacing="0">
+          <table role="presentation" width="100%" style="max-width:560px;background-color:${NAVY};" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="padding-bottom:28px;text-align:center;border-bottom:1px solid rgba(201,162,39,0.25);">
-                <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:4px;color:${GOLD};text-transform:uppercase;">VeriCert</span>
-                <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-top:6px;">Research Peptides</div>
+              <td style="padding:28px 24px;text-align:center;border-bottom:1px solid rgba(201,162,39,0.3);">
+                <img src="${logoUrl}" alt="VeriCert Research Peptides" width="180" style="display:inline-block;max-width:180px;height:auto;" />
               </td>
             </tr>
             <tr>
-              <td style="padding:32px 4px;font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:rgba(255,255,255,0.85);">
+              <td style="padding:32px 28px;font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:${OFFWHITE};">
                 ${bodyHtml}
               </td>
             </tr>
             <tr>
-              <td style="padding-top:24px;border-top:1px solid rgba(255,255,255,0.1);font-family:Arial,sans-serif;font-size:11px;line-height:1.6;color:rgba(255,255,255,0.35);">
+              <td style="padding:20px 28px 28px;border-top:1px solid rgba(243,236,221,0.12);font-family:Arial,sans-serif;font-size:11px;line-height:1.6;color:rgba(243,236,221,0.45);">
                 For research use only. Not for human or veterinary use.<br />
                 &copy; ${new Date().getFullYear()} VeriCert Research. All rights reserved.
               </td>
@@ -70,8 +74,8 @@ export function renderEmailHtml(subject: string, bodyText: string): string {
 // A highlighted gold callout box — used for order references, affiliate
 // portal codes, etc. so they stand out from the surrounding body copy.
 export function renderCalloutBox(label: string, value: string): string {
-  return `<div style="margin:20px 0;padding:16px;border:1px solid rgba(201,162,39,0.4);background-color:rgba(201,162,39,0.05);text-align:center;">
-  <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4);">${escapeHtml(label)}</div>
+  return `<div style="margin:20px 0;padding:16px;border:1px solid rgba(201,162,39,0.4);background-color:rgba(201,162,39,0.08);text-align:center;">
+  <div style="font-family:Arial,sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(243,236,221,0.5);">${escapeHtml(label)}</div>
   <div style="font-family:'Courier New',monospace;font-size:22px;letter-spacing:2px;color:${GOLD};margin-top:6px;">${escapeHtml(value)}</div>
 </div>`;
 }
@@ -83,3 +87,4 @@ export function renderButton(label: string, href: string): string {
 }
 
 export { escapeHtml };
+
