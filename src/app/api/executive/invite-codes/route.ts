@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireCommandSession } from "@/lib/executive/require-auth";
-import { listInviteCodes, createInviteCode } from "@/lib/affiliates";
+import { listInviteCodes, createInviteCode, getTierInfo } from "@/lib/affiliates";
 import { inviteCodeSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
 import { getCurrentCustomer } from "@/lib/users/current-user";
+import { sendInviteCodeEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,18 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     const code = await createInviteCode(parsed.data);
     const actor = await getCurrentCustomer();
     if (actor) await logActivity(actor.email, "invite_code.created", code.code);
+
+    // Bound to a specific person — email them the code + signup link
+    // immediately instead of making the CEO copy/paste it by hand.
+    if (code.boundEmail) {
+      const tierInfo = getTierInfo(code.tier);
+      sendInviteCodeEmail({
+        email: code.boundEmail,
+        code: code.code,
+        tierLabel: tierInfo?.label ?? code.tier,
+      }).catch((err) => console.error("Failed to send invite code email:", err));
+    }
+
     return NextResponse.json({ code });
   } catch (err) {
     return NextResponse.json(

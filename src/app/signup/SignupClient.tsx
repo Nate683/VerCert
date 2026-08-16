@@ -16,7 +16,7 @@ function SignupForm() {
   const [phone, setPhone] = useState("");
   const [smsOptIn, setSmsOptIn] = useState(false);
   const [isAffiliate, setIsAffiliate] = useState(searchParams.get("affiliate") === "1");
-  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState(searchParams.get("code")?.toUpperCase() ?? "");
   const [error, setError] = useState<string | null>(null);
   const [invalidCode, setInvalidCode] = useState(false);
   const [submitting, setSubmitting] = useState(false);

@@ -69,6 +69,17 @@ export function InviteCodesPanel() {
     await load();
   }
 
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
+  async function handleResend(id: string) {
+    setResendingId(id);
+    try {
+      await fetch(`/api/executive/invite-codes/${id}/resend`, { method: "POST" });
+    } finally {
+      setResendingId(null);
+    }
+  }
+
   const cardClass = "command-panel p-6";
 
   return (
@@ -155,13 +166,25 @@ export function InviteCodesPanel() {
                     </td>
                     <td className="py-3">
                       {!c.usedAt && (
-                        <button
-                          type="button"
-                          onClick={() => handleRevoke(c.id)}
-                          className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
-                        >
-                          Revoke
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          {c.boundEmail && (
+                            <button
+                              type="button"
+                              onClick={() => handleResend(c.id)}
+                              disabled={resendingId === c.id}
+                              className="border border-gold/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-gold/80 hover:border-gold disabled:opacity-40"
+                            >
+                              {resendingId === c.id ? "Sending..." : "Resend"}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRevoke(c.id)}
+                            className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
+                          >
+                            Revoke
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

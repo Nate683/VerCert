@@ -116,6 +116,43 @@ export async function sendAffiliateInviteEmail(affiliate: Affiliate, setPassword
   );
 }
 
+// Sent the moment a command-only invite code is generated for a specific
+// email — the prospective affiliate never has to be handed the code by
+// hand. The signup link pre-fills the invite code via a query param.
+export async function sendInviteCodeEmail(input: {
+  email: string;
+  code: string;
+  tierLabel: string;
+}): Promise<void> {
+  const subject = "You're Invited to Become a VeriCert Affiliate";
+  const signupUrl = `${siteUrl()}/signup?affiliate=1&code=${encodeURIComponent(input.code)}`;
+  const text = [
+    `Hi,`,
+    "",
+    `You've been invited to join the VeriCert Partner Program as a ${input.tierLabel} affiliate.`,
+    "",
+    `Your invite code: ${input.code}`,
+    "",
+    `Create your account here (your invite code is already filled in):`,
+    signupUrl,
+    "",
+    `This code is single-use and tied to this email address.`,
+    "",
+    "— VeriCert Research",
+  ].join("\n");
+
+  await sendMailWithHtml(
+    input.email,
+    subject,
+    text,
+    `<p>Hi,</p>
+     <p>You've been invited to join the VeriCert Partner Program as a <strong>${input.tierLabel}</strong> affiliate.</p>
+     ${renderCalloutBox("Your Invite Code", input.code)}
+     ${renderButton("Create Your Account", signupUrl)}
+     <p>This code is single-use and tied to this email address.</p>`
+  );
+}
+
 // Sent immediately after a public /partner/apply submission, before any
 // review has happened — confirms mailbox ownership only.
 export async function sendAffiliateApplicationVerificationEmail(input: {
