@@ -210,6 +210,33 @@ async function main() {
   // promo code) an affiliate enters at login to reach their own /affiliate page.
   await sql`ALTER TABLE affiliates ADD COLUMN IF NOT EXISTS portal_code TEXT`;
 
+  // Tier assigned on application approval (standard/associate/principal/
+  // managing_principal/partner) — nullable since affiliates created via the
+  // direct-invite path don't require one.
+  await sql`ALTER TABLE affiliates ADD COLUMN IF NOT EXISTS tier TEXT`;
+
+  // Public affiliate applications submitted at /partner/apply — reviewed
+  // from /command before any real affiliate account or promo code exists.
+  await sql`
+    CREATE TABLE IF NOT EXISTS affiliate_applications (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      phone TEXT,
+      promotion_method TEXT,
+      payment_method TEXT,
+      password_hash TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+      verification_token TEXT,
+      verification_token_expires_at TEXT,
+      reject_note TEXT,
+      affiliate_id TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+
   // Lightweight funnel/analytics events (page_view, add_to_cart,
   // checkout_started, order_completed) — enough for conversion-funnel
   // reporting without a third-party analytics vendor.
@@ -243,6 +270,69 @@ async function main() {
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email TEXT`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email_token TEXT`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS pending_email_token_expires_at TIMESTAMPTZ`;
+
+  // Display name — collected at signup (unified customer/affiliate form).
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT`;
+
+  // Single-use affiliate invite codes generated from /command. The code
+  // text doubles as the affiliate's permanent referral/promo code once
+  // redeemed, so there's no separate "assign a promo code" step at signup.
+  await sql`
+    CREATE TABLE IF NOT EXISTS affiliate_invite_codes (
+      id TEXT PRIMARY KEY,
+      code TEXT NOT NULL UNIQUE,
+      bound_email TEXT,
+      tier TEXT NOT NULL,
+      customer_discount_percent DOUBLE PRECISION NOT NULL DEFAULT 0,
+      used_by_affiliate_id TEXT,
+      used_at TEXT,
+      created_by TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  // /hq shared workspace — executives + active affiliates only.
+  await sql`
+    CREATE TABLE IF NOT EXISTS hq_messages (
+      id TEXT PRIMARY KEY,
+      channel TEXT NOT NULL,
+      sender_id TEXT NOT NULL,
+      sender_name TEXT NOT NULL,
+      sender_kind TEXT NOT NULL,
+      body TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS hq_announcements (
+      id TEXT PRIMARY KEY,
+      author_name TEXT NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      pinned BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS hq_resources (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      description TEXT,
+      file_url TEXT NOT NULL,
+      file_type TEXT,
+      uploaded_by TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS hq_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `;
 
   // Financial ledger — manual bookkeeping entries. All amounts are USD.
   await sql`

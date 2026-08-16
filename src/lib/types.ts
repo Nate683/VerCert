@@ -182,6 +182,7 @@ export type SavedAddress = {
 export type Customer = {
   id: string;
   email: string;
+  name?: string;
   passwordHash: string;
   marketingOptIn: boolean;
   emailVerified: boolean;
@@ -203,6 +204,8 @@ export type Customer = {
 
 export type CommissionType = "percent" | "flat";
 
+export type AffiliateTier = "standard" | "associate" | "principal" | "managing_principal" | "partner";
+
 export type Affiliate = {
   id: string;
   name: string;
@@ -217,6 +220,9 @@ export type Affiliate = {
   // Separate from the customer-facing promo code — an affiliate enters this
   // at login (alongside their normal password) to reach their /affiliate page.
   portalCode?: string;
+  // Assigned on application approval — nullable since affiliates created via
+  // the direct-invite path don't require one.
+  tier?: AffiliateTier;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -240,6 +246,76 @@ export type AffiliateSummary = Affiliate & {
   balanceOwed: number;
   ytdRevenue: number;
   ytdCommission: number;
+};
+
+export type AffiliateApplicationStatus = "pending" | "approved" | "rejected";
+
+export type AffiliateApplication = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  promotionMethod?: string;
+  paymentMethod?: string;
+  passwordHash: string;
+  status: AffiliateApplicationStatus;
+  emailVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpiresAt?: string;
+  rejectNote?: string;
+  affiliateId?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PublicAffiliateApplication = Omit<
+  AffiliateApplication,
+  "passwordHash" | "verificationToken" | "verificationTokenExpiresAt"
+>;
+
+export type AffiliateInviteCode = {
+  id: string;
+  code: string;
+  boundEmail?: string;
+  tier: AffiliateTier;
+  customerDiscountPercent: number;
+  usedByAffiliateId?: string;
+  usedAt?: string;
+  createdBy?: string;
+  createdAt: string;
+};
+
+// ===== /hq shared workspace (executives + active affiliates only) =====
+
+export type HqMemberKind = "executive" | "affiliate";
+
+export type HqMessage = {
+  id: string;
+  channel: string; // "general" or a deterministic "dm:<idA>:<idB>" thread id
+  senderId: string;
+  senderName: string;
+  senderKind: HqMemberKind;
+  body: string;
+  createdAt: string;
+};
+
+export type HqAnnouncement = {
+  id: string;
+  authorName: string;
+  title: string;
+  body: string;
+  pinned: boolean;
+  createdAt: string;
+};
+
+export type HqResource = {
+  id: string;
+  title: string;
+  description?: string;
+  fileUrl: string;
+  fileType?: string;
+  uploadedBy?: string;
+  createdAt: string;
 };
 
 export type ActivityLogEntry = {

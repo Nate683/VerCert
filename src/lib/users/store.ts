@@ -8,6 +8,7 @@ import type { Customer, SavedAddress } from "@/lib/types";
 type UserRow = {
   id: string;
   email: string;
+  name: string | null;
   password_hash: string;
   marketing_opt_in: boolean;
   email_verified: boolean;
@@ -28,6 +29,7 @@ function rowToUser(row: UserRow): Customer {
   return {
     id: row.id,
     email: row.email,
+    name: row.name ?? undefined,
     passwordHash: row.password_hash,
     marketingOptIn: Boolean(row.marketing_opt_in),
     emailVerified: Boolean(row.email_verified),
@@ -49,6 +51,7 @@ const SELECT_ALL = "SELECT * FROM users";
 
 export type CreateUserInput = {
   email: string;
+  name?: string;
   passwordHash: string;
   marketingOptIn: boolean;
   verificationToken: string;
@@ -65,6 +68,7 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
   const user: Customer = {
     id: randomUUID(),
     email,
+    name: input.name,
     passwordHash: input.passwordHash,
     marketingOptIn: input.marketingOptIn,
     emailVerified: false,
@@ -75,11 +79,12 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
 
   await query(
     `INSERT INTO users
-      (id, email, password_hash, marketing_opt_in, email_verified, created_at, verification_token, verification_token_expires_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      (id, email, name, password_hash, marketing_opt_in, email_verified, created_at, verification_token, verification_token_expires_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [
       user.id,
       user.email,
+      user.name ?? null,
       user.passwordHash,
       user.marketingOptIn,
       false,
@@ -94,6 +99,13 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
 
 export async function listUsers(): Promise<Customer[]> {
   const rows = await query<UserRow>(`${SELECT_ALL} ORDER BY created_at DESC`);
+  return rows.map(rowToUser);
+}
+
+// Executive accounts (role is set on first executive login) — used to
+// build the /hq member roster alongside active affiliates.
+export async function listStaffUsers(): Promise<Customer[]> {
+  const rows = await query<UserRow>(`${SELECT_ALL} WHERE role IS NOT NULL`);
   return rows.map(rowToUser);
 }
 
@@ -125,6 +137,7 @@ export async function getUserByPendingEmailToken(token: string): Promise<Custome
 // Maps Customer (camelCase) fields to their Postgres column names.
 const PATCHABLE_COLUMNS: Record<string, string> = {
   email: "email",
+  name: "name",
   passwordHash: "password_hash",
   marketingOptIn: "marketing_opt_in",
   emailVerified: "email_verified",

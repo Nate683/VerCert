@@ -9,34 +9,59 @@ function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refresh } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [isAffiliate, setIsAffiliate] = useState(searchParams.get("affiliate") === "1");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [invalidCode, setInvalidCode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const next = searchParams.get("next") || "/account";
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(asAffiliate: boolean) {
     setSubmitting(true);
     setError(null);
+    setInvalidCode(false);
     try {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, marketingOptIn }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          marketingOptIn,
+          isAffiliate: asAffiliate,
+          inviteCode: asAffiliate ? inviteCode : undefined,
+        }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Something went wrong creating your account.");
+      if (!res.ok) {
+        setInvalidCode(Boolean(data.invalidCode));
+        throw new Error(data.error ?? "Something went wrong creating your account.");
+      }
       await refresh();
-      router.push(next);
+      router.push(data.isAffiliate ? "/partner" : next);
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong creating your account."
       );
       setSubmitting(false);
     }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await submit(isAffiliate);
+  }
+
+  async function handleContinueAsCustomer() {
+    setIsAffiliate(false);
+    await submit(false);
   }
 
   return (
@@ -50,11 +75,18 @@ function SignupForm() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <input
           required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Full name"
+          autoFocus
+          className="input-field"
+        />
+        <input
+          required
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email address"
-          autoFocus
           className="input-field"
         />
         <input
@@ -75,10 +107,38 @@ function SignupForm() {
           />
           Send me occasional updates about new compounds and testing results.
         </label>
+        <label className="flex items-center gap-3 text-sm text-white/60">
+          <input
+            type="checkbox"
+            checked={isAffiliate}
+            onChange={(e) => setIsAffiliate(e.target.checked)}
+            className="h-4 w-4 accent-[#c9a227]"
+          />
+          I&apos;m an affiliate
+        </label>
+        {isAffiliate && (
+          <input
+            required
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+            placeholder="Invite code"
+            className="input-field"
+          />
+        )}
         {error && (
-          <p className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
-            {error}
-          </p>
+          <div className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+            <p>{error}</p>
+            {invalidCode && (
+              <button
+                type="button"
+                onClick={handleContinueAsCustomer}
+                disabled={submitting}
+                className="mt-2 underline hover:text-red-200 disabled:opacity-40"
+              >
+                Sign up as a customer instead
+              </button>
+            )}
+          </div>
         )}
         <button
           type="submit"
@@ -106,3 +166,4 @@ export default function SignupClient() {
     </Suspense>
   );
 }
+

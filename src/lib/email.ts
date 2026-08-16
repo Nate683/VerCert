@@ -83,21 +83,21 @@ export async function sendAdminNotification(to: string, subject: string, text: s
 }
 
 // Sent when an executive adds a new affiliate (or clicks "Resend Invite"),
-// with the portal code they need — alongside their normal account
-// email/password — to reach their personal /affiliate production page.
-export async function sendAffiliateInviteEmail(affiliate: Affiliate): Promise<void> {
+// with a link to set their password — alongside their email address — to
+// reach their personal /partner production page. Reuses the standard
+// reset-password page/flow so there's no bespoke set-password UI.
+export async function sendAffiliateInviteEmail(affiliate: Affiliate, setPasswordToken: string): Promise<void> {
   const subject = "You've Been Added as a VeriCert Affiliate";
-  const loginUrl = `${siteUrl()}/login`;
+  const setPasswordUrl = `${siteUrl()}/reset-password?token=${setPasswordToken}`;
+  const partnerUrl = `${siteUrl()}/partner`;
   const text = [
     `Hi ${affiliate.name},`,
     "",
-    `You've been set up as a VeriCert affiliate. Here's how to access your personal production and commission dashboard:`,
+    `You've been set up as a VeriCert affiliate. Set your password to access your personal production and commission dashboard:`,
     "",
-    `1. Sign in (or create an account) at ${loginUrl} using this email address: ${affiliate.email}`,
-    `2. Check the "I'm an Affiliate" box on the sign-in form.`,
-    `3. Enter your affiliate code below when prompted.`,
+    setPasswordUrl,
     "",
-    `Your Affiliate Code: ${affiliate.portalCode ?? "(not yet generated — ask us to resend this invite)"}`,
+    `This link expires in 24 hours. Once you've set a password, sign in any time at ${partnerUrl} with this email address: ${affiliate.email}`,
     "",
     `Once inside, you'll see your personal referral code, orders driven, and commission earned — updated live.`,
     "",
@@ -109,15 +109,61 @@ export async function sendAffiliateInviteEmail(affiliate: Affiliate): Promise<vo
     subject,
     text,
     `<p>Hi ${affiliate.name},</p>
-     <p>You've been set up as a VeriCert affiliate. Here's how to access your personal production and commission dashboard:</p>
-     <ol>
-       <li>Sign in (or create an account) at ${renderInlineLink(loginUrl)} using this email address: <strong>${affiliate.email}</strong></li>
-       <li>Check the "I'm an Affiliate" box on the sign-in form.</li>
-       <li>Enter your affiliate code below when prompted.</li>
-     </ol>
-     ${affiliate.portalCode ? renderCalloutBox("Your Affiliate Code", affiliate.portalCode) : "<p>Ask us to resend this invite once your code is generated.</p>"}
-     ${renderButton("Sign In", loginUrl)}
+     <p>You've been set up as a VeriCert affiliate. Set your password to access your personal production and commission dashboard:</p>
+     ${renderButton("Set Your Password", setPasswordUrl)}
+     <p>This link expires in 24 hours. Once you've set a password, sign in any time at ${renderInlineLink(partnerUrl)} with this email address: <strong>${affiliate.email}</strong></p>
      <p>Once inside, you'll see your personal referral code, orders driven, and commission earned — updated live.</p>`
+  );
+}
+
+// Sent immediately after a public /partner/apply submission, before any
+// review has happened — confirms mailbox ownership only.
+export async function sendAffiliateApplicationVerificationEmail(input: {
+  name: string;
+  email: string;
+  token: string;
+}): Promise<void> {
+  const subject = "Verify Your VeriCert Partner Application";
+  const verifyUrl = `${siteUrl()}/api/partner/verify-email?token=${input.token}`;
+  const text = [
+    `Hi ${input.name},`,
+    "",
+    `Thanks for applying to the VeriCert Partner Program. Please verify your email address by visiting:`,
+    verifyUrl,
+    "",
+    `This link expires in 24 hours. Verifying doesn't approve your application — our team still reviews every applicant and will email you once a decision is made.`,
+    "",
+    "— VeriCert Research",
+  ].join("\n");
+  await sendMail(input.email, subject, text);
+}
+
+// Sent when /command approves a pending application — the affiliate is now
+// live with a real promo code and commission tier.
+export async function sendAffiliateApprovedEmail(affiliate: Affiliate, code: string): Promise<void> {
+  const subject = "You're Approved — Welcome to the VeriCert Partner Program";
+  const partnerUrl = `${siteUrl()}/partner`;
+  const text = [
+    `Hi ${affiliate.name},`,
+    "",
+    `Great news — your VeriCert affiliate application has been approved. You're live.`,
+    "",
+    `Your Promo Code: ${code}`,
+    "",
+    `Sign in any time at ${partnerUrl} with the email and password you applied with to see your referral code, orders driven, and commission earned — updated live.`,
+    "",
+    "— VeriCert Research",
+  ].join("\n");
+
+  await sendMailWithHtml(
+    affiliate.email,
+    subject,
+    text,
+    `<p>Hi ${affiliate.name},</p>
+     <p>Great news — your VeriCert affiliate application has been approved. You're live.</p>
+     ${renderCalloutBox("Your Promo Code", code)}
+     ${renderButton("Sign In to the Partner Portal", partnerUrl)}
+     <p>Sign in any time with the email and password you applied with to see your referral code, orders driven, and commission earned — updated live.</p>`
   );
 }
 

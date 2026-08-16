@@ -5,6 +5,7 @@ import {
   createAffiliate,
   computeAffiliateSummaries,
   getAllPayouts,
+  issueAffiliateSetPasswordToken,
 } from "@/lib/affiliates";
 import { listOrders } from "@/lib/orders/store";
 import { listPromoCodes } from "@/lib/promotions";
@@ -93,7 +94,8 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     const actor = await getCurrentCustomer();
     if (actor) await logActivity(actor.email, "affiliate.created", affiliate.name);
     try {
-      await sendAffiliateInviteEmail(affiliate);
+      const token = await issueAffiliateSetPasswordToken(affiliate);
+      await sendAffiliateInviteEmail(affiliate, token);
     } catch (err) {
       console.error("Failed to send affiliate invite email:", err);
     }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { getOrdersByCustomer } from "@/lib/orders/store";
+import { getAffiliateByEmail } from "@/lib/affiliates";
 import { AddressForm } from "./AddressForm";
 import { MarketingToggle } from "./MarketingToggle";
 import { ResendVerification } from "./ResendVerification";
@@ -25,7 +26,10 @@ export default async function AccountPage() {
   const customer = await getCurrentCustomer();
   if (!customer) redirect("/login?next=/account");
 
-  const orders = await getOrdersByCustomer(customer.id);
+  const [orders, affiliate] = await Promise.all([
+    getOrdersByCustomer(customer.id),
+    getAffiliateByEmail(customer.email),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 lg:px-10">
@@ -42,6 +46,18 @@ export default async function AccountPage() {
         </div>
         <AccountLogoutButton />
       </div>
+
+      {affiliate?.active && (
+        <div className="mt-6 flex items-center justify-between border border-gold/30 bg-gold/5 px-5 py-4">
+          <p className="text-sm text-white/70">You&apos;re a VeriCert affiliate.</p>
+          <Link
+            href="/partner"
+            className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+          >
+            Partner Portal →
+          </Link>
+        </div>
+      )}
 
       <section className="mt-10">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Email Address</h2>

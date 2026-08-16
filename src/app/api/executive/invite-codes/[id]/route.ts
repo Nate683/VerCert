@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireCommandSession } from "@/lib/executive/require-auth";
-import { getAffiliateById, issueAffiliateSetPasswordToken } from "@/lib/affiliates";
-import { sendAffiliateInviteEmail } from "@/lib/email";
+import { listInviteCodes, deleteInviteCode } from "@/lib/affiliates";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 
 export const dynamic = "force-dynamic";
 
-export const POST = withApiErrorHandling(async (
+export const DELETE = withApiErrorHandling(async (
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) => {
@@ -17,15 +16,18 @@ export const POST = withApiErrorHandling(async (
   }
 
   const { id } = await params;
-  const affiliate = await getAffiliateById(id);
-  if (!affiliate) {
-    return NextResponse.json({ error: "Affiliate not found." }, { status: 404 });
+  const existing = (await listInviteCodes()).find((c) => c.id === id);
+  if (!existing) {
+    return NextResponse.json({ error: "Invite code not found." }, { status: 404 });
+  }
+  if (existing.usedAt) {
+    return NextResponse.json({ error: "This code has already been used and can't be revoked." }, { status: 400 });
   }
 
-  await sendAffiliateInviteEmail(affiliate, await issueAffiliateSetPasswordToken(affiliate));
+  await deleteInviteCode(id);
 
   const actor = await getCurrentCustomer();
-  if (actor) await logActivity(actor.email, "affiliate.invite_resent", affiliate.name);
+  if (actor) await logActivity(actor.email, "invite_code.revoked", existing.code);
 
   return NextResponse.json({ ok: true });
 });

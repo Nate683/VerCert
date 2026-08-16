@@ -18,6 +18,7 @@ import { SiteContentPanel } from "./SiteContentPanel";
 import { FinancialsPanel } from "./FinancialsPanel";
 import { IntelligencePanel } from "./IntelligencePanel";
 import { AffiliatesPanel } from "./AffiliatesPanel";
+import { InviteCodesPanel } from "./InviteCodesPanel";
 import { AdminPanel } from "./AdminPanel";
 import { LedgerPanel } from "./LedgerPanel";
 import { LiveIndicator } from "./LiveIndicator";
@@ -38,6 +39,7 @@ type Tab =
   | "admin"
   | "promotions"
   | "affiliates"
+  | "invite-codes"
   | "content";
 
 const BASE_TABS: { id: Tab; label: string }[] = [
@@ -55,9 +57,11 @@ const BASE_TABS: { id: Tab; label: string }[] = [
 
 // Promotions and Content editing are /command-only — /office never sees
 // these tabs. Affiliates is shared (both realms), but /office gets a
-// read-only view — see AffiliatesPanel's `variant` prop.
+// read-only view — see AffiliatesPanel's `variant` prop. Invite codes grant
+// instant affiliate access, so generating them is command-only too.
 const COMMAND_ONLY_TABS: { id: Tab; label: string }[] = [
   { id: "promotions", label: "Promotions" },
+  { id: "invite-codes", label: "Invite Codes" },
   { id: "content", label: "Content" },
 ];
 
@@ -239,6 +243,7 @@ export function ExecutiveTerminal({
           {tab === "intelligence" && <IntelligencePanel variant={variant} />}
           {tab === "promotions" && isCommand && <PromotionsPanel />}
           {tab === "affiliates" && <AffiliatesPanel variant={variant} />}
+          {tab === "invite-codes" && isCommand && <InviteCodesPanel />}
           {tab === "content" && isCommand && <SiteContentPanel />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
           {tab === "assistant" && <AssistantChat variant={variant} />}

@@ -9,8 +9,8 @@ import { ExecModeToggle } from "./ExecModeToggle";
 import type { SaleBannerContent } from "@/lib/site-content";
 import { track } from "@/lib/track-client";
 
-// The executive terminals (/command, /office) render their own dedicated
-// shell instead of the storefront header/footer.
+// The executive terminals (/command, /office) and the /hq shared workspace
+// render their own dedicated shell instead of the storefront header/footer.
 export function SiteChrome({
   saleBanner,
   children,
@@ -19,7 +19,8 @@ export function SiteChrome({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isExecutive = pathname.startsWith("/command") || pathname.startsWith("/office");
+  const isExecutive =
+    pathname.startsWith("/command") || pathname.startsWith("/office") || pathname.startsWith("/hq");
 
   useEffect(() => {
     if (!isExecutive) track("page_view", { path: pathname });

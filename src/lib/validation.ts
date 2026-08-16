@@ -7,14 +7,15 @@ import { NextResponse } from "next/server";
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1).max(200),
-  isAffiliate: z.boolean().optional(),
-  affiliateCode: z.string().trim().max(40).optional(),
 });
 
 export const signupSchema = z.object({
+  name: z.string().trim().min(1).max(200),
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8).max(200),
   marketingOptIn: z.boolean().optional(),
+  isAffiliate: z.boolean().optional(),
+  inviteCode: z.string().trim().max(40).optional(),
 });
 
 export const forgotPasswordSchema = z.object({
@@ -152,6 +153,7 @@ export const affiliateSchema = z.object({
     .regex(/^[A-Z0-9_-]+$/, "code must be letters, numbers, hyphens, or underscores"),
   customerDiscountPercent: z.number().min(0).max(100).optional(),
   active: z.boolean().optional(),
+  tier: z.enum(["standard", "associate", "principal", "managing_principal", "partner"]).optional(),
 });
 
 export const affiliateUpdateSchema = affiliateSchema
@@ -162,6 +164,37 @@ export const affiliatePayoutSchema = z.object({
   amount: z.number().min(0.01).max(1000000),
   paidAt: z.string().trim().min(1).max(40),
   note: z.string().trim().max(500).optional(),
+});
+
+export const inviteCodeSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .min(3)
+    .max(40)
+    .regex(/^[A-Z0-9_-]+$/, "code must be letters, numbers, hyphens, or underscores"),
+  boundEmail: z.string().trim().toLowerCase().email().optional().or(z.literal("")),
+  tier: z.enum(["standard", "associate", "principal", "managing_principal", "partner"]),
+  customerDiscountPercent: z.number().min(0).max(100).optional(),
+});
+
+export const hqMessageSchema = z.object({
+  channel: z.string().trim().min(1).max(200).optional(),
+  toMemberId: z.string().trim().min(1).max(100).optional(),
+  body: z.string().trim().min(1).max(4000),
+});
+
+export const hqAnnouncementSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  body: z.string().trim().min(1).max(4000),
+  pinned: z.boolean().optional(),
+});
+
+export const hqAnnouncementUpdateSchema = hqAnnouncementSchema.partial();
+
+export const hqSettingsSchema = z.object({
+  leaderboardEnabled: z.boolean(),
 });
 
 export const refundOrderSchema = z.object({

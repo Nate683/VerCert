@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { query } from "@/lib/db";
-import type { Affiliate, AffiliatePayout, CommissionType } from "@/lib/types";
+import type { Affiliate, AffiliatePayout, AffiliateTier, CommissionType } from "@/lib/types";
 import { createPromoCode, deletePromoCode, getPromoCodeByCode, updatePromoCode } from "@/lib/promotions";
 
 // Server-only Postgres-backed affiliate store. Each affiliate is backed by
@@ -19,6 +19,7 @@ type AffiliateRow = {
   commission_flat_amount: number;
   promo_code_id: string | null;
   portal_code: string | null;
+  tier: string | null;
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -46,6 +47,7 @@ function rowToAffiliate(row: AffiliateRow): Affiliate {
     commissionFlatAmount: row.commission_flat_amount,
     promoCodeId: row.promo_code_id ?? undefined,
     portalCode: row.portal_code ?? undefined,
+    tier: (row.tier as AffiliateTier | null) ?? undefined,
     active: row.active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -80,6 +82,7 @@ export type CreateAffiliateInput = {
   commissionFlatAmount?: number;
   code: string;
   customerDiscountPercent?: number;
+  tier?: AffiliateTier;
 };
 
 // Creates the affiliate and its linked promo code together. The promo code
@@ -101,8 +104,8 @@ export async function createAffiliate(input: CreateAffiliateInput): Promise<Affi
   const id = randomUUID();
   await query(
     `INSERT INTO affiliates
-      (id, name, email, phone, payment_method, notes, commission_type, commission_rate, commission_flat_amount, promo_code_id, portal_code, active, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+      (id, name, email, phone, payment_method, notes, commission_type, commission_rate, commission_flat_amount, promo_code_id, portal_code, tier, active, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
     [
       id,
       input.name,
@@ -115,6 +118,7 @@ export async function createAffiliate(input: CreateAffiliateInput): Promise<Affi
       input.commissionFlatAmount ?? 0,
       promo.id,
       generatePortalCode(),
+      input.tier ?? null,
       true,
       now,
       now,
@@ -137,6 +141,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   commissionRate: "commission_rate",
   commissionFlatAmount: "commission_flat_amount",
   portalCode: "portal_code",
+  tier: "tier",
   active: "active",
 };
 
