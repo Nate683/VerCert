@@ -220,8 +220,8 @@ export type Affiliate = {
   commissionRate: number; // percent (0-100), used when commissionType === "percent"
   commissionFlatAmount: number; // used when commissionType === "flat"
   promoCodeId?: string;
-  // Separate from the customer-facing promo code — an affiliate enters this
-  // at login (alongside their normal password) to reach their /affiliate page.
+  // Separate from the customer-facing promo code — an affiliate can enter
+  // this instead of their password at /login to reach their /partner page.
   portalCode?: string;
   // Assigned on application approval — nullable since affiliates created via
   // the direct-invite path don't require one.

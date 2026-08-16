@@ -240,8 +240,8 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
               <thead>
                 <tr className="border-b border-white/15 text-[10px] uppercase tracking-[0.1em] text-white/40">
                   <th className="pb-3 pr-4 font-normal">Affiliate</th>
-                  <th className="pb-3 pr-4 font-normal">Code</th>
-                  <th className="pb-3 pr-4 font-normal">Portal Code</th>
+                  <th className="pb-3 pr-4 font-normal">Promo Code</th>
+                  <th className="pb-3 pr-4 font-normal">Login Code</th>
                   <th className="pb-3 pr-4 font-normal">Orders</th>
                   <th className="pb-3 pr-4 font-normal">Gross Revenue</th>
                   <th className="pb-3 pr-4 font-normal">Commission Earned</th>
@@ -262,6 +262,7 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                     <td className="py-3 pr-4 font-mono text-xs">{a.code ?? "—"}</td>
                     <td className="py-3 pr-4">
                       <p className="font-mono text-xs text-gold">{a.portalCode ?? "—"}</p>
+                      <p className="text-[10px] text-white/30">Use instead of password at /login</p>
                       {isCommand && (
                         <div className="mt-1 flex flex-wrap gap-2">
                           <button

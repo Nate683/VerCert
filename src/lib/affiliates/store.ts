@@ -71,6 +71,12 @@ export async function getAffiliateByEmail(email: string): Promise<Affiliate | nu
   return rows[0] ? rowToAffiliate(rows[0]) : null;
 }
 
+// Used by the affiliate quick-login (code instead of password) at /login.
+export async function getAffiliateByPortalCode(portalCode: string): Promise<Affiliate | null> {
+  const rows = await query<AffiliateRow>(`${SELECT_ALL} WHERE portal_code = $1`, [portalCode.toUpperCase()]);
+  return rows[0] ? rowToAffiliate(rows[0]) : null;
+}
+
 export type CreateAffiliateInput = {
   name: string;
   email: string;

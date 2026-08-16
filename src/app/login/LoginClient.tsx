@@ -11,6 +11,8 @@ function LoginForm() {
   const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [portalCode, setPortalCode] = useState("");
+  const [useAffiliateCode, setUseAffiliateCode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,7 +26,9 @@ function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(
+          useAffiliateCode ? { email, portalCode } : { email, password }
+        ),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Incorrect email or password.");
@@ -55,14 +59,25 @@ function LoginForm() {
           autoFocus
           className="input-field"
         />
-        <input
-          required
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="input-field"
-        />
+        {useAffiliateCode ? (
+          <input
+            required
+            type="text"
+            value={portalCode}
+            onChange={(e) => setPortalCode(e.target.value.toUpperCase())}
+            placeholder="Affiliate code"
+            className="input-field font-mono uppercase tracking-widest"
+          />
+        ) : (
+          <input
+            required
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="input-field"
+          />
+        )}
         {error && (
           <p className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
             {error}
@@ -76,6 +91,19 @@ function LoginForm() {
           {submitting ? "Signing In..." : "Sign In"}
         </button>
       </form>
+
+      <button
+        type="button"
+        onClick={() => {
+          setUseAffiliateCode((v) => !v);
+          setError(null);
+        }}
+        className="mt-4 text-center text-xs text-white/40 hover:text-gold"
+      >
+        {useAffiliateCode
+          ? "Sign in with your password instead"
+          : "Affiliate? Sign in with your affiliate code instead"}
+      </button>
 
       <div className="mt-6 flex justify-between text-xs text-white/40">
         <Link href="/forgot-password" className="hover:text-gold">

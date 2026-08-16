@@ -4,10 +4,15 @@ import { NextResponse } from "next/server";
 // Shared zod schemas for the highest-risk request bodies (auth + money
 // paths). Parse with `parseBody` to get a consistent 400 response shape.
 
-export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(1).max(200),
-});
+export const loginSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email(),
+    password: z.string().min(1).max(200).optional(),
+    portalCode: z.string().trim().max(20).optional(),
+  })
+  .refine((data) => Boolean(data.password?.trim()) || Boolean(data.portalCode?.trim()), {
+    message: "Password or affiliate code is required.",
+  });
 
 export const signupSchema = z.object({
   name: z.string().trim().min(1).max(200),
