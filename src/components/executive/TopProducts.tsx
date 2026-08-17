@@ -1,41 +1,61 @@
 import type { TopProduct } from "@/lib/executive/stats";
+import { Panel, Empty, type Variant } from "./Chrome";
 
 export function TopProducts({
   products,
   variant,
 }: {
   products: TopProduct[];
-  variant: "command" | "office";
+  variant: Variant;
 }) {
   const isCommand = variant === "command";
   return (
-    <div
-      className={
-        isCommand
-          ? "command-card command-panel p-6"
-          : "office-card"
-      }
+    <Panel
+      variant={variant}
+      title="Top Products by Revenue"
+      tone="green"
+      meta={products.length > 0 ? `${products.length} listed` : undefined}
+      bodyClassName="px-5 pb-5 pt-4"
+      className="h-full"
     >
-      <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">Top Products by Revenue</p>
       {products.length === 0 ? (
-        <p className="mt-4 text-sm text-white/40">No paid orders yet.</p>
+        <Empty variant={variant}>No paid orders yet.</Empty>
       ) : (
-        <ul className="mt-4 space-y-3">
+        <ol className="divide-y divide-[var(--cmd-brass)]/10">
           {products.map((product, i) => (
-            <li key={product.slug} className="flex items-center justify-between text-sm">
-              <span className="text-white/70">
-                <span className={isCommand ? "font-mono text-gold" : "text-gold"}>
+            <li key={product.slug} className="flex items-baseline justify-between gap-3 py-2 text-sm">
+              <span className="flex min-w-0 items-baseline gap-2.5">
+                <span
+                  className={
+                    isCommand
+                      ? "command-figure shrink-0 text-[11px] text-[var(--cmd-brass)]/70"
+                      : "shrink-0 text-[11px] office-gold"
+                  }
+                >
                   {String(i + 1).padStart(2, "0")}
-                </span>{" "}
-                {product.name}
+                </span>
+                <span className={isCommand ? "command-body truncate" : "truncate text-[var(--office-fg)]"}>
+                  {product.name}
+                </span>
               </span>
-              <span className={isCommand ? "font-mono text-white" : "text-white"}>
-                ${product.revenue.toFixed(0)}
+              <span className="flex shrink-0 items-baseline gap-3">
+                <span
+                  className={
+                    isCommand
+                      ? "command-figure text-[11px] text-[var(--cmd-bone-faint)]"
+                      : "text-[11px] office-platinum"
+                  }
+                >
+                  {product.unitsSold} u
+                </span>
+                <span className={isCommand ? "command-figure text-sm" : "text-sm font-semibold office-gold"}>
+                  ${product.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </span>
               </span>
             </li>
           ))}
-        </ul>
+        </ol>
       )}
-    </div>
+    </Panel>
   );
 }

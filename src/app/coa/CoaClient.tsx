@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import type { CoaResult } from "@/lib/types";
 
 async function fetchCoa(batch: string): Promise<CoaResult | null> {
@@ -15,50 +16,97 @@ function CoaLookupForm() {
   const searchParams = useSearchParams();
   const [batchInput, setBatchInput] = useState("");
   const [result, setResult] = useState<CoaResult | null | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
+  // The batch actually looked up, so the "not found" message can't disagree
+  // with what the customer has since typed into the box.
+  const [searched, setSearched] = useState("");
 
   useEffect(() => {
     const prefill = searchParams.get("batch");
-    if (prefill) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from the URL query on mount
-      setBatchInput(prefill);
-      fetchCoa(prefill).then(setResult);
-    }
+    if (!prefill) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from the URL query on mount
+    setBatchInput(prefill);
+    setSearched(prefill);
+    setLoading(true);
+    fetchCoa(prefill)
+      .then(setResult)
+      .finally(() => setLoading(false));
   }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setResult(await fetchCoa(batchInput));
+    const batch = batchInput.trim();
+    if (!batch || loading) return;
+    setSearched(batch);
+    setLoading(true);
+    try {
+      setResult(await fetchCoa(batch));
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:flex-row">
+        <label htmlFor="coa-lookup" className="sr-only">
+          Batch number
+        </label>
         <input
+          id="coa-lookup"
           type="text"
           value={batchInput}
           onChange={(e) => setBatchInput(e.target.value)}
           placeholder="e.g. VC-BPC-2411"
-          className="w-full border border-white/15 bg-transparent px-4 py-3 font-mono text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none sm:flex-1"
+          autoComplete="off"
+          spellCheck={false}
+          className="w-full border border-white/15 bg-black/30 px-4 py-3 font-mono text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none sm:flex-1"
         />
         <button
           type="submit"
-          className="border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold"
+          disabled={loading || !batchInput.trim()}
+          className="border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gold disabled:hover:text-black"
         >
-          Verify
+          {loading ? "Checking…" : "Verify"}
         </button>
       </form>
 
-      {result === null && (
-        <div className="mt-10 border border-white/15 p-8 text-center">
-          <p className="font-serif text-xl text-white">No Record Found</p>
-          <p className="mt-2 text-sm text-white/50">
-            We couldn&apos;t find a certificate for batch &quot;{batchInput}&quot;.
-            Double-check the batch number printed on your vial label.
-          </p>
+      {loading && (
+        <div className="mt-10 space-y-4 border border-white/10 p-8">
+          <div className="skeleton h-3 w-40" />
+          <div className="skeleton h-8 w-64" />
+          <div className="skeleton h-3 w-32" />
+          <div className="skeleton h-40 w-full" />
         </div>
       )}
 
-      {result && (
+      {!loading && result === null && (
+        <div className="mt-10 border border-white/15 p-8 text-center">
+          <p className="font-serif text-xl text-white">No record for that batch</p>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/50">
+            Nothing is filed under &ldquo;{searched}&rdquo;. Batch numbers are
+            printed on the vial label and look like{" "}
+            <span className="font-mono text-white/70">VC-BPC-2411</span> —
+            check for a mistyped character or a missing hyphen.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            <Link
+              href="/how-we-test"
+              className="border border-white/20 px-5 py-2.5 text-xs uppercase tracking-[0.16em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+            >
+              How We Test
+            </Link>
+            <Link
+              href="/contact"
+              className="border border-white/20 px-5 py-2.5 text-xs uppercase tracking-[0.16em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+            >
+              Ask Us About It
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {!loading && result && (
         <div className="mt-10 border border-gold/40 p-8">
           <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-center">
             <div>
@@ -67,6 +115,12 @@ function CoaLookupForm() {
               </p>
               <h2 className="mt-2 font-serif text-2xl text-white">{result.productName}</h2>
               <p className="mt-1 font-mono text-xs text-white/40">Batch {result.batchNumber}</p>
+              <p className="mt-3 font-mono text-3xl text-gold">
+                {result.purityPercent.toFixed(1)}%
+                <span className="ml-2 font-sans text-xs uppercase tracking-[0.18em] text-white/40">
+                  Purity
+                </span>
+              </p>
             </div>
             <div className="text-sm text-white/60 sm:text-right">
               <p>Issued {result.dateIssued}</p>

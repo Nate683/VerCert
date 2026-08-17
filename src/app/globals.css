@@ -8,21 +8,43 @@
   --navy: #1b2a4a;
   --navy-deep: #0d1626;
   --gold: #c9a227;
-  /* Command system: obsidian (near-black) + oxblood (deep, dried-blood red)
-     + gold. Nothing else on the site uses this palette. */
-  --obsidian: #0a0708;
-  --obsidian-deep: #000000;
-  --oxblood: #3d0f16;
-  --oxblood-deep: #1a0508;
+
+  /* Command system — 1970s power broker. Every value is warm: the base is
+     near-black with a brown undertone rather than a cold grey, the gold is
+     burnished brass rather than yellow, the white is bone rather than paper.
+     Nothing else on the site uses this palette. */
+  --cmd-base: #0d0b0a;
+  --cmd-base-deep: #060505;
+  --cmd-base-raised: #17120f;
+  --cmd-oxblood: #5c1a1b;
+  --cmd-oxblood-deep: #3a1011;
+  --cmd-brass: #b8912f;
+  --cmd-brass-bright: #d9b45c;
+  --cmd-brass-dim: #7d6220;
+  --cmd-forest: #1a2e22;
+  --cmd-forest-deep: #101d16;
+  --cmd-bone: #e8e3d8;
+  --cmd-bone-dim: #a49c8c;
+  --cmd-bone-faint: #6e6759;
+
+  /* Legacy Command aliases — a few components still reference these. */
+  --obsidian: var(--cmd-base);
+  --obsidian-deep: var(--cmd-base-deep);
+  --oxblood: var(--cmd-oxblood);
+  --oxblood-deep: var(--cmd-oxblood-deep);
   --command-accent-2: #7a2430;
+
   /* Office system: navy + platinum + gold — same family as the storefront,
-     brighter and more open than Command. */
-  --office-bg: #1b2a4a;
-  --office-panel: #23345c;
-  --office-border: #3a4d7a;
+     brighter and more open than Command. A different room, same building. */
+  --office-bg: #16243f;
+  --office-bg-2: #1f3055;
+  --office-panel: #223255;
+  --office-panel-raised: #2a3d68;
+  --office-border: #3d5182;
   --office-fg: #f3ecdd;
   --office-gold: #c9a227;
   --office-platinum: #cdd3dd;
+  --office-platinum-dim: #8e9ab1;
 }
 
 @theme inline {
@@ -31,6 +53,9 @@
   --color-gold: var(--gold);
   --color-navy: var(--navy);
   --color-navy-deep: var(--navy-deep);
+  --color-brass: var(--cmd-brass);
+  --color-bone: var(--cmd-bone);
+  --color-oxblood: var(--cmd-oxblood);
   /* Overrides Tailwind's default white/black so every existing text-white,
      bg-black, border-white/X utility across the site inherits the new
      warm-off-white / true-black brand values with no per-file changes. */
@@ -68,7 +93,9 @@ body {
   @apply w-full border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none;
 }
 
-/* Storefront "pop" system: layered depth, hover motion, gold underline draw. */
+/* ==========================================================================
+   STOREFRONT — layered depth, hover motion, gold underline draw.
+   ========================================================================== */
 
 /* Card elevation on hover — subtle lift + deepened shadow, gold hairline glow. */
 .card-elevate {
@@ -150,90 +177,378 @@ body {
   user-select: none;
 }
 
+/* Loading skeleton — a slow shimmer over a dim block. Every async surface on
+   the storefront shows one of these instead of a blank screen. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
 
-/* VeriCert Executive Command: obsidian and oxblood with gold — private,
-   powerful, slightly intimidating. Nothing else on the site looks like
-   this. */
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.07) 50%,
+    transparent 100%
+  );
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Storefront pop-in for instant-search results and drawers. */
+.pop-in {
+  animation: pop-in 0.22s cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide the native clear/decoration on search inputs so our own control is
+   the only affordance. */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* ==========================================================================
+   COMMAND — 1970s power broker. A private club back room: cigar smoke,
+   oxblood leather, brass, dark wood, marble. Every surface is a material.
+   ========================================================================== */
+
+/* The room itself. Lamplight falls from the upper left, the corners fall away
+   into a warm vignette, and film grain sits over the whole thing. */
+.command-shell,
 .command-grain {
   position: relative;
   isolation: isolate;
-  background: radial-gradient(120% 100% at 50% -10%, #2a1013 0%, #140708 40%, #000000 100%);
+  /* Re-point the two brand variables the storefront utilities resolve through
+     (`text-gold`, `text-white`, `border-white/15`, …) at the Command palette.
+     Every panel in the terminal inherits burnished brass and bone from this
+     one declaration, with no per-component edits. */
+  --gold: var(--cmd-brass);
+  --foreground: var(--cmd-bone);
+  color: var(--cmd-bone);
+  background-color: var(--cmd-base);
+  background-image:
+    radial-gradient(120% 90% at 18% -10%, rgba(184, 145, 47, 0.11) 0%, transparent 55%),
+    radial-gradient(100% 80% at 82% 0%, rgba(92, 26, 27, 0.28) 0%, transparent 60%),
+    linear-gradient(180deg, #17110e 0%, var(--cmd-base) 42%, var(--cmd-base-deep) 100%);
 }
 
+/* Warm vignette — lamplight, not screen glow. */
+.command-shell::before,
 .command-grain::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.045;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background:
+    radial-gradient(115% 95% at 50% 40%, transparent 45%, rgba(0, 0, 0, 0.55) 100%),
+    radial-gradient(70% 55% at 22% 8%, rgba(217, 180, 92, 0.06) 0%, transparent 70%);
 }
 
-/* Faint scanline texture — a private-terminal cue, restrained enough to
-   never interfere with reading figures. */
+/* Film grain — visible, drifting very slowly so it reads as emulsion rather
+   than a static overlay. */
+.command-shell::after,
 .command-grain::after {
   content: "";
   position: fixed;
+  inset: -50%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.085;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: command-grain-drift 8s steps(6) infinite;
+}
+
+@keyframes command-grain-drift {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-2%, 1%); }
+  40% { transform: translate(1%, -2%); }
+  60% { transform: translate(-1%, -1%); }
+  80% { transform: translate(2%, 1%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* --- Panels: oxblood leather stretched over a dark frame ---------------- */
+
+.command-panel {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid rgba(184, 145, 47, 0.22);
+  background-color: var(--cmd-base-raised);
+  background-image:
+    url("/textures/leather.svg"),
+    linear-gradient(168deg, rgba(92, 26, 27, 0.42) 0%, rgba(58, 16, 17, 0.24) 46%, rgba(6, 5, 5, 0.5) 100%);
+  background-size: 300px 300px, cover;
+  background-repeat: repeat, no-repeat;
+  box-shadow:
+    0 32px 64px -34px rgba(0, 0, 0, 0.95),
+    inset 0 1px 0 rgba(232, 227, 216, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* Thin double gold rule across the head of every panel — art-deco, not a
+   highlight. */
+.command-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  pointer-events: none;
+  background-image:
+    linear-gradient(90deg, transparent, rgba(184, 145, 47, 0.75) 12%, rgba(217, 180, 92, 0.85) 50%, rgba(184, 145, 47, 0.75) 88%, transparent),
+    linear-gradient(90deg, transparent, rgba(184, 145, 47, 0.35) 20%, rgba(184, 145, 47, 0.35) 80%, transparent);
+  background-size: 100% 1px, 100% 1px;
+  background-position: 0 0, 0 3px;
+  background-repeat: no-repeat;
+}
+
+/* Corner ornaments — four engraved brackets, drawn as eight background
+   layers so no extra markup is needed on any panel. */
+.command-panel::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    linear-gradient(var(--cmd-brass), var(--cmd-brass)), linear-gradient(var(--cmd-brass), var(--cmd-brass)),
+    linear-gradient(var(--cmd-brass), var(--cmd-brass)), linear-gradient(var(--cmd-brass), var(--cmd-brass)),
+    linear-gradient(var(--cmd-brass), var(--cmd-brass)), linear-gradient(var(--cmd-brass), var(--cmd-brass)),
+    linear-gradient(var(--cmd-brass), var(--cmd-brass)), linear-gradient(var(--cmd-brass), var(--cmd-brass));
+  background-size:
+    12px 1px, 1px 12px,
+    12px 1px, 1px 12px,
+    12px 1px, 1px 12px,
+    12px 1px, 1px 12px;
+  background-position:
+    top left, top left,
+    top right, top right,
+    bottom left, bottom left,
+    bottom right, bottom right;
+  background-repeat: no-repeat;
+  opacity: 0.45;
+}
+
+/* Guilloche engraving — the banknote lathe-work, reserved for the panels that
+   carry the headline figures. */
+.command-engraved {
+  position: relative;
+}
+
+.command-engraved > * {
+  position: relative;
+  z-index: 1;
+}
+
+.command-engraved::before {
+  content: "";
+  position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.05;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.5) 0px,
-    rgba(255, 255, 255, 0.5) 1px,
-    transparent 1px,
-    transparent 3px
-  );
+  opacity: 0.09;
+  background-image: url("/textures/guilloche.svg");
+  background-position: right -80px top -110px;
+  background-repeat: no-repeat;
+  background-size: 440px 440px;
 }
 
-.command-fade-in {
-  animation: command-fade-in 1.1s ease-out both;
+/* Secondary panel tone — deep forest green, for the ledger/holdings side of
+   the room. */
+.command-panel--green {
+  background-image:
+    url("/textures/leather.svg"),
+    linear-gradient(168deg, rgba(26, 46, 34, 0.7) 0%, rgba(16, 29, 22, 0.45) 46%, rgba(6, 5, 5, 0.5) 100%);
 }
 
-@keyframes command-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Heavier oxblood tone for headline panels. */
+.command-panel--blood {
+  background-image:
+    url("/textures/leather.svg"),
+    linear-gradient(168deg, rgba(92, 26, 27, 0.72) 0%, rgba(58, 16, 17, 0.5) 52%, rgba(6, 5, 5, 0.55) 100%);
 }
 
-/* Staggered section reveal used across the Command overview — pair with an
-   inline `--reveal-delay` custom property per section. Restrained: short
-   distance, no overshoot/bounce. */
-.command-reveal {
-  animation: command-reveal 0.7s cubic-bezier(0.2, 0.65, 0.3, 1) both;
-  animation-delay: var(--reveal-delay, 0s);
-}
-
-@keyframes command-reveal {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Command hover lift for cards + the hero stat */
 .command-card {
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  transition: border-color 0.5s ease, box-shadow 0.5s ease;
 }
 
 .command-card:hover {
-  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 15%, transparent), 0 24px 48px -24px rgba(0, 0, 0, 0.8);
+  border-color: rgba(184, 145, 47, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(184, 145, 47, 0.14),
+    0 32px 64px -30px rgba(0, 0, 0, 0.95),
+    inset 0 1px 0 rgba(232, 227, 216, 0.09);
+}
+
+/* --- Brass plaque: engraved, beveled section header --------------------- */
+
+.command-plaque {
+  position: relative;
+  /* Above the panel's corner ornaments, which are drawn on ::after. */
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.875rem;
+  background-image: linear-gradient(
+    180deg,
+    #6b5420 0%,
+    #a5822c 18%,
+    #d6b258 46%,
+    #9c7a28 62%,
+    #5e4a1c 100%
+  );
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 236, 180, 0.5),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    0 2px 6px -2px rgba(0, 0, 0, 0.8);
+}
+
+/* Engraved letterforms: dark ink cut into the metal, lit from above. */
+.command-plaque__text {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.28em;
+  color: #241a06;
+  text-shadow: 0 1px 0 rgba(255, 240, 195, 0.45);
+}
+
+.command-plaque__meta {
+  font-family: var(--font-ledger), "Courier New", monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  color: #2c2008;
+  text-shadow: 0 1px 0 rgba(255, 240, 195, 0.35);
+}
+
+/* --- Marble: header stone --------------------------------------------- */
+
+.command-marble {
+  position: relative;
+  isolation: isolate;
+  background-color: #14100e;
+  background-image: linear-gradient(
+    172deg,
+    #241c17 0%,
+    #171210 38%,
+    #0e0b0a 100%
+  );
+}
+
+.command-marble::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.13;
+  background-image: url("/textures/marble.svg");
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* --- Rules: thin double gold, art-deco -------------------------------- */
+
+.command-rule {
+  height: 4px;
+  border: 0;
+  background-image:
+    linear-gradient(90deg, transparent, rgba(184, 145, 47, 0.85) 8%, rgba(184, 145, 47, 0.85) 92%, transparent),
+    linear-gradient(90deg, transparent, rgba(184, 145, 47, 0.35) 8%, rgba(184, 145, 47, 0.35) 92%, transparent);
+  background-size: 100% 1px, 100% 1px;
+  background-position: 0 0, 0 3px;
+  background-repeat: no-repeat;
+}
+
+/* Centre-diamond variant for the masthead. */
+.command-rule--crest {
+  position: relative;
+}
+
+.command-rule--crest::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  height: 7px;
+  width: 7px;
+  transform: translateX(-50%) rotate(45deg);
+  background: var(--cmd-base);
+  border: 1px solid var(--cmd-brass);
+}
+
+/* --- Type ------------------------------------------------------------- */
+
+/* Section labels: small caps, widely letterspaced, brass. */
+.command-label {
+  font-family: var(--font-display), Georgia, serif;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.26em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cmd-brass);
+}
+
+.command-label--dim {
+  color: var(--cmd-bone-dim);
+}
+
+/* Headings: high-contrast serif with weight. */
+.command-heading {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--cmd-bone);
+}
+
+/* Body copy is a clean serif in bone, never pure white. */
+.command-body {
+  font-family: var(--font-read), Georgia, serif;
+  color: var(--cmd-bone);
+  line-height: 1.6;
+}
+
+/* Every figure reads as consequential: brass, tabular, monospace. */
+.command-figure {
+  font-family: var(--font-ledger), "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--cmd-brass-bright);
 }
 
 .command-hero-figure {
+  font-family: var(--font-ledger), "Courier New", monospace;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--cmd-bone);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8), 0 0 28px rgba(184, 145, 47, 0.14);
 }
 
 .command-accent-2 {
@@ -244,45 +559,193 @@ body {
   border-color: color-mix(in srgb, var(--command-accent-2) 45%, transparent);
 }
 
-/* Dense trading-floor panel: obsidian/oxblood-glass surface, thin gold top
-   rule, deep shadow — the base unit of the Command layout. */
-.command-panel {
+/* --- Tabs: brass file tabs along the top of the cabinet ---------------- */
+
+.command-tab {
   position: relative;
-  border: 1px solid rgba(201, 162, 39, 0.18);
-  background: linear-gradient(180deg, rgba(61, 15, 22, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
-  box-shadow: 0 30px 60px -32px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  font-family: var(--font-display), Georgia, serif;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.2em;
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.85rem;
+  color: var(--cmd-bone-dim);
+  border: 1px solid transparent;
+  border-bottom: 0;
+  background-color: rgba(0, 0, 0, 0.25);
+  transition: color 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
 }
 
-.command-panel::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.55), transparent);
+.command-tab:hover {
+  color: var(--cmd-bone);
+  border-color: rgba(184, 145, 47, 0.28);
+  background-color: rgba(92, 26, 27, 0.3);
 }
 
-/* Every figure in Command reads as consequential: tabular monospace. */
-.command-figure {
-  font-family: var(--font-mono, "Courier New", monospace);
+.command-tab[aria-selected="true"] {
+  color: #241a06;
+  border-color: rgba(0, 0, 0, 0.5);
+  background-image: linear-gradient(180deg, #d6b258 0%, #a5822c 55%, #7b6021 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 195, 0.55), 0 -2px 8px -3px rgba(184, 145, 47, 0.6);
+  text-shadow: 0 1px 0 rgba(255, 240, 195, 0.4);
+}
+
+/* --- Dense data surfaces ---------------------------------------------- */
+
+/* Every table inside the room picks up the ledger treatment automatically. */
+:is(.command-shell, .command-grain) table {
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
 }
 
-/* VeriCert Executive Office: navy + platinum + gold — same brand family as
-   the storefront, but cleaner, brighter, and more open than Command. */
+:is(.command-shell, .command-grain) thead th {
+  font-family: var(--font-display), Georgia, serif;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.18em;
+  color: var(--cmd-brass);
+  border-bottom: 1px solid rgba(184, 145, 47, 0.3);
+}
+
+:is(.command-shell, .command-grain) tbody tr {
+  border-bottom: 1px solid rgba(232, 227, 216, 0.06);
+  transition: background-color 0.3s ease;
+}
+
+:is(.command-shell, .command-grain) tbody tr:hover {
+  background-color: rgba(92, 26, 27, 0.25);
+}
+
+/* Fields read as engraved slots in the desk rather than web inputs. */
+:is(.command-shell, .command-grain) input,
+:is(.command-shell, .command-grain) select,
+:is(.command-shell, .command-grain) textarea {
+  color: var(--cmd-bone);
+  background-color: rgba(6, 5, 5, 0.55);
+  border-color: rgba(184, 145, 47, 0.22);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7);
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+:is(.command-shell, .command-grain) input::placeholder,
+:is(.command-shell, .command-grain) textarea::placeholder {
+  color: var(--cmd-bone-faint);
+}
+
+:is(.command-shell, .command-grain) input:focus,
+:is(.command-shell, .command-grain) select:focus,
+:is(.command-shell, .command-grain) textarea:focus {
+  outline: none;
+  border-color: rgba(184, 145, 47, 0.65);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(184, 145, 47, 0.2);
+}
+
+:is(.command-shell, .command-grain) option {
+  background-color: #17120f;
+  color: var(--cmd-bone);
+}
+
+:is(.command-shell, .command-grain) ::selection {
+  background: var(--cmd-brass);
+  color: #17120f;
+}
+
+:is(.command-shell, .command-grain) *::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+:is(.command-shell, .command-grain) *::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+:is(.command-shell, .command-grain) *::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8a6c26, #4e3d15);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+/* --- Motion: slow fades only, nothing bounces -------------------------- */
+
+.command-fade-in {
+  animation: command-fade-in 1.4s ease-out both;
+}
+
+@keyframes command-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.command-reveal {
+  animation: command-reveal 0.95s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0s);
+}
+
+@keyframes command-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .command-fade-in,
+  .command-reveal,
+  .scroll-reveal,
+  .pop-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .command-shell::after {
+    animation: none;
+  }
+
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   OFFICE — navy and platinum. Lighter, cleaner, equally capable: a different
+   room in the same building.
+   ========================================================================== */
+
 .office-shell {
-  background: linear-gradient(180deg, var(--office-bg) 0%, #2a3d68 100%);
+  min-height: 100vh;
   color: var(--office-fg);
+  background-color: var(--office-bg);
+  background-image:
+    radial-gradient(90% 60% at 50% 0%, rgba(205, 211, 221, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, var(--office-bg) 0%, var(--office-bg-2) 100%);
 }
 
 .office-card {
+  position: relative;
   border-radius: 0.75rem;
   border: 1px solid var(--office-border);
-  background: var(--office-panel);
-  padding: 1.75rem;
-  box-shadow: 0 12px 32px -20px rgba(0, 0, 0, 0.4);
+  background-image: linear-gradient(180deg, var(--office-panel-raised) 0%, var(--office-panel) 100%);
+  padding: 1.5rem;
+  box-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.office-card:hover {
+  border-color: color-mix(in srgb, var(--office-gold) 45%, var(--office-border));
+  box-shadow: 0 22px 48px -28px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.office-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--office-platinum-dim);
 }
 
 .office-gold {
@@ -293,4 +756,61 @@ body {
   color: var(--office-platinum);
 }
 
+.office-tab {
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--office-platinum-dim);
+  border: 1px solid transparent;
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
 
+.office-tab:hover {
+  color: var(--office-fg);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.office-tab[aria-selected="true"] {
+  color: #14203a;
+  background-color: var(--office-platinum);
+  border-color: var(--office-platinum);
+}
+
+.office-shell thead th {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--office-platinum-dim);
+  border-bottom: 1px solid var(--office-border);
+}
+
+.office-shell tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.office-shell tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.office-shell input,
+.office-shell select,
+.office-shell textarea {
+  color: var(--office-fg);
+  background-color: rgba(13, 22, 38, 0.55);
+  border-color: var(--office-border);
+}
+
+.office-shell input:focus,
+.office-shell select:focus,
+.office-shell textarea:focus {
+  outline: none;
+  border-color: var(--office-gold);
+}
+
+.office-shell option {
+  background-color: var(--office-panel);
+  color: var(--office-fg);
+}

@@ -1,10 +1,11 @@
 import { AnimatedNumber } from "./AnimatedNumber";
 import { ChangeBadge } from "./ChangeBadge";
+import { Panel, Readout, type Variant } from "./Chrome";
 
 type Props = {
   label: string;
   value: string;
-  variant: "command" | "office";
+  variant: Variant;
   hint?: string;
   changePercent?: number | null;
   changeLabel?: string;
@@ -12,32 +13,40 @@ type Props = {
 };
 
 export function StatCard({ label, value, variant, hint, changePercent, changeLabel, animate }: Props) {
-  const isCommand = variant === "command";
-  return (
-    <div
-      className={
-        isCommand
-          ? "command-card command-panel p-6"
-          : "office-card"
-      }
-    >
-      <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">{label}</p>
-      <p
-        className={
-          isCommand
-            ? "command-hero-figure mt-3 font-mono text-3xl text-gold"
-            : "mt-2 text-2xl font-semibold office-gold"
-        }
-      >
-        {animate ? <AnimatedNumber value={animate.value} format={animate.format} /> : value}
-      </p>
+  const figure = animate ? <AnimatedNumber value={animate.value} format={animate.format} /> : value;
+  const footnote = (
+    <>
       {changePercent !== undefined && (
-        <p className="mt-1 text-xs">
-          <ChangeBadge changePercent={changePercent} />{" "}
-          <span className="text-white/30">{changeLabel ?? "vs prior period"}</span>
-        </p>
+        <span className="flex items-center gap-1.5">
+          <ChangeBadge changePercent={changePercent ?? null} />
+          <span>{changeLabel ?? "vs prior period"}</span>
+        </span>
       )}
-      {hint && <p className="mt-1 text-xs text-white/30">{hint}</p>}
-    </div>
+      {hint && <span className="block">{hint}</span>}
+    </>
+  );
+
+  if (variant === "office") {
+    return (
+      <div className="office-card">
+        <Readout
+          variant="office"
+          label={label}
+          size="lg"
+          footnote={changePercent !== undefined || hint ? footnote : undefined}
+        >
+          {figure}
+        </Readout>
+      </div>
+    );
+  }
+
+  return (
+    <Panel variant="command" title={label} bodyClassName="px-5 pb-5 pt-4">
+      <p className="command-figure text-2xl">{figure}</p>
+      {(changePercent !== undefined || hint) && (
+        <div className="mt-1.5 space-y-0.5 text-[11px] text-[var(--cmd-bone-dim)]">{footnote}</div>
+      )}
+    </Panel>
   );
 }

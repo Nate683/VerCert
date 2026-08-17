@@ -8,6 +8,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { EditableText } from "@/components/EditableText";
 import { EditableImage } from "@/components/EditableImage";
 import { SectionToggle } from "@/components/SectionToggle";
+import { CoaQuickLookup } from "@/components/CoaQuickLookup";
 import { buildMetadata } from "@/lib/seo";
 import { getContent, DEFAULT_HOME_HERO, DEFAULT_FEATURED, DEFAULT_HOME_SECTIONS } from "@/lib/site-content";
 
@@ -121,6 +122,24 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* COA lookup — the first thing under the hero. Verification is the
+          product's whole promise, so it isn't buried behind a nav link. */}
+      <section className="border-b border-white/10 bg-white/[0.02]">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-6 py-12 lg:grid-cols-[1fr_1.1fr] lg:px-10">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-gold">Verify a Batch</p>
+            <h2 className="mt-3 font-serif text-2xl text-white">
+              Already have a vial? Check its certificate.
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-white/50">
+              Enter the batch number printed on the label to pull the
+              independent lab report for that exact lot.
+            </p>
+          </div>
+          <CoaQuickLookup />
+        </div>
+      </section>
+
       {/* Featured products */}
       <ScrollReveal>
         <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
@@ -170,6 +189,14 @@ export default async function Home() {
                 </ScrollReveal>
               ))}
             </div>
+            <ScrollReveal className="mt-14 text-center">
+              <Link
+                href="/how-we-test"
+                className="inline-block border border-white/20 px-8 py-3 text-sm uppercase tracking-[0.2em] text-white/80 transition-colors hover:border-gold hover:text-gold"
+              >
+                How We Test
+              </Link>
+            </ScrollReveal>
           </div>
         </section>
       )}

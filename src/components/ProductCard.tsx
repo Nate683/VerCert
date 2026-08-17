@@ -51,13 +51,26 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <div className={`card-elevate flex flex-col border bg-white/[0.02] transition-colors duration-300 ${active ? "border-gold/20 hover:border-gold/60" : "border-white/5 opacity-50"}`}>
       <Link href={`/shop/${product.slug}`} className="group flex flex-1 flex-col">
-        <ProductImage src={product.primaryImageUrl} name={product.name} zoom sizes="(min-width: 1024px) 25vw, 50vw" />
+        <ProductImage
+          src={product.primaryImageUrl}
+          name={product.name}
+          zoom
+          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+        />
         <div className="border-t border-gold/10 p-6">
           <p className="text-[11px] uppercase tracking-[0.2em] text-gold/80">
             {product.category}
           </p>
           <h3 className="underline-draw mt-2 font-serif text-xl text-white">{product.name}</h3>
-          <p className="mt-1 font-mono text-xs text-white/40">CAS {product.casNumber}</p>
+          <p className="mt-1 font-mono text-xs text-white/40">
+            CAS {product.casNumber}
+            {product.batchNumbers[0] && (
+              <>
+                <span className="mx-1.5 text-white/20">·</span>
+                Batch {product.batchNumbers[0]}
+              </>
+            )}
+          </p>
           <div className="mt-4 flex items-center justify-between text-sm">
             <span className="purity-badge">{product.purityPercent.toFixed(1)}% Purity</span>
             <span className="text-white">from ${minPrice}</span>
