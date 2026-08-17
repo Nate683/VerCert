@@ -37,6 +37,9 @@ yarn-error.log*
 # order data (local JSON store; contains customer PII)
 /data
 
+# local agent tooling settings
+/.claude
+
 # vercel
 .vercel
 
