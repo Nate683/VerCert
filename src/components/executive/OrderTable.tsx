@@ -387,7 +387,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                   type="checkbox"
                   checked={orders.length > 0 && selected.size === orders.length}
                   onChange={toggleSelectAll}
-                  className="h-3.5 w-3.5 accent-[#c9a227]"
+                  className="h-3.5 w-3.5 accent-gold"
                 />
               </th>
               <th className="pb-3 pr-4 font-normal">Date</th>
@@ -421,7 +421,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                       type="checkbox"
                       checked={selected.has(order.id)}
                       onChange={() => toggleSelect(order.id)}
-                      className="h-3.5 w-3.5 accent-[#c9a227]"
+                      className="h-3.5 w-3.5 accent-gold"
                     />
                   </td>
                   <td className="py-3 pr-4 text-xs text-white/50">

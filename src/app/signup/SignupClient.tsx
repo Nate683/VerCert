@@ -107,7 +107,7 @@ function SignupForm() {
             type="checkbox"
             checked={marketingOptIn}
             onChange={(e) => setMarketingOptIn(e.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-[#c9a227]"
+            className="mt-0.5 h-4 w-4 accent-gold"
           />
           Send me occasional updates about new compounds and testing results.
         </label>
@@ -116,7 +116,7 @@ function SignupForm() {
             type="checkbox"
             checked={smsOptIn}
             onChange={(e) => setSmsOptIn(e.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-[#c9a227]"
+            className="mt-0.5 h-4 w-4 accent-gold"
           />
           Text me order and shipping updates by SMS. Message and data rates may apply. Reply STOP to unsubscribe at any time.
         </label>
@@ -135,7 +135,7 @@ function SignupForm() {
             type="checkbox"
             checked={isAffiliate}
             onChange={(e) => setIsAffiliate(e.target.checked)}
-            className="h-4 w-4 accent-[#c9a227]"
+            className="h-4 w-4 accent-gold"
           />
           I&apos;m an affiliate
         </label>

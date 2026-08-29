@@ -91,7 +91,7 @@ export function AnnouncementsPanel({ member }: { member: HqMember }) {
                 type="checkbox"
                 checked={pinned}
                 onChange={(e) => setPinned(e.target.checked)}
-                className="h-4 w-4 accent-[#c9a227]"
+                className="h-4 w-4 accent-gold"
               />
               Pin to top
             </label>

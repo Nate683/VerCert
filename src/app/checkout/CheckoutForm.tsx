@@ -384,7 +384,7 @@ export function CheckoutForm({
                 type="checkbox"
                 checked={agreed}
                 onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-[#c9a227]"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-gold"
               />
               I certify that I am purchasing these products strictly for
               laboratory research purposes, and not for human or veterinary

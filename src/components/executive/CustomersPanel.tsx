@@ -189,7 +189,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                           disabled={!c.marketingOptIn}
                           checked={selected.has(c.email)}
                           onChange={() => toggleSelected(c.email)}
-                          className="h-4 w-4 accent-[#c9a227] disabled:opacity-20"
+                          className="h-4 w-4 accent-gold disabled:opacity-20"
                         />
                       </td>
                       <td className="py-3 pr-4 text-white">
@@ -270,7 +270,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                 type="radio"
                 checked={channel === "email"}
                 onChange={() => setChannel("email")}
-                className="h-4 w-4 accent-[#c9a227]"
+                className="h-4 w-4 accent-gold"
               />
               Email
             </label>
@@ -279,7 +279,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                 type="radio"
                 checked={channel === "sms"}
                 onChange={() => setChannel("sms")}
-                className="h-4 w-4 accent-[#c9a227]"
+                className="h-4 w-4 accent-gold"
               />
               SMS
             </label>
@@ -290,7 +290,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                 type="radio"
                 checked={mode === "all-optin"}
                 onChange={() => setMode("all-optin")}
-                className="h-4 w-4 accent-[#c9a227]"
+                className="h-4 w-4 accent-gold"
               />
               All opted-in customers ({optedInCount})
             </label>
@@ -299,7 +299,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                 type="radio"
                 checked={mode === "all-affiliates"}
                 onChange={() => setMode("all-affiliates")}
-                className="h-4 w-4 accent-[#c9a227]"
+                className="h-4 w-4 accent-gold"
               />
               All affiliates
             </label>
@@ -308,7 +308,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                 type="radio"
                 checked={mode === "selected"}
                 onChange={() => setMode("selected")}
-                className="h-4 w-4 accent-[#c9a227]"
+                className="h-4 w-4 accent-gold"
               />
               Selected only ({selected.size})
             </label>

@@ -475,7 +475,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
           <input value={expenseForm.paymentMethod} onChange={(e) => setExpenseForm({ ...expenseForm, paymentMethod: e.target.value })} placeholder="Payment method" className="input-field" />
           <input value={expenseForm.notes} onChange={(e) => setExpenseForm({ ...expenseForm, notes: e.target.value })} placeholder="Notes" className="input-field" />
           <label className="input-field flex items-center gap-2">
-            <input type="checkbox" checked={expenseForm.recurring} onChange={(e) => setExpenseForm({ ...expenseForm, recurring: e.target.checked })} className="h-4 w-4 accent-[#c9a227]" />
+            <input type="checkbox" checked={expenseForm.recurring} onChange={(e) => setExpenseForm({ ...expenseForm, recurring: e.target.checked })} className="h-4 w-4 accent-gold" />
             <span className="text-sm text-white/70">Recurring</span>
           </label>
           {expenseForm.recurring && (

@@ -167,7 +167,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
           step={5}
           value={maxPrice}
           onChange={(e) => setMaxPrice(Number(e.target.value))}
-          className="mt-2 w-full accent-[#c9a227]"
+          className="mt-2 w-full accent-gold"
         />
         <div className="flex justify-between font-mono text-[10px] text-white/30">
           <span>$10</span>

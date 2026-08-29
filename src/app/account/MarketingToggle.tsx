@@ -27,7 +27,7 @@ export function MarketingToggle({ initialOptIn }: { initialOptIn: boolean }) {
         checked={optIn}
         disabled={saving}
         onChange={(e) => handleChange(e.target.checked)}
-        className="h-4 w-4 accent-[#c9a227]"
+        className="h-4 w-4 accent-gold"
       />
       Send me occasional updates about new compounds and testing results.
     </label>

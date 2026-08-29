@@ -190,7 +190,7 @@ export function PromotionsPanel() {
               type="checkbox"
               checked={banner.active}
               onChange={(e) => setBanner((b) => ({ ...b, active: e.target.checked }))}
-              className="h-4 w-4 accent-[#c9a227]"
+              className="h-4 w-4 accent-gold"
             />
             <span className="text-sm text-white/70">Show announcement banner site-wide</span>
           </label>
@@ -381,7 +381,7 @@ export function PromotionsPanel() {
                 type="checkbox"
                 checked={form.active}
                 onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
-                className="h-4 w-4 accent-[#c9a227]"
+                className="h-4 w-4 accent-gold"
               />
               <span className="text-sm text-white/70">Active</span>
             </label>

@@ -66,7 +66,7 @@ export function AdminPanel({ variant }: { variant: "command" | "office" }) {
               type="checkbox"
               checked={settings.notifyNewOrder}
               onChange={(e) => setSettings({ ...settings, notifyNewOrder: e.target.checked })}
-              className="h-4 w-4 accent-[#c9a227]"
+              className="h-4 w-4 accent-gold"
             />
             <span className="text-sm text-white/70">Email me when a new order is placed</span>
           </label>
@@ -75,7 +75,7 @@ export function AdminPanel({ variant }: { variant: "command" | "office" }) {
               type="checkbox"
               checked={settings.notifyLowStock}
               onChange={(e) => setSettings({ ...settings, notifyLowStock: e.target.checked })}
-              className="h-4 w-4 accent-[#c9a227]"
+              className="h-4 w-4 accent-gold"
             />
             <span className="text-sm text-white/70">Email me when a product hits its low-stock threshold</span>
           </label>
