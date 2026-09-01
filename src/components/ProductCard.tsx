@@ -6,9 +6,19 @@ import type { Product } from "@/lib/types";
 import { ProductImage } from "./ProductImage";
 import { useExecMode } from "@/lib/exec-mode-context";
 
+// "from $40" hid the spread on products whose sizes differ by an order of
+// magnitude. Show the range, and collapse to a single figure when there is
+// only one size or every size costs the same.
+function priceRange(product: Product): string {
+  const prices = product.sizes.map((s) => s.priceUsd);
+  if (prices.length === 0) return "—";
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max ? `$${min}` : `$${min} – $${max}`;
+}
+
 export function ProductCard({ product }: { product: Product }) {
   const { execMode, beginSave, endSave } = useExecMode();
-  const minPrice = Math.min(...product.sizes.map((s) => s.priceUsd));
   const [active, setActive] = useState(product.active ?? true);
   const [priceDraft, setPriceDraft] = useState(String(product.sizes[0]?.priceUsd ?? ""));
   const [stockDraft, setStockDraft] = useState("");
@@ -49,32 +59,48 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className={`card-elevate flex flex-col border bg-surface transition-colors duration-300 ${active ? "border-gold/20 hover:border-gold/60" : "border-hairline opacity-50"}`}>
+    <div className={`card-elevate flex flex-col overflow-hidden border bg-navy transition-colors duration-300 ${active ? "border-gold/20 hover:border-gold/60" : "border-hairline opacity-50"}`}>
       <Link href={`/shop/${product.slug}`} className="group flex flex-1 flex-col">
-        <ProductImage
-          src={product.primaryImageUrl}
-          name={product.name}
-          zoom
-          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
-        />
-        <div className="border-t border-gold/10 p-6">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-gold-ink/80">
+        {/* Image area, with the two badges pinned to its corners. */}
+        <div className="relative">
+          <ProductImage
+            src={product.primaryImageUrl}
+            name={product.name}
+            zoom
+            sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+          />
+          <span className="pointer-events-none absolute left-3 top-3 border border-gold/40 bg-black/70 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-gold backdrop-blur-sm">
             {product.category}
-          </p>
-          <h3 className="underline-draw mt-2 font-serif text-xl text-navy">{product.name}</h3>
-          <p className="mt-1 font-mono text-xs text-muted">
-            CAS {product.casNumber}
-            {product.batchNumbers[0] && (
-              <>
-                <span className="mx-1.5 text-muted/50">·</span>
-                Batch {product.batchNumbers[0]}
-              </>
-            )}
-          </p>
-          <div className="mt-4 flex items-center justify-between text-sm">
-            <span className="purity-badge">{product.purityPercent.toFixed(1)}% Purity</span>
-            <span className="text-navy">from ${minPrice}</span>
+          </span>
+          <span
+            className={`pointer-events-none absolute right-3 top-3 border px-2 py-1 text-[10px] uppercase tracking-[0.16em] backdrop-blur-sm ${
+              active
+                ? "border-gold/40 bg-black/70 text-white/80"
+                : "border-white/25 bg-black/80 text-white/50"
+            }`}
+          >
+            {active ? "In Stock" : "Unavailable"}
+          </span>
+        </div>
+
+        {/* Info block. Deliberately dark against the light shell so the tile
+            reads as one object and the image sits on a matching ground. */}
+        <div className="flex flex-1 flex-col bg-navy p-5">
+          <h3 className="font-serif text-lg leading-snug text-white">{product.name}</h3>
+          <p className="mt-1 font-mono text-[11px] text-white/45">CAS {product.casNumber}</p>
+
+          <div className="mt-4 flex items-baseline justify-between gap-3">
+            <span className="text-sm text-white">{priceRange(product)}</span>
+            <span className="text-[10px] uppercase tracking-[0.14em] text-gold">
+              {product.purityPercent.toFixed(1)}% Purity
+            </span>
           </div>
+
+          {/* A span, not a button: the whole tile is already one link, and a
+              nested interactive element would be invalid and unreachable. */}
+          <span className="mt-4 block border border-gold/50 px-4 py-2.5 text-center text-[11px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:bg-gold group-hover:text-black">
+            Select options
+          </span>
         </div>
       </Link>
       {execMode && (
