@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ExecModeToggle } from "./ExecModeToggle";
+import { AgeGate } from "./AgeGate";
 import type { SaleBannerContent, ContactContent } from "@/lib/site-content";
 import { track } from "@/lib/track-client";
 
@@ -32,6 +33,9 @@ export function SiteChrome({
 
   return (
     <>
+      {/* Rendered inside this branch on purpose: the executive terminals
+          returned above, so /command, /office and /hq never see the gate. */}
+      <AgeGate />
       <ExecModeToggle />
       {saleBanner.active && saleBanner.message && (
         <div className="bg-gold px-4 py-2 text-center text-xs uppercase tracking-[0.15em] text-black">
