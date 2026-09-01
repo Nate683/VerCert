@@ -213,6 +213,34 @@ body {
   );
 }
 
+/* Ticker marquee. The track holds two identical runs, so translating it by
+   exactly -50% lands the second run where the first started — a seamless loop
+   with no JS and no measuring. Duration is long on purpose: this is a trust
+   strip, not an attention grab. */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  animation: ticker-scroll 60s linear infinite;
+  will-change: transform;
+}
+
+.ticker:hover .ticker-track,
+.ticker:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+
+/* Reduced motion: hold the strip still rather than scrolling it. The content
+   stays readable because the first run is fully visible from the start. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+    transform: none;
+  }
+}
+
 /* Subtle V-mark watermark — large, low-opacity, non-interactive. */
 .v-watermark {
   position: absolute;
