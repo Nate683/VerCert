@@ -70,9 +70,9 @@ function SignupForm() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-20 lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">Account</p>
-      <h1 className="mt-3 font-serif text-3xl text-white">Create an Account</h1>
-      <p className="mt-3 text-sm text-white/50">
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
+      <h1 className="mt-3 font-serif text-3xl text-navy">Create an Account</h1>
+      <p className="mt-3 text-sm text-muted">
         An account is required to complete a purchase.
       </p>
 
@@ -83,7 +83,7 @@ function SignupForm() {
           onChange={(e) => setName(e.target.value)}
           placeholder="Full name"
           autoFocus
-          className="input-field"
+          className="input-field-light"
         />
         <input
           required
@@ -91,7 +91,7 @@ function SignupForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email address"
-          className="input-field"
+          className="input-field-light"
         />
         <input
           required
@@ -100,9 +100,9 @@ function SignupForm() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password (min. 8 characters)"
           minLength={8}
-          className="input-field"
+          className="input-field-light"
         />
-        <label className="flex items-start gap-3 text-xs leading-relaxed text-white/50">
+        <label className="flex items-start gap-3 text-xs leading-relaxed text-muted">
           <input
             type="checkbox"
             checked={marketingOptIn}
@@ -111,7 +111,7 @@ function SignupForm() {
           />
           Send me occasional updates about new compounds and testing results.
         </label>
-        <label className="flex items-start gap-3 text-xs leading-relaxed text-white/50">
+        <label className="flex items-start gap-3 text-xs leading-relaxed text-muted">
           <input
             type="checkbox"
             checked={smsOptIn}
@@ -127,10 +127,10 @@ function SignupForm() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Phone number"
-            className="input-field"
+            className="input-field-light"
           />
         )}
-        <label className="flex items-center gap-3 text-sm text-white/60">
+        <label className="flex items-center gap-3 text-sm text-muted">
           <input
             type="checkbox"
             checked={isAffiliate}
@@ -145,7 +145,7 @@ function SignupForm() {
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
             placeholder="Invite code"
-            className="input-field"
+            className="input-field-light"
           />
         )}
         {error && (
@@ -166,15 +166,15 @@ function SignupForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+          className="w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:opacity-40"
         >
           {submitting ? "Creating Account..." : "Create Account"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-xs text-white/40">
+      <p className="mt-6 text-center text-xs text-muted">
         Already have an account?{" "}
-        <Link href={`/login${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="text-gold hover:underline">
+        <Link href={`/login${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="text-gold-ink hover:underline">
           Sign in
         </Link>
       </p>
