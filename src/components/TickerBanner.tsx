@@ -2,7 +2,7 @@ import { VialGlyph } from "./VialGlyph";
 
 const ITEMS = [
   "COA on every lot",
-  "Discreet, tracked shipping",
+  "Tracked shipping on every order",
   "Third-party HPLC-MS verified",
 ];
 
