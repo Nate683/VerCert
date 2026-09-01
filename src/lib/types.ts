@@ -198,6 +198,10 @@ export type Customer = {
   pendingEmailTokenExpiresAt?: string;
   // Grants access to the matching executive dashboard via the normal login.
   role?: "command" | "office";
+  // Staff only: salted hash of the seed password last applied from
+  // COMMAND_PASSWORD/OFFICE_PASSWORD, so a changed env var can be told apart
+  // from a password the owner chose. See lib/executive/staff.ts.
+  staffSeedHash?: string;
   // Executive-facing only — never shown to the customer.
   notes?: string;
   // Explicit opt-in, unchecked by default at signup — never text without it.

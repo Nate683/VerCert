@@ -22,6 +22,7 @@ type UserRow = {
   pending_email_token: string | null;
   pending_email_token_expires_at: string | null;
   role: string | null;
+  staff_seed_hash: string | null;
   notes: string | null;
   phone: string | null;
   sms_opt_in: boolean;
@@ -45,6 +46,7 @@ function rowToUser(row: UserRow): Customer {
     pendingEmailToken: row.pending_email_token ?? undefined,
     pendingEmailTokenExpiresAt: row.pending_email_token_expires_at ?? undefined,
     role: (row.role as Customer["role"]) ?? undefined,
+    staffSeedHash: row.staff_seed_hash ?? undefined,
     notes: row.notes ?? undefined,
     phone: row.phone ?? undefined,
     smsOptIn: Boolean(row.sms_opt_in),
@@ -160,6 +162,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   pendingEmailToken: "pending_email_token",
   pendingEmailTokenExpiresAt: "pending_email_token_expires_at",
   role: "role",
+  staffSeedHash: "staff_seed_hash",
   notes: "notes",
   phone: "phone",
   smsOptIn: "sms_opt_in",

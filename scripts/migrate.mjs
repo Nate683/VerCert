@@ -408,6 +408,11 @@ async function main() {
 
   // SMS opt-in (explicit, unchecked by default at signup) + phone number.
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT`;
+
+  // Records which COMMAND_PASSWORD/OFFICE_PASSWORD value was last applied to a
+  // staff account, so changing the env var can reset that account's password
+  // while a password the owner set themselves is left alone.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS staff_seed_hash TEXT`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS sms_opt_in BOOLEAN NOT NULL DEFAULT FALSE`;
 
   // Monthly/quarterly revenue targets — pace is always computed live against
