@@ -43,9 +43,9 @@ function LoginForm() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-20 lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">Account</p>
-      <h1 className="mt-3 font-serif text-3xl text-white">Sign In</h1>
-      <p className="mt-3 text-sm text-white/50">
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
+      <h1 className="mt-3 font-serif text-3xl text-navy">Sign In</h1>
+      <p className="mt-3 text-sm text-muted">
         Sign in to check out and view your order history.
       </p>
 
@@ -57,7 +57,7 @@ function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email address"
           autoFocus
-          className="input-field"
+          className="input-field-light"
         />
         {useAffiliateCode ? (
           <input
@@ -66,7 +66,7 @@ function LoginForm() {
             value={portalCode}
             onChange={(e) => setPortalCode(e.target.value.toUpperCase())}
             placeholder="Affiliate code"
-            className="input-field font-mono uppercase tracking-widest"
+            className="input-field-light font-mono uppercase tracking-widest"
           />
         ) : (
           <input
@@ -75,7 +75,7 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="input-field"
+            className="input-field-light"
           />
         )}
         {error && (
@@ -86,7 +86,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+          className="w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:opacity-40"
         >
           {submitting ? "Signing In..." : "Sign In"}
         </button>
@@ -98,25 +98,25 @@ function LoginForm() {
           setUseAffiliateCode((v) => !v);
           setError(null);
         }}
-        className="mt-4 text-center text-xs text-white/40 hover:text-gold"
+        className="mt-4 text-center text-xs text-muted hover:text-gold-ink"
       >
         {useAffiliateCode
           ? "Sign in with your password instead"
           : "Affiliate? Sign in with your affiliate code instead"}
       </button>
 
-      <div className="mt-6 flex justify-between text-xs text-white/40">
-        <Link href="/forgot-password" className="hover:text-gold">
+      <div className="mt-6 flex justify-between text-xs text-muted">
+        <Link href="/forgot-password" className="hover:text-gold-ink">
           Forgot password?
         </Link>
-        <Link href={`/signup${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="hover:text-gold">
+        <Link href={`/signup${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="hover:text-gold-ink">
           Create an account
         </Link>
       </div>
 
-      <p className="mt-8 text-center text-xs text-white/30">
+      <p className="mt-8 text-center text-xs text-muted/70">
         Want to become an affiliate?{" "}
-        <Link href="/signup?affiliate=1" className="text-gold hover:underline">
+        <Link href="/signup?affiliate=1" className="text-gold-ink hover:underline">
           Sign up here
         </Link>
       </p>

@@ -38,12 +38,12 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-20 text-center lg:px-10">
-        <p className="text-xs uppercase tracking-[0.35em] text-gold">Account</p>
-        <h1 className="mt-3 font-serif text-3xl text-white">Invalid Link</h1>
-        <p className="mt-3 text-sm text-white/50">
+        <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
+        <h1 className="mt-3 font-serif text-3xl text-navy">Invalid Link</h1>
+        <p className="mt-3 text-sm text-muted">
           This password reset link is missing a token.
         </p>
-        <Link href="/forgot-password" className="mt-6 text-xs text-gold hover:underline">
+        <Link href="/forgot-password" className="mt-6 text-xs text-gold-ink hover:underline">
           Request a new link
         </Link>
       </div>
@@ -53,17 +53,17 @@ function ResetPasswordForm() {
   if (done) {
     return (
       <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-20 text-center lg:px-10">
-        <p className="text-xs uppercase tracking-[0.35em] text-gold">Password Updated</p>
-        <h1 className="mt-3 font-serif text-3xl text-white">Success</h1>
-        <p className="mt-3 text-sm text-white/50">Redirecting you to sign in...</p>
+        <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Password Updated</p>
+        <h1 className="mt-3 font-serif text-3xl text-navy">Success</h1>
+        <p className="mt-3 text-sm text-muted">Redirecting you to sign in...</p>
       </div>
     );
   }
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-20 lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">Account</p>
-      <h1 className="mt-3 font-serif text-3xl text-white">Choose a New Password</h1>
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
+      <h1 className="mt-3 font-serif text-3xl text-navy">Choose a New Password</h1>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <input
@@ -74,7 +74,7 @@ function ResetPasswordForm() {
           placeholder="New password (min. 8 characters)"
           minLength={8}
           autoFocus
-          className="input-field"
+          className="input-field-light"
         />
         {error && (
           <p className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
@@ -84,7 +84,7 @@ function ResetPasswordForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+          className="w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:opacity-40"
         >
           {submitting ? "Updating..." : "Update Password"}
         </button>
