@@ -54,37 +54,38 @@ export default async function Home() {
 
   return (
     <div>
-      {/* Hero — full-width background image with a gradient scrim, logo and
-          headline overlaid. Falls back to the navy gradient when no hero
-          image has been uploaded yet. */}
-      <section className="relative isolate flex min-h-[85vh] items-center overflow-hidden border-b border-white/10">
+      {/* Hero — a light editorial band. The type is navy with no scrim under
+          it, so an uploaded hero photo has to sit behind a heavy paper veil
+          rather than carry the composition the way the dark hero did. */}
+      <section className="relative isolate flex min-h-[85vh] items-center overflow-hidden border-b border-hairline bg-paper">
         {hero.heroImageUrl ? (
-          <EditableImage contentKey="home_hero" field="heroImageUrl">
-            <Image
-              src={hero.heroImageUrl}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="absolute inset-0 -z-10 object-cover"
-            />
-          </EditableImage>
+          <>
+            <EditableImage contentKey="home_hero" field="heroImageUrl">
+              <Image
+                src={hero.heroImageUrl}
+                alt=""
+                fill
+                priority
+                sizes="100vw"
+                className="absolute inset-0 -z-10 object-cover"
+              />
+            </EditableImage>
+            {/* Paper veil — the light counterpart of the old black scrim.
+                Heaviest at the bottom, where the headline and CTAs sit. */}
+            <div className="absolute inset-0 -z-[5] bg-gradient-to-t from-paper via-paper/90 to-paper/70" />
+          </>
         ) : (
           <EditableImage contentKey="home_hero" field="heroImageUrl">
-            <div className="absolute inset-0 -z-10 bg-gradient-to-b from-navy via-navy to-black" />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-b from-paper via-paper to-surface" />
           </EditableImage>
         )}
-        {/* Gradient scrim: darkest at the bottom/edges so overlaid text and the
-            footer transition both stay legible regardless of the photo. */}
-        <div className="absolute inset-0 -z-[5] bg-gradient-to-t from-black via-black/60 to-black/20" />
-        <div className="absolute inset-0 -z-[5] bg-gradient-to-r from-black/70 via-black/20 to-black/70" />
 
         <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 py-28 text-center lg:px-10">
-          <VeriCertLogo className="h-14 w-auto drop-shadow-[0_2px_12px_rgba(0,0,0,0.6)]" priority />
+          <VeriCertLogo className="h-14 aspect-[441/194]" tone="ink" />
           <EditableText
             value={hero.badge}
             as="p"
-            className="mt-8 text-xs uppercase tracking-[0.4em] text-gold"
+            className="mt-8 text-xs uppercase tracking-[0.4em] text-gold-ink"
             contentKey="home_hero"
             field="badge"
           />
@@ -92,29 +93,29 @@ export default async function Home() {
             value={hero.headline}
             as="h1"
             multiline
-            className="mt-6 max-w-3xl whitespace-pre-line font-serif text-5xl leading-tight text-white text-balance drop-shadow-[0_2px_16px_rgba(0,0,0,0.5)] lg:text-7xl"
+            className="mt-6 max-w-3xl whitespace-pre-line font-serif text-5xl leading-tight text-navy text-balance lg:text-7xl"
             contentKey="home_hero"
             field="headline"
           />
-          <div className="mt-8 h-px w-24 bg-gold/60" />
+          <div className="mt-8 h-px w-24 bg-gold-ink/60" />
           <EditableText
             value={hero.subtext}
             as="p"
             multiline
-            className="mt-8 max-w-xl text-base leading-relaxed text-white/70"
+            className="mt-8 max-w-xl text-base leading-relaxed text-navy/80"
             contentKey="home_hero"
             field="subtext"
           />
           <div className="mt-12 flex flex-col gap-4 sm:flex-row">
             <Link
               href="/shop"
-              className="card-elevate border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold"
+              className="card-elevate border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:border-gold-ink hover:bg-transparent hover:text-gold-ink"
             >
               {hero.ctaPrimaryLabel}
             </Link>
             <Link
               href="/coa"
-              className="card-elevate border border-white/20 px-8 py-3 text-sm uppercase tracking-[0.2em] text-white/80 transition-colors hover:border-gold hover:text-gold"
+              className="card-elevate border border-navy/25 px-8 py-3 text-sm uppercase tracking-[0.2em] text-navy transition-colors hover:border-gold-ink hover:text-gold-ink"
             >
               {hero.ctaSecondaryLabel}
             </Link>
@@ -122,16 +123,19 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* The rest of the light storefront shell. The hero above is light too
+          now, so this wrapper only grounds the sections below it. */}
+      <div className="bg-paper text-navy">
       {/* COA lookup — the first thing under the hero. Verification is the
           product's whole promise, so it isn't buried behind a nav link. */}
-      <section className="border-b border-white/10 bg-white/[0.02]">
+      <section className="border-b border-hairline bg-surface">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-6 py-12 lg:grid-cols-[1fr_1.1fr] lg:px-10">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-gold">Verify a Batch</p>
-            <h2 className="mt-3 font-serif text-2xl text-white">
+            <h2 className="mt-3 font-serif text-2xl text-navy">
               Already have a vial? Check its certificate.
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-white/50">
+            <p className="mt-2 text-sm leading-relaxed text-muted">
               Enter the batch number printed on the label to pull the
               independent lab report for that exact lot.
             </p>
@@ -143,18 +147,18 @@ export default async function Home() {
       {/* Featured products */}
       <ScrollReveal>
         <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
-          <div className="flex items-end justify-between border-b border-white/10 pb-6">
+          <div className="flex items-end justify-between border-b border-hairline pb-6">
             <div>
               <p className="text-xs uppercase tracking-[0.35em] text-gold">
                 Featured Compounds
               </p>
-              <h2 className="mt-3 font-serif text-3xl text-white">
+              <h2 className="mt-3 font-serif text-3xl text-navy">
                 Selected for the Bench
               </h2>
             </div>
             <Link
               href="/shop"
-              className="underline-draw hidden text-sm uppercase tracking-[0.15em] text-white/60 hover:text-gold sm:block"
+              className="underline-draw hidden text-sm uppercase tracking-[0.15em] text-muted hover:text-gold sm:block"
             >
               View All →
             </Link>
@@ -165,17 +169,17 @@ export default async function Home() {
 
       {/* Trust section */}
       {sections.trust && (
-        <section className="texture-diagonal relative border-y border-white/10 bg-white/[0.02]">
+        <section className="texture-diagonal relative border-y border-hairline bg-surface">
           <SectionToggle sectionKey="trust" visible={sections.trust} />
           <div className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
             <ScrollReveal className="text-center">
               <p className="text-xs uppercase tracking-[0.35em] text-gold">
                 Third-Party Testing
               </p>
-              <h2 className="mt-3 font-serif text-3xl text-white">
+              <h2 className="mt-3 font-serif text-3xl text-navy">
                 Verification, Not Assumption
               </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/50">
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted">
                 Every compound VeriCert distributes is tested by an independent
                 laboratory before it reaches a researcher&apos;s bench.
               </p>
@@ -184,15 +188,15 @@ export default async function Home() {
               {TRUST_POINTS.map((point, i) => (
                 <ScrollReveal key={point.title} delayMs={i * 100} className="flex flex-col items-center text-center">
                   <VialGlyph className="h-14 w-14 text-gold" />
-                  <h3 className="mt-6 font-serif text-xl text-white">{point.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-white/50">{point.body}</p>
+                  <h3 className="mt-6 font-serif text-xl text-navy">{point.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{point.body}</p>
                 </ScrollReveal>
               ))}
             </div>
             <ScrollReveal className="mt-14 text-center">
               <Link
                 href="/how-we-test"
-                className="inline-block border border-white/20 px-8 py-3 text-sm uppercase tracking-[0.2em] text-white/80 transition-colors hover:border-gold hover:text-gold"
+                className="inline-block border border-control px-8 py-3 text-sm uppercase tracking-[0.2em] text-muted transition-colors hover:border-gold hover:text-gold"
               >
                 How We Test
               </Link>
@@ -206,10 +210,10 @@ export default async function Home() {
         <ScrollReveal>
           <section className="relative mx-auto max-w-7xl px-6 py-24 text-center lg:px-10">
             <SectionToggle sectionKey="cta" visible={sections.cta} />
-            <h2 className="font-serif text-3xl text-white lg:text-4xl">
+            <h2 className="font-serif text-3xl text-navy lg:text-4xl">
               Every Batch. Certified.
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/50">
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted">
               Already have a product in hand? Enter its batch number to view the
               independent lab report.
             </p>
@@ -222,6 +226,7 @@ export default async function Home() {
           </section>
         </ScrollReveal>
       )}
+      </div>
     </div>
   );
 }

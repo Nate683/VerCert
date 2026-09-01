@@ -3,11 +3,27 @@
 :root {
   /* Brand system: deep navy primary, gold accent, black as a secondary
      depth layer (insets/panels/tooltips), warm off-white for all text. */
-  --background: #1b2a4a;
+  --background: #132544;
   --foreground: #f3ecdd;
-  --navy: #1b2a4a;
+  --navy: #132544;
   --navy-deep: #0d1626;
   --gold: #c9a227;
+
+  /* Light storefront theme. Body copy uses the existing --navy, which is
+     the brand ink; only the tones navy cannot supply are new. The Command
+     and Office palettes below are untouched and stay dark. Ratios are
+     against #FFFFFF. */
+  --paper:    #FFFFFF;   /* true white page ground. NOTE: bg-white is NOT
+                            white here — @theme inline aliases --color-white
+                            to --foreground (#f3ecdd). Use bg-paper. */
+  --muted:    #6A7075;   /* 5.02:1 — captions, supporting copy */
+  --surface:  #F8F8F9;   /* navy 3%  — banded sections */
+  --hairline: #E3E5E9;   /* navy 12% — dividers, section rules */
+  --control:  #7D8798;   /* 3.63:1 — outlined controls (WCAG 1.4.11) */
+  --gold-ink: #B08C50;   /* 3.13:1 — gold for large, letter-spaced type on
+                            white. The brand --gold is only 2.42:1 on paper,
+                            which fails even the 3:1 large-text bar, so it
+                            must never carry text on the light shell. */
 
   /* Command system — 1970s power broker. Every value is warm: the base is
      near-black with a brown undertone rather than a cold grey, the gold is
@@ -51,8 +67,14 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-gold: var(--gold);
+  --color-gold-ink: var(--gold-ink);
   --color-navy: var(--navy);
   --color-navy-deep: var(--navy-deep);
+  --color-paper: var(--paper);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-hairline: var(--hairline);
+  --color-control: var(--control);
   --color-brass: var(--cmd-brass);
   --color-bone: var(--cmd-bone);
   --color-oxblood: var(--cmd-oxblood);
@@ -65,9 +87,15 @@
   --font-sans: var(--font-body);
 }
 
+/* The storefront shell is light. This rule is UNLAYERED, so it beats any
+   bg-* / text-* utility set on <body> (Tailwind ships its utilities inside
+   @layer utilities, and unlayered rules win regardless of specificity) — set
+   the page ground here, never with a class on the body element.
+   --background/--foreground stay navy and warm off-white on purpose: every
+   text-white on the dark sections still resolves through --foreground. */
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--paper);
+  color: var(--navy);
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
 }
 
@@ -78,6 +106,15 @@ body {
 
 .font-serif {
   font-family: var(--font-display), Georgia, serif;
+}
+
+/* The wordmark asset is a cream lockup drawn for dark grounds. On a light
+   surface it is painted through its own alpha channel as a mask, so it renders
+   in exact brand navy without a second PNG to keep in sync. */
+.logo-ink {
+  background-color: var(--navy);
+  -webkit-mask: url("/logo.png") center / contain no-repeat;
+  mask: url("/logo.png") center / contain no-repeat;
 }
 
 /* thin gold divider */

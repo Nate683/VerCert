@@ -60,12 +60,15 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const saleBanner = await getContent("sale_banner", DEFAULT_SALE_BANNER);
   const contact = await getContent("contact_page", DEFAULT_CONTACT);
 
+  // Page ground lives in globals.css: the unlayered `body` rule there
+  // overrides bg-* / text-* utilities set on this element, so putting the
+  // colours here would be inert.
   return (
     <html
       lang="en"
       className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable} ${ledgerFont.variable} ${readFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-navy text-white">
+      <body className="min-h-full flex flex-col">
         <AuthProvider>
           <ExecModeProvider>
             <CartProvider>

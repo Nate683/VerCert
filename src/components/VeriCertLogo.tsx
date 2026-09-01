@@ -5,10 +5,25 @@ import Image from "next/image";
 export function VeriCertLogo({
   className = "h-10 w-auto",
   priority = false,
+  tone = "default",
 }: {
   className?: string;
   priority?: boolean;
+  /** "ink" repaints the lockup navy for light grounds. Size it with an
+      explicit height plus aspect-[441/194] — a mask has no intrinsic width,
+      so w-auto collapses it to nothing. */
+  tone?: "default" | "ink";
 }) {
+  if (tone === "ink") {
+    return (
+      <div
+        role="img"
+        aria-label="VeriCert Research Peptides"
+        className={`logo-ink ${className}`}
+      />
+    );
+  }
+
   return (
     <Image
       src="/logo.png"
