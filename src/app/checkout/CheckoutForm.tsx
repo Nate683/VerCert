@@ -246,14 +246,14 @@ export function CheckoutForm({
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-24 text-center lg:px-10">
-        <p className="text-xs uppercase tracking-[0.35em] text-gold">Checkout</p>
-        <h1 className="mt-3 font-serif text-4xl text-white">Your cart is empty</h1>
-        <p className="mt-4 text-sm text-white/50">
+        <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Checkout</p>
+        <h1 className="mt-3 font-serif text-4xl text-navy">Your cart is empty</h1>
+        <p className="mt-4 text-sm text-muted">
           Add a compound to your cart and it will be waiting here.
         </p>
         <Link
           href="/shop"
-          className="mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black"
+          className="mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
         >
           Shop the Collection
         </Link>
@@ -263,15 +263,15 @@ export function CheckoutForm({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-14 lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">Checkout</p>
-      <h1 className="mt-3 font-serif text-4xl text-white">Complete Your Order</h1>
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Checkout</p>
+      <h1 className="mt-3 font-serif text-4xl text-navy">Complete Your Order</h1>
 
       <ProgressBar step={step} />
 
       <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px]">
         <form onSubmit={handleSubmit} noValidate className="space-y-10">
           <section aria-labelledby="contact-heading">
-            <h2 id="contact-heading" className="text-xs uppercase tracking-[0.25em] text-gold">
+            <h2 id="contact-heading" className="text-xs uppercase tracking-[0.25em] text-gold-ink">
               1 · Contact
             </h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -289,14 +289,14 @@ export function CheckoutForm({
 
           <section aria-labelledby="shipping-heading">
             <div className="flex items-center justify-between">
-              <h2 id="shipping-heading" className="text-xs uppercase tracking-[0.25em] text-gold">
+              <h2 id="shipping-heading" className="text-xs uppercase tracking-[0.25em] text-gold-ink">
                 2 · Shipping Address
               </h2>
               {initialAddress && !editingAddress && (
                 <button
                   type="button"
                   onClick={() => setEditingAddress(true)}
-                  className="text-xs uppercase tracking-[0.12em] text-white/50 underline-offset-4 transition-colors hover:text-gold hover:underline"
+                  className="text-xs uppercase tracking-[0.12em] text-muted underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
                 >
                   Use a different address
                 </button>
@@ -305,9 +305,9 @@ export function CheckoutForm({
 
             {!editingAddress && initialAddress ? (
               <div className="mt-4 flex items-start justify-between gap-4 border border-gold/25 bg-gold/[0.04] p-4">
-                <div className="text-sm leading-relaxed text-white/70">
-                  <p className="text-xs uppercase tracking-[0.15em] text-gold">Saved address</p>
-                  <p className="mt-2 text-white">{values.address}</p>
+                <div className="text-sm leading-relaxed text-muted">
+                  <p className="text-xs uppercase tracking-[0.15em] text-gold-ink">Saved address</p>
+                  <p className="mt-2 text-navy">{values.address}</p>
                   <p>
                     {values.city}, {values.state} {values.postalCode}
                   </p>
@@ -316,7 +316,7 @@ export function CheckoutForm({
                 <button
                   type="button"
                   onClick={() => setEditingAddress(true)}
-                  className="shrink-0 border border-white/20 px-3 py-1.5 text-xs uppercase tracking-[0.12em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+                  className="shrink-0 border border-hairline px-3 py-1.5 text-xs uppercase tracking-[0.12em] text-muted transition-colors hover:border-gold hover:text-gold-ink"
                 >
                   Edit
                 </button>
@@ -334,13 +334,13 @@ export function CheckoutForm({
                 ))}
               </div>
             )}
-            <p className="mt-3 text-xs text-white/35">
+            <p className="mt-3 text-xs text-muted">
               We&apos;ll save this address so your next order is one step shorter.
             </p>
           </section>
 
           <section aria-labelledby="payment-heading">
-            <h2 id="payment-heading" className="text-xs uppercase tracking-[0.25em] text-gold">
+            <h2 id="payment-heading" className="text-xs uppercase tracking-[0.25em] text-gold-ink">
               3 · Payment Method
             </h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -350,7 +350,7 @@ export function CheckoutForm({
                   className={`cursor-pointer border p-5 transition-colors ${
                     method === option.value
                       ? "border-gold bg-gold/5"
-                      : "border-white/15 hover:border-white/30"
+                      : "border-hairline hover:border-control"
                   }`}
                 >
                   <input
@@ -362,15 +362,15 @@ export function CheckoutForm({
                     className="sr-only"
                   />
                   <span className="flex items-center justify-between gap-3">
-                    <span className="font-serif text-lg text-white">{option.title}</span>
+                    <span className="font-serif text-lg text-navy">{option.title}</span>
                     <span
                       className={`h-3.5 w-3.5 shrink-0 rounded-full border ${
-                        method === option.value ? "border-gold bg-gold" : "border-white/30"
+                        method === option.value ? "border-gold bg-gold" : "border-hairline"
                       }`}
                     />
                   </span>
-                  <span className="mt-1.5 block text-sm text-gold">{option.oneLiner}</span>
-                  <span className="mt-1.5 block text-xs leading-relaxed text-white/50">
+                  <span className="mt-1.5 block text-sm text-gold-ink">{option.oneLiner}</span>
+                  <span className="mt-1.5 block text-xs leading-relaxed text-muted">
                     {option.detail}
                   </span>
                 </label>
@@ -379,7 +379,7 @@ export function CheckoutForm({
           </section>
 
           <div className="space-y-4">
-            <label className="flex cursor-pointer items-start gap-3 border border-white/10 p-4 text-sm leading-relaxed text-white/60">
+            <label className="flex cursor-pointer items-start gap-3 border border-hairline p-4 text-sm leading-relaxed text-muted">
               <input
                 type="checkbox"
                 checked={agreed}
@@ -400,49 +400,49 @@ export function CheckoutForm({
             <button
               type="submit"
               disabled={submitting}
-              className="w-full border border-gold bg-gold py-3.5 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-gold disabled:hover:text-black"
+              className="w-full border border-gold bg-gold py-3.5 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-gold disabled:hover:text-black"
             >
               {submitting ? "Placing order…" : `Place Order · $${total.toFixed(2)}`}
             </button>
-            <p className="text-center text-xs text-white/35">
+            <p className="text-center text-xs text-muted">
               No charge is taken until you complete payment on the next screen.
             </p>
           </div>
         </form>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <div className="border border-white/10 p-6">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Order Summary</h2>
+          <div className="border border-hairline p-6">
+            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Order Summary</h2>
             <ul className="mt-4 space-y-4">
               {items.map((item) => (
                 <li key={`${item.slug}-${item.sizeLabel}`} className="flex justify-between gap-3 text-sm">
                   <div className="min-w-0">
-                    <p className="truncate text-white">{item.name}</p>
-                    <p className="text-xs text-white/40">
+                    <p className="truncate text-navy">{item.name}</p>
+                    <p className="text-xs text-muted">
                       {item.sizeLabel} × {item.quantity}
                     </p>
                   </div>
-                  <span className="shrink-0 font-mono text-white">
+                  <span className="shrink-0 font-mono text-navy">
                     ${(item.priceUsd * item.quantity).toFixed(2)}
                   </span>
                 </li>
               ))}
             </ul>
 
-            <div className="mt-6 border-t border-white/10 pt-4">
-              <label htmlFor="promo" className="text-xs uppercase tracking-[0.2em] text-gold">
+            <div className="mt-6 border-t border-hairline pt-4">
+              <label htmlFor="promo" className="text-xs uppercase tracking-[0.2em] text-gold-ink">
                 Promo Code
               </label>
               {appliedPromo ? (
                 <div className="mt-3 flex items-center justify-between gap-2 border border-gold/40 bg-gold/5 px-3 py-2 text-sm">
-                  <span className="min-w-0 truncate text-white">
+                  <span className="min-w-0 truncate text-navy">
                     {appliedPromo.code}
                     {appliedPromo.freeShipping && " — free shipping"}
                   </span>
                   <button
                     type="button"
                     onClick={handleRemovePromo}
-                    className="shrink-0 text-xs uppercase tracking-[0.1em] text-white/50 transition-colors hover:text-red-300"
+                    className="shrink-0 text-xs uppercase tracking-[0.1em] text-muted transition-colors hover:text-red-300"
                   >
                     Remove
                   </button>
@@ -461,13 +461,13 @@ export function CheckoutForm({
                       }
                     }}
                     placeholder="Enter code"
-                    className="input-field flex-1 px-3 py-2 text-sm"
+                    className="input-field-light flex-1 px-3 py-2 text-sm"
                   />
                   <button
                     type="button"
                     onClick={handleApplyPromo}
                     disabled={promoChecking || !promoInput.trim()}
-                    className="border border-white/20 px-4 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-gold hover:text-gold disabled:cursor-not-allowed disabled:opacity-40"
+                    className="border border-hairline px-4 text-xs uppercase tracking-[0.1em] text-muted transition-colors hover:border-gold hover:text-gold-ink disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {promoChecking ? "…" : "Apply"}
                   </button>
@@ -480,33 +480,33 @@ export function CheckoutForm({
               )}
             </div>
 
-            <dl className="mt-6 space-y-2 border-t border-white/10 pt-4 text-sm">
+            <dl className="mt-6 space-y-2 border-t border-hairline pt-4 text-sm">
               <div className="flex justify-between">
-                <dt className="text-white/60">Subtotal</dt>
-                <dd className="font-mono text-white">${subtotal.toFixed(2)}</dd>
+                <dt className="text-muted">Subtotal</dt>
+                <dd className="font-mono text-navy">${subtotal.toFixed(2)}</dd>
               </div>
               {discountAmount > 0 && (
                 <div className="flex justify-between">
-                  <dt className="text-white/60">Discount</dt>
-                  <dd className="font-mono text-gold">−${discountAmount.toFixed(2)}</dd>
+                  <dt className="text-muted">Discount</dt>
+                  <dd className="font-mono text-gold-ink">−${discountAmount.toFixed(2)}</dd>
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-white/60">Shipping</dt>
-                <dd className="text-white/60">
+                <dt className="text-muted">Shipping</dt>
+                <dd className="text-muted">
                   {appliedPromo?.freeShipping ? "Free" : "Calculated after payment"}
                 </dd>
               </div>
             </dl>
 
-            <div className="mt-4 flex items-baseline justify-between border-t border-white/10 pt-4 font-serif text-lg">
-              <span className="text-white">Total</span>
-              <span className="font-mono text-gold">${total.toFixed(2)}</span>
+            <div className="mt-4 flex items-baseline justify-between border-t border-hairline pt-4 font-serif text-lg">
+              <span className="text-navy">Total</span>
+              <span className="font-mono text-gold-ink">${total.toFixed(2)}</span>
             </div>
 
             <Link
               href="/cart"
-              className="mt-5 block text-center text-xs uppercase tracking-[0.12em] text-white/40 underline-offset-4 transition-colors hover:text-gold hover:underline"
+              className="mt-5 block text-center text-xs uppercase tracking-[0.12em] text-muted underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
             >
               Edit cart
             </Link>
@@ -528,12 +528,12 @@ function ProgressBar({ step }: { step: number }) {
           <li key={label} className="flex-1">
             <div
               className={`h-0.5 w-full transition-colors duration-500 ${
-                state === "upcoming" ? "bg-white/10" : "bg-gold"
+                state === "upcoming" ? "bg-surface" : "bg-gold"
               }`}
             />
             <p
               className={`mt-2 text-[11px] uppercase tracking-[0.14em] transition-colors ${
-                state === "current" ? "text-gold" : state === "done" ? "text-white/60" : "text-white/30"
+                state === "current" ? "text-gold-ink" : state === "done" ? "text-muted" : "text-muted/70"
               }`}
             >
               {state === "done" ? "✓ " : ""}
@@ -560,7 +560,7 @@ function TextField({
   const id = `checkout-${field.name}`;
   return (
     <div className={field.span ? "sm:col-span-2" : undefined}>
-      <label htmlFor={id} className="block text-xs uppercase tracking-[0.12em] text-white/50">
+      <label htmlFor={id} className="block text-xs uppercase tracking-[0.12em] text-muted">
         {field.label}
       </label>
       <input
@@ -573,8 +573,8 @@ function TextField({
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`mt-1.5 w-full border bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none ${
-          error ? "border-red-500/60 focus:border-red-400" : "border-white/15 focus:border-gold"
+        className={`mt-1.5 w-full border bg-paper px-4 py-3 text-sm text-navy placeholder:text-muted/70 focus:outline-none ${
+          error ? "border-red-500/60 focus:border-red-400" : "border-hairline focus:border-gold"
         }`}
       />
       {error && (

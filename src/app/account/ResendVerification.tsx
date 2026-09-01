@@ -12,7 +12,7 @@ export function ResendVerification() {
   }
 
   if (status === "sent") {
-    return <p className="text-xs text-gold">Verification email sent — check your inbox.</p>;
+    return <p className="text-xs text-gold-ink">Verification email sent — check your inbox.</p>;
   }
 
   return (
@@ -20,7 +20,7 @@ export function ResendVerification() {
       type="button"
       onClick={handleClick}
       disabled={status === "sending"}
-      className="text-xs uppercase tracking-[0.15em] text-gold underline-offset-4 hover:underline disabled:opacity-40"
+      className="text-xs uppercase tracking-[0.15em] text-gold-ink underline-offset-4 hover:underline disabled:opacity-40"
     >
       {status === "sending" ? "Sending..." : "Resend verification email"}
     </button>

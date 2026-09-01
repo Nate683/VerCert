@@ -23,7 +23,7 @@ export function ReorderButton({
 
   if (items.length === 0) {
     return (
-      <span className="text-xs uppercase tracking-[0.12em] text-white/30">
+      <span className="text-xs uppercase tracking-[0.12em] text-muted/70">
         No longer available
       </span>
     );
@@ -41,12 +41,12 @@ export function ReorderButton({
         type="button"
         onClick={handleReorder}
         disabled={busy}
-        className="border border-white/20 px-3 py-1.5 text-xs uppercase tracking-[0.12em] text-white/70 transition-colors hover:border-gold hover:text-gold disabled:opacity-50"
+        className="border border-hairline px-3 py-1.5 text-xs uppercase tracking-[0.12em] text-muted transition-colors hover:border-gold hover:text-gold-ink disabled:opacity-50"
       >
         {busy ? "Adding…" : "Reorder"}
       </button>
       {unavailable.length > 0 && (
-        <p className="mt-1 text-[11px] text-white/35">
+        <p className="mt-1 text-[11px] text-muted">
           {unavailable.length} item(s) no longer stocked
         </p>
       )}

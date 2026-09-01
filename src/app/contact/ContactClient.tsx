@@ -47,32 +47,32 @@ export default function ContactClient({ content }: { content: ContactContent }) 
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-20 lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">Contact</p>
-      <h1 className="mt-3 font-serif text-4xl text-white">Get in Touch</h1>
-      <EditableText value={content.intro} as="p" multiline className="mt-4 max-w-xl text-sm leading-relaxed text-white/50" contentKey="contact_page" field="intro" />
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Contact</p>
+      <h1 className="mt-3 font-serif text-4xl text-navy">Get in Touch</h1>
+      <EditableText value={content.intro} as="p" multiline className="mt-4 max-w-xl text-sm leading-relaxed text-muted" contentKey="contact_page" field="intro" />
 
       <div className="mt-12 grid grid-cols-1 gap-16 lg:grid-cols-3">
         <div className="lg:col-span-2">
           {sent ? (
             <div className="border border-gold/40 p-8 text-center">
-              <p className="font-serif text-2xl text-white">Message Sent</p>
-              <p className="mt-2 text-sm text-white/50">
+              <p className="font-serif text-2xl text-navy">Message Sent</p>
+              <p className="mt-2 text-sm text-muted">
                 Thank you — our team will respond within one business day.
               </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <input required name="name" type="text" placeholder="Name" className="input-field" />
-                <input required name="email" type="email" placeholder="Email address" className="input-field" />
+                <input required name="name" type="text" placeholder="Name" className="input-field-light" />
+                <input required name="email" type="email" placeholder="Email address" className="input-field-light" />
               </div>
-              <input name="subject" type="text" placeholder="Subject" className="input-field" />
+              <input name="subject" type="text" placeholder="Subject" className="input-field-light" />
               <textarea
                 required
                 name="message"
                 placeholder="Message"
                 rows={6}
-                className="input-field resize-none"
+                className="input-field-light resize-none"
               />
               {error && (
                 <p className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">{error}</p>
@@ -80,7 +80,7 @@ export default function ContactClient({ content }: { content: ContactContent }) 
               <button
                 type="submit"
                 disabled={submitting}
-                className="border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+                className="border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:opacity-40"
               >
                 {submitting ? "Sending..." : "Send Message"}
               </button>
@@ -88,32 +88,32 @@ export default function ContactClient({ content }: { content: ContactContent }) 
           )}
         </div>
 
-        <div className="space-y-8 border-t border-white/10 pt-8 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
+        <div className="space-y-8 border-t border-hairline pt-8 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
           {(execMode || !isUnset(content.email)) && (
             <div>
-              <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Email</h3>
-              <EditableText value={content.email} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="email" />
+              <h3 className="text-xs uppercase tracking-[0.2em] text-gold-ink">Email</h3>
+              <EditableText value={content.email} as="p" className="mt-2 text-sm text-muted" contentKey="contact_page" field="email" />
             </div>
           )}
           {(execMode || !isUnset(content.phone)) && (
             <div>
-              <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Phone</h3>
-              <EditableText value={content.phone} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="phone" />
+              <h3 className="text-xs uppercase tracking-[0.2em] text-gold-ink">Phone</h3>
+              <EditableText value={content.phone} as="p" className="mt-2 text-sm text-muted" contentKey="contact_page" field="phone" />
             </div>
           )}
           {(execMode || !isUnset(content.address)) && (
             <div>
-              <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Address</h3>
-              <EditableText value={content.address} as="p" multiline className="mt-2 text-sm text-white/70" contentKey="contact_page" field="address" />
+              <h3 className="text-xs uppercase tracking-[0.2em] text-gold-ink">Address</h3>
+              <EditableText value={content.address} as="p" multiline className="mt-2 text-sm text-muted" contentKey="contact_page" field="address" />
             </div>
           )}
           <div>
-            <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Hours</h3>
-            <EditableText value={content.hours} as="p" className="mt-2 text-sm text-white/70" contentKey="contact_page" field="hours" />
+            <h3 className="text-xs uppercase tracking-[0.2em] text-gold-ink">Hours</h3>
+            <EditableText value={content.hours} as="p" className="mt-2 text-sm text-muted" contentKey="contact_page" field="hours" />
           </div>
           <div>
-            <h3 className="text-xs uppercase tracking-[0.2em] text-gold">Wholesale</h3>
-            <EditableText value={content.wholesaleNote} as="p" multiline className="mt-2 text-sm text-white/70" contentKey="contact_page" field="wholesaleNote" />
+            <h3 className="text-xs uppercase tracking-[0.2em] text-gold-ink">Wholesale</h3>
+            <EditableText value={content.wholesaleNote} as="p" multiline className="mt-2 text-sm text-muted" contentKey="contact_page" field="wholesaleNote" />
           </div>
         </div>
       </div>

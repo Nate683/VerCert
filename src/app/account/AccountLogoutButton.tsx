@@ -17,7 +17,7 @@ export function AccountLogoutButton() {
     <button
       type="button"
       onClick={handleClick}
-      className="border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+      className="border border-hairline px-4 py-2 text-xs uppercase tracking-[0.15em] text-muted transition-colors hover:border-gold hover:text-gold-ink"
     >
       Sign Out
     </button>

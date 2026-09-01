@@ -28,13 +28,13 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
 // Status colour carries meaning at a glance: gold = we're waiting on the
 // customer, green = in motion, dim = closed.
 const STATUS_TONE: Record<OrderStatus, string> = {
-  awaiting_payment: "border-gold/50 bg-gold/10 text-gold",
+  awaiting_payment: "border-gold/50 bg-gold/10 text-gold-ink",
   expired: "border-red-400/40 bg-red-500/10 text-red-200",
-  cancelled: "border-white/15 bg-white/[0.03] text-white/40",
+  cancelled: "border-hairline bg-surface text-muted",
   paid: "border-emerald-400/30 bg-emerald-400/5 text-emerald-200",
   processing: "border-emerald-400/30 bg-emerald-400/5 text-emerald-200",
   shipped: "border-emerald-400/30 bg-emerald-400/5 text-emerald-200",
-  delivered: "border-white/15 bg-white/[0.03] text-white/50",
+  delivered: "border-hairline bg-surface text-muted",
 };
 
 export default async function AccountPage() {
@@ -72,13 +72,13 @@ export default async function AccountPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 lg:px-10">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-gold">Account</p>
-          <h1 className="mt-3 font-serif text-3xl text-white">{customer.email}</h1>
+          <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
+          <h1 className="mt-3 font-serif text-3xl text-navy">{customer.email}</h1>
           {!customer.emailVerified && (
             <div className="mt-2 flex items-center gap-3">
-              <span className="text-xs text-white/40">Email not verified.</span>
+              <span className="text-xs text-muted">Email not verified.</span>
               <ResendVerification />
             </div>
           )}
@@ -88,10 +88,10 @@ export default async function AccountPage() {
 
       {affiliate?.active && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border border-gold/30 bg-gold/5 px-5 py-4">
-          <p className="text-sm text-white/70">You&apos;re a VeriCert affiliate.</p>
+          <p className="text-sm text-muted">You&apos;re a VeriCert affiliate.</p>
           <Link
             href="/partner"
-            className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+            className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
           >
             Partner Portal →
           </Link>
@@ -101,26 +101,26 @@ export default async function AccountPage() {
       {/* Orders first — it is the reason people sign in. */}
       <section className="mt-10">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Order History</h2>
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Order History</h2>
           {orders.length > 0 && (
-            <span className="text-xs text-white/30">
+            <span className="text-xs text-muted/70">
               {orders.length} order{orders.length === 1 ? "" : "s"}
             </span>
           )}
         </div>
 
         {orders.length === 0 ? (
-          <div className="mt-4 border border-white/10 p-8 text-center">
-            <p className="text-sm text-white/50">You haven&apos;t placed any orders yet.</p>
+          <div className="mt-4 border border-hairline p-8 text-center">
+            <p className="text-sm text-muted">You haven&apos;t placed any orders yet.</p>
             <Link
               href="/shop"
-              className="mt-5 inline-block border border-gold px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-gold transition-colors hover:bg-gold hover:text-black"
+              className="mt-5 inline-block border border-gold px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
             >
               Browse the Catalog
             </Link>
           </div>
         ) : (
-          <ul className="mt-4 divide-y divide-white/10 border-y border-white/10">
+          <ul className="mt-4 divide-y divide-hairline border-y border-hairline">
             {orders.map((order) => {
               const reorder = reorderable.find((r) => r.id === order.id);
               return (
@@ -128,11 +128,11 @@ export default async function AccountPage() {
                   <div className="min-w-0">
                     <Link
                       href={`/order/${order.reference}`}
-                      className="font-mono text-sm text-white transition-colors hover:text-gold"
+                      className="font-mono text-sm text-navy transition-colors hover:text-gold-ink"
                     >
                       {order.reference}
                     </Link>
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="mt-1 text-xs text-muted">
                       {new Date(order.createdAt).toLocaleDateString(undefined, {
                         year: "numeric",
                         month: "short",
@@ -141,11 +141,11 @@ export default async function AccountPage() {
                       · {order.items.length} item{order.items.length === 1 ? "" : "s"} ·{" "}
                       <span className="font-mono">${order.total.toFixed(2)}</span>
                     </p>
-                    <p className="mt-1 truncate text-xs text-white/30">
+                    <p className="mt-1 truncate text-xs text-muted/70">
                       {order.items.map((i) => `${i.name} (${i.sizeLabel})`).join(", ")}
                     </p>
                     {order.status === "shipped" && (order.carrier || order.trackingNumber) && (
-                      <p className="mt-1.5 font-mono text-xs text-gold">
+                      <p className="mt-1.5 font-mono text-xs text-gold-ink">
                         {order.carrier ? `${order.carrier} · ` : ""}
                         {order.trackingNumber}
                       </p>
@@ -172,9 +172,9 @@ export default async function AccountPage() {
         )}
       </section>
 
-      <section className="mt-12 border-t border-white/10 pt-8">
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Saved Shipping Address</h2>
-        <p className="mt-2 text-xs text-white/35">
+      <section className="mt-12 border-t border-hairline pt-8">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Saved Shipping Address</h2>
+        <p className="mt-2 text-xs text-muted">
           Used to pre-fill checkout so returning orders take a few seconds.
         </p>
         <div className="mt-4">
@@ -182,15 +182,15 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      <section className="mt-12 border-t border-white/10 pt-8">
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Email Address</h2>
+      <section className="mt-12 border-t border-hairline pt-8">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Email Address</h2>
         <div className="mt-4">
           <EmailChangeForm pendingEmail={customer.pendingEmail} />
         </div>
       </section>
 
-      <section className="mt-12 border-t border-white/10 pt-8">
-        <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Email Preferences</h2>
+      <section className="mt-12 border-t border-hairline pt-8">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Email Preferences</h2>
         <div className="mt-4">
           <MarketingToggle initialOptIn={customer.marketingOptIn} />
         </div>

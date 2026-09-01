@@ -31,11 +31,11 @@ export function CoaQuickLookup({ compact = false }: { compact?: boolean }) {
         placeholder="Enter batch number — e.g. VC-BPC-2411"
         autoComplete="off"
         spellCheck={false}
-        className="w-full border border-white/20 bg-black/40 px-4 py-3 font-mono text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none sm:flex-1"
+        className="w-full border border-hairline bg-paper px-4 py-3 font-mono text-sm text-navy placeholder:text-muted/70 focus:border-gold focus:outline-none sm:flex-1"
       />
       <button
         type="submit"
-        className="shrink-0 border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-gold"
+        className="shrink-0 border border-gold bg-gold px-8 py-3 text-sm uppercase tracking-[0.18em] text-black transition-colors hover:bg-transparent hover:text-gold-ink"
       >
         Verify
       </button>

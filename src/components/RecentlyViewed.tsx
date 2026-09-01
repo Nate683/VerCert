@@ -33,15 +33,15 @@ export function RecentlyViewed({
 
   return (
     <section className={className}>
-      <h2 className="text-xs uppercase tracking-[0.3em] text-gold">{title}</h2>
+      <h2 className="text-xs uppercase tracking-[0.3em] text-gold-ink">{title}</h2>
       <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {items.map((item) => (
           <Link
             key={item.slug}
             href={`/shop/${item.slug}`}
-            className="group border border-white/10 transition-colors hover:border-gold/50"
+            className="group border border-hairline transition-colors hover:border-gold/50"
           >
-            <span className="relative block aspect-square w-full overflow-hidden bg-white/[0.02]">
+            <span className="relative block aspect-square w-full overflow-hidden bg-surface">
               {item.imageUrl && (
                 <Image
                   src={item.imageUrl}
@@ -53,8 +53,8 @@ export function RecentlyViewed({
               )}
             </span>
             <span className="block p-3">
-              <span className="block truncate text-xs text-white">{item.name}</span>
-              <span className="mt-0.5 block text-[11px] text-gold">from ${item.minPriceUsd}</span>
+              <span className="block truncate text-xs text-navy">{item.name}</span>
+              <span className="mt-0.5 block text-[11px] text-gold-ink">from ${item.minPriceUsd}</span>
             </span>
           </Link>
         ))}

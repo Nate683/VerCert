@@ -22,11 +22,11 @@ export function CopyReference({ reference }: { reference: string }) {
     <button
       type="button"
       onClick={copy}
-      className="inline-flex items-center gap-2 border border-white/15 px-3 py-1.5 font-mono text-sm text-white transition-colors hover:border-gold hover:text-gold"
+      className="inline-flex items-center gap-2 border border-hairline px-3 py-1.5 font-mono text-sm text-navy transition-colors hover:border-gold hover:text-gold-ink"
       aria-label={`Copy order reference ${reference}`}
     >
       {reference}
-      <span className="text-[10px] uppercase tracking-[0.14em] text-white/40">
+      <span className="text-[10px] uppercase tracking-[0.14em] text-muted">
         {copied ? "Copied" : "Copy"}
       </span>
     </button>

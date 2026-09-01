@@ -10,9 +10,9 @@ export const metadata = buildMetadata({
 export default function CoaPage() {
   return (
     <div className="mx-auto max-w-3xl px-6 py-20 lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">Verification</p>
-      <h1 className="mt-3 font-serif text-4xl text-white">Certificate of Analysis</h1>
-      <p className="mt-4 text-sm leading-relaxed text-white/50">
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Verification</p>
+      <h1 className="mt-3 font-serif text-4xl text-navy">Certificate of Analysis</h1>
+      <p className="mt-4 text-sm leading-relaxed text-muted">
         Every batch VeriCert releases is independently tested. Enter the
         batch number printed on your vial label to retrieve its lab report.
       </p>

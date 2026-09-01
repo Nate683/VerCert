@@ -111,7 +111,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
   const filterControls = (
     <div className="space-y-8">
       <fieldset>
-        <legend className="text-[11px] uppercase tracking-[0.2em] text-gold">Category</legend>
+        <legend className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">Category</legend>
         <div className="mt-3 flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
             <button
@@ -122,7 +122,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
               className={`border px-3 py-1.5 text-xs tracking-[0.08em] transition-colors ${
                 category === c
                   ? "border-gold bg-gold text-black"
-                  : "border-white/15 text-white/60 hover:border-gold hover:text-gold"
+                  : "border-hairline text-muted hover:border-gold hover:text-gold-ink"
               }`}
             >
               {c}
@@ -132,7 +132,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
       </fieldset>
 
       <fieldset>
-        <legend className="text-[11px] uppercase tracking-[0.2em] text-gold">Purity</legend>
+        <legend className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">Purity</legend>
         <div className="mt-3 flex flex-wrap gap-2">
           {PURITY_OPTIONS.map((option) => (
             <button
@@ -143,7 +143,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
               className={`border px-3 py-1.5 text-xs tracking-[0.08em] transition-colors ${
                 minPurity === option.value
                   ? "border-gold bg-gold text-black"
-                  : "border-white/15 text-white/60 hover:border-gold hover:text-gold"
+                  : "border-hairline text-muted hover:border-gold hover:text-gold-ink"
               }`}
             >
               {option.label}
@@ -153,10 +153,10 @@ function ShopCatalog({ products }: { products: Product[] }) {
       </fieldset>
 
       <div>
-        <label htmlFor="max-price" className="text-[11px] uppercase tracking-[0.2em] text-gold">
+        <label htmlFor="max-price" className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">
           Price
         </label>
-        <p className="mt-2 font-mono text-sm text-white">
+        <p className="mt-2 font-mono text-sm text-navy">
           {maxPrice >= priceCeiling ? "Any price" : `Up to $${maxPrice}`}
         </p>
         <input
@@ -169,7 +169,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
           onChange={(e) => setMaxPrice(Number(e.target.value))}
           className="mt-2 w-full accent-gold"
         />
-        <div className="flex justify-between font-mono text-[10px] text-white/30">
+        <div className="flex justify-between font-mono text-[10px] text-muted/70">
           <span>$10</span>
           <span>${priceCeiling}</span>
         </div>
@@ -192,7 +192,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or CAS number…"
-            className="w-full border border-white/15 bg-black/30 px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none"
+            className="w-full border border-hairline bg-paper px-4 py-2.5 text-sm text-navy placeholder:text-muted/70 focus:border-gold focus:outline-none"
           />
         </div>
         <label htmlFor="shop-sort" className="sr-only">
@@ -202,7 +202,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
           id="shop-sort"
           value={sort}
           onChange={(e) => setSort(e.target.value as SortOption)}
-          className="border border-white/15 bg-navy-deep px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-white/70 focus:border-gold focus:outline-none"
+          className="border border-hairline bg-paper px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-muted focus:border-gold focus:outline-none"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -214,14 +214,14 @@ function ShopCatalog({ products }: { products: Product[] }) {
           type="button"
           onClick={() => setFiltersOpen((v) => !v)}
           aria-expanded={filtersOpen}
-          className="border border-white/15 px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-gold hover:text-gold lg:hidden"
+          className="border border-hairline px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-muted transition-colors hover:border-gold hover:text-gold-ink lg:hidden"
         >
           Filters{activeFilters.length > 0 ? ` (${activeFilters.length})` : ""}
         </button>
       </div>
 
       {filtersOpen && (
-        <div className="pop-in mt-4 border border-white/10 p-5 lg:hidden">{filterControls}</div>
+        <div className="pop-in mt-4 border border-hairline p-5 lg:hidden">{filterControls}</div>
       )}
 
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[210px_1fr]">
@@ -230,8 +230,8 @@ function ShopCatalog({ products }: { products: Product[] }) {
         </aside>
 
         <div>
-          <div className="flex flex-wrap items-center gap-3 border-b border-white/10 pb-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/40">
+          <div className="flex flex-wrap items-center gap-3 border-b border-hairline pb-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">
               {filtered.length} {filtered.length === 1 ? "compound" : "compounds"}
             </p>
             {activeFilters.map((filter) => (
@@ -239,7 +239,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
                 key={filter.label}
                 type="button"
                 onClick={filter.clear}
-                className="flex items-center gap-1.5 border border-gold/40 bg-gold/5 px-2.5 py-1 text-[11px] text-gold transition-colors hover:bg-gold/15"
+                className="flex items-center gap-1.5 border border-gold/40 bg-gold/5 px-2.5 py-1 text-[11px] text-gold-ink transition-colors hover:bg-gold/15"
               >
                 {filter.label}
                 <span aria-hidden="true">×</span>
@@ -250,7 +250,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
               <button
                 type="button"
                 onClick={clearAll}
-                className="text-[11px] uppercase tracking-[0.12em] text-white/40 underline-offset-4 hover:text-gold hover:underline"
+                className="text-[11px] uppercase tracking-[0.12em] text-muted underline-offset-4 hover:text-gold-ink hover:underline"
               >
                 Clear all
               </button>
@@ -265,15 +265,15 @@ function ShopCatalog({ products }: { products: Product[] }) {
             </div>
           ) : (
             <div className="mt-20 flex flex-col items-center text-center">
-              <p className="font-serif text-2xl text-white">No compounds match</p>
-              <p className="mt-2 max-w-sm text-sm text-white/50">
+              <p className="font-serif text-2xl text-navy">No compounds match</p>
+              <p className="mt-2 max-w-sm text-sm text-muted">
                 Nothing in the catalog fits every filter at once. Try clearing
                 one of them, or search by CAS number instead.
               </p>
               <button
                 type="button"
                 onClick={clearAll}
-                className="mt-6 border border-gold px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-gold transition-colors hover:bg-gold hover:text-black"
+                className="mt-6 border border-gold px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
               >
                 Clear all filters
               </button>
@@ -291,7 +291,7 @@ function CatalogSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
       {[0, 1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="border border-white/10">
+        <div key={i} className="border border-hairline">
           <div className="skeleton aspect-square w-full" />
           <div className="space-y-3 p-6">
             <div className="skeleton h-3 w-24" />

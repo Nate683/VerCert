@@ -78,7 +78,7 @@ export function ProductGallery({
         onMouseEnter={() => setZooming(true)}
         onMouseLeave={() => setZooming(false)}
         onMouseMove={handleMove}
-        className="group relative aspect-square w-full cursor-zoom-in overflow-hidden border border-white/10 bg-white/[0.02]"
+        className="group relative aspect-square w-full cursor-zoom-in overflow-hidden border border-hairline bg-surface"
         onClick={() => setLightbox(true)}
         role="button"
         tabIndex={0}
@@ -123,7 +123,7 @@ export function ProductGallery({
               aria-label={`View image ${i + 1} of ${images.length}`}
               aria-current={active === i}
               className={`relative h-16 w-16 shrink-0 overflow-hidden border transition-colors ${
-                active === i ? "border-gold" : "border-white/15 hover:border-white/40"
+                active === i ? "border-gold" : "border-hairline hover:border-control"
               }`}
             >
               <Image src={url} alt="" fill sizes="64px" className="object-cover" />

@@ -131,7 +131,7 @@ export default async function Home() {
       <section className="border-b border-hairline bg-surface">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-6 py-12 lg:grid-cols-[1fr_1.1fr] lg:px-10">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-gold">Verify a Batch</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Verify a Batch</p>
             <h2 className="mt-3 font-serif text-2xl text-navy">
               Already have a vial? Check its certificate.
             </h2>
@@ -149,7 +149,7 @@ export default async function Home() {
         <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
           <div className="flex items-end justify-between border-b border-hairline pb-6">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-gold">
+              <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">
                 Featured Compounds
               </p>
               <h2 className="mt-3 font-serif text-3xl text-navy">
@@ -158,7 +158,7 @@ export default async function Home() {
             </div>
             <Link
               href="/shop"
-              className="underline-draw hidden text-sm uppercase tracking-[0.15em] text-muted hover:text-gold sm:block"
+              className="underline-draw hidden text-sm uppercase tracking-[0.15em] text-muted hover:text-gold-ink sm:block"
             >
               View All →
             </Link>
@@ -173,7 +173,7 @@ export default async function Home() {
           <SectionToggle sectionKey="trust" visible={sections.trust} />
           <div className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
             <ScrollReveal className="text-center">
-              <p className="text-xs uppercase tracking-[0.35em] text-gold">
+              <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">
                 Third-Party Testing
               </p>
               <h2 className="mt-3 font-serif text-3xl text-navy">
@@ -187,7 +187,7 @@ export default async function Home() {
             <div className="mt-16 grid grid-cols-1 gap-12 sm:grid-cols-3">
               {TRUST_POINTS.map((point, i) => (
                 <ScrollReveal key={point.title} delayMs={i * 100} className="flex flex-col items-center text-center">
-                  <VialGlyph className="h-14 w-14 text-gold" />
+                  <VialGlyph className="h-14 w-14 text-gold-ink" />
                   <h3 className="mt-6 font-serif text-xl text-navy">{point.title}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-muted">{point.body}</p>
                 </ScrollReveal>
@@ -196,7 +196,7 @@ export default async function Home() {
             <ScrollReveal className="mt-14 text-center">
               <Link
                 href="/how-we-test"
-                className="inline-block border border-control px-8 py-3 text-sm uppercase tracking-[0.2em] text-muted transition-colors hover:border-gold hover:text-gold"
+                className="inline-block border border-control px-8 py-3 text-sm uppercase tracking-[0.2em] text-muted transition-colors hover:border-gold hover:text-gold-ink"
               >
                 How We Test
               </Link>
@@ -219,7 +219,7 @@ export default async function Home() {
             </p>
             <Link
               href="/coa"
-              className="card-elevate mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black"
+              className="card-elevate mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
             >
               Verify a Certificate
             </Link>

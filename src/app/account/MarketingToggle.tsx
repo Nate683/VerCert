@@ -21,7 +21,7 @@ export function MarketingToggle({ initialOptIn }: { initialOptIn: boolean }) {
   }
 
   return (
-    <label className="flex items-center gap-3 text-sm text-white/70">
+    <label className="flex items-center gap-3 text-sm text-muted">
       <input
         type="checkbox"
         checked={optIn}

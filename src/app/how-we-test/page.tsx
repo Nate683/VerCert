@@ -73,13 +73,13 @@ const COA_FIELDS = [
 export default function HowWeTestPage() {
   return (
     <div>
-      <section className="border-b border-white/10">
+      <section className="border-b border-hairline">
         <div className="mx-auto max-w-4xl px-6 py-20 lg:px-10">
-          <p className="text-xs uppercase tracking-[0.35em] text-gold">Verification</p>
-          <h1 className="mt-3 font-serif text-4xl leading-tight text-white lg:text-5xl">
+          <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Verification</p>
+          <h1 className="mt-3 font-serif text-4xl leading-tight text-navy lg:text-5xl">
             How We Test
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/60">
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
             Every claim VeriCert makes about a compound is traceable to a
             document produced by someone other than us. This page explains
             exactly how that works — the process, the instruments, and how to
@@ -90,36 +90,36 @@ export default function HowWeTestPage() {
 
       {/* The process */}
       <section className="mx-auto max-w-5xl px-6 py-20 lg:px-10">
-        <h2 className="font-serif text-3xl text-white">From Lot to Certificate</h2>
+        <h2 className="font-serif text-3xl text-navy">From Lot to Certificate</h2>
         <div className="mt-12 grid grid-cols-1 gap-x-12 gap-y-10 sm:grid-cols-2">
           {STAGES.map((stage) => (
-            <div key={stage.step} className="border-t border-white/10 pt-6">
-              <p className="font-mono text-xs text-gold">{stage.step}</p>
-              <h3 className="mt-2 font-serif text-xl text-white">{stage.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-white/55">{stage.body}</p>
+            <div key={stage.step} className="border-t border-hairline pt-6">
+              <p className="font-mono text-xs text-gold-ink">{stage.step}</p>
+              <h3 className="mt-2 font-serif text-xl text-navy">{stage.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{stage.body}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Reading a certificate */}
-      <section className="texture-diagonal border-y border-white/10 bg-white/[0.02]">
+      <section className="texture-diagonal border-y border-hairline bg-surface">
         <div className="mx-auto max-w-5xl px-6 py-20 lg:px-10">
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-            <VialGlyph className="h-12 w-12 shrink-0 text-gold" />
+            <VialGlyph className="h-12 w-12 shrink-0 text-gold-ink" />
             <div>
-              <h2 className="font-serif text-3xl text-white">Reading a Certificate</h2>
-              <p className="mt-2 text-sm leading-relaxed text-white/50">
+              <h2 className="font-serif text-3xl text-navy">Reading a Certificate</h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
                 A COA is only useful if you know what each line is telling you.
               </p>
             </div>
           </div>
 
-          <dl className="mt-12 divide-y divide-white/10 border-y border-white/10">
+          <dl className="mt-12 divide-y divide-hairline border-y border-hairline">
             {COA_FIELDS.map((row) => (
               <div key={row.field} className="grid grid-cols-1 gap-2 py-5 sm:grid-cols-[220px_1fr] sm:gap-8">
-                <dt className="text-sm uppercase tracking-[0.12em] text-gold">{row.field}</dt>
-                <dd className="text-sm leading-relaxed text-white/60">{row.meaning}</dd>
+                <dt className="text-sm uppercase tracking-[0.12em] text-gold-ink">{row.field}</dt>
+                <dd className="text-sm leading-relaxed text-muted">{row.meaning}</dd>
               </div>
             ))}
           </dl>
@@ -128,8 +128,8 @@ export default function HowWeTestPage() {
 
       {/* Check yours */}
       <section className="mx-auto max-w-4xl px-6 py-20 lg:px-10">
-        <h2 className="font-serif text-3xl text-white">Check Your Batch</h2>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55">
+        <h2 className="font-serif text-3xl text-navy">Check Your Batch</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
           Enter the batch number from your vial label. You&apos;ll get the same
           report we hold on file — no account required, and it works whether you
           bought yesterday or two years ago.
@@ -138,28 +138,28 @@ export default function HowWeTestPage() {
           <CoaQuickLookup />
         </div>
 
-        <div className="mt-16 border-t border-white/10 pt-10">
-          <h3 className="font-serif text-xl text-white">Still have a question?</h3>
-          <p className="mt-2 text-sm leading-relaxed text-white/55">
+        <div className="mt-16 border-t border-hairline pt-10">
+          <h3 className="font-serif text-xl text-navy">Still have a question?</h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted">
             If a figure on your certificate doesn&apos;t look right, or the batch
             number won&apos;t resolve, tell us and we will look into it directly.
           </p>
           <div className="mt-6 flex flex-wrap gap-4">
             <Link
               href="/contact"
-              className="border border-gold px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-gold transition-colors hover:bg-gold hover:text-black"
+              className="border border-gold px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
             >
               Contact Us
             </Link>
             <Link
               href="/faq"
-              className="border border-white/20 px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+              className="border border-hairline px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-muted transition-colors hover:border-gold hover:text-gold-ink"
             >
               Read the FAQ
             </Link>
             <Link
               href="/shop"
-              className="border border-white/20 px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+              className="border border-hairline px-6 py-2.5 text-xs uppercase tracking-[0.18em] text-muted transition-colors hover:border-gold hover:text-gold-ink"
             >
               Browse the Catalog
             </Link>

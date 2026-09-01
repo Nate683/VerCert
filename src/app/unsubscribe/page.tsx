@@ -22,9 +22,9 @@ export default async function UnsubscribePage({
 
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col justify-center px-6 py-20 text-center lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">Email Preferences</p>
-      <h1 className="mt-3 font-serif text-3xl text-white">Unsubscribed</h1>
-      <p className="mt-4 text-sm leading-relaxed text-white/50">{message}</p>
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Email Preferences</p>
+      <h1 className="mt-3 font-serif text-3xl text-navy">Unsubscribed</h1>
+      <p className="mt-4 text-sm leading-relaxed text-muted">{message}</p>
     </div>
   );
 }

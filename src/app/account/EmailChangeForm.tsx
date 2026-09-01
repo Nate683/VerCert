@@ -32,7 +32,7 @@ export function EmailChangeForm({ pendingEmail }: { pendingEmail?: string }) {
   return (
     <div className="space-y-3">
       {pending && (
-        <p className="text-xs text-gold">
+        <p className="text-xs text-gold-ink">
           Verification email sent to <span className="font-mono">{pending}</span> — check your
           inbox to finish the change.
         </p>
@@ -44,12 +44,12 @@ export function EmailChangeForm({ pendingEmail }: { pendingEmail?: string }) {
           value={newEmail}
           onChange={(e) => setNewEmail(e.target.value)}
           placeholder="New email address"
-          className="border border-white/15 bg-black px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none"
+          className="border border-hairline bg-paper px-3 py-2 text-sm text-navy placeholder:text-muted/70 focus:border-gold focus:outline-none"
         />
         <button
           type="submit"
           disabled={status === "saving" || !newEmail}
-          className="border border-gold px-5 py-2 text-xs uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+          className="border border-gold px-5 py-2 text-xs uppercase tracking-[0.2em] text-gold-ink transition-colors hover:bg-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
         >
           {status === "saving" ? "Sending..." : "Send Verification"}
         </button>

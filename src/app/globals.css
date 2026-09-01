@@ -130,6 +130,12 @@ body {
   @apply w-full border border-white/15 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-gold focus:outline-none;
 }
 
+/* Storefront inputs on the light shell. --control is the WCAG 1.4.11 tone for
+   an unfocused control edge; the focus ring is the accessible gold. */
+.input-field-light {
+  @apply w-full border border-control bg-paper px-4 py-3 text-sm text-navy placeholder:text-muted/70 focus:border-gold-ink focus:outline-none;
+}
+
 /* ==========================================================================
    STOREFRONT — layered depth, hover motion, gold underline draw.
    ========================================================================== */
@@ -179,7 +185,7 @@ body {
   font-size: 0.6875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-ink);
 }
 
 /* Scroll-triggered fade-in, toggled by the `is-visible` class from an
@@ -195,12 +201,13 @@ body {
   transform: translateY(0);
 }
 
-/* Subtle repeating diagonal texture for dense navy blocks (trust band, etc.) */
+/* Subtle repeating diagonal texture for banded sections. Navy-tinted: the
+   old white lines were invisible once the shell went light. */
 .texture-diagonal {
   background-image: repeating-linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.015) 0px,
-    rgba(255, 255, 255, 0.015) 1px,
+    rgba(19, 37, 68, 0.03) 0px,
+    rgba(19, 37, 68, 0.03) 1px,
     transparent 1px,
     transparent 10px
   );

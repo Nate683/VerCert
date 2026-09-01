@@ -33,10 +33,10 @@ export default function FaqClient({ items }: { items: FaqItem[] }) {
           }),
         }}
       />
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">FAQ</p>
-      <h1 className="mt-3 font-serif text-4xl text-white">Frequently Asked Questions</h1>
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">FAQ</p>
+      <h1 className="mt-3 font-serif text-4xl text-navy">Frequently Asked Questions</h1>
 
-      <div className="mt-12 divide-y divide-white/10 border-y border-white/10">
+      <div className="mt-12 divide-y divide-hairline border-y border-hairline">
         {localItems.map((faq, i) => {
           const open = openIndex === i;
           return (
@@ -49,10 +49,10 @@ export default function FaqClient({ items }: { items: FaqItem[] }) {
                 <EditableText
                   value={faq.q}
                   as="span"
-                  className="font-serif text-lg text-white"
+                  className="font-serif text-lg text-navy"
                   onSave={(v) => saveItems(localItems.map((item, idx) => (idx === i ? { ...item, q: v } : item)))}
                 />
-                <span className={`text-xl text-gold transition-transform ${open ? "rotate-45" : ""}`}>
+                <span className={`text-xl text-gold-ink transition-transform ${open ? "rotate-45" : ""}`}>
                   +
                 </span>
               </button>
@@ -61,7 +61,7 @@ export default function FaqClient({ items }: { items: FaqItem[] }) {
                   value={faq.a}
                   as="p"
                   multiline
-                  className="pb-6 text-sm leading-relaxed text-white/60"
+                  className="pb-6 text-sm leading-relaxed text-muted"
                   onSave={(v) => saveItems(localItems.map((item, idx) => (idx === i ? { ...item, a: v } : item)))}
                 />
               )}

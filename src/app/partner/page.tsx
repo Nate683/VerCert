@@ -12,9 +12,9 @@ export const metadata = { title: "Partner Portal | VeriCert", robots: { index: f
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-gold/20 bg-white/[0.02] p-4">
-      <p className="text-[10px] uppercase tracking-[0.15em] text-white/40">{label}</p>
-      <p className="mt-2 font-mono text-xl text-gold">{value}</p>
+    <div className="border border-gold/20 bg-surface p-4">
+      <p className="text-[10px] uppercase tracking-[0.15em] text-muted">{label}</p>
+      <p className="mt-2 font-mono text-xl text-gold-ink">{value}</p>
     </div>
   );
 }
@@ -32,12 +32,12 @@ function StatusScreen({
 }) {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-md flex-col justify-center px-6 py-20 text-center lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold">Partner Portal</p>
-      <h1 className="mt-3 font-serif text-3xl text-white">{title}</h1>
-      <p className="mt-3 text-sm leading-relaxed text-white/50">{message}</p>
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Partner Portal</p>
+      <h1 className="mt-3 font-serif text-3xl text-navy">{title}</h1>
+      <p className="mt-3 text-sm leading-relaxed text-muted">{message}</p>
       <Link
         href={ctaHref ?? "/account"}
-        className="mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black"
+        className="mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
       >
         {ctaLabel ?? "Go to My Account"}
       </Link>
@@ -113,30 +113,30 @@ export default async function PartnerPage() {
 
     return (
       <div className="mx-auto max-w-4xl px-6 py-16 lg:px-10">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-6">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-hairline pb-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-gold">Partner Portal</p>
-            <h1 className="mt-3 font-serif text-3xl text-white">{affiliate.name}</h1>
-            <p className="mt-4 text-xs uppercase tracking-[0.2em] text-white/40">Your Affiliate Code</p>
-            <p className="mt-1 font-mono text-3xl text-gold">{summary.code ?? "—"}</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Partner Portal</p>
+            <h1 className="mt-3 font-serif text-3xl text-navy">{affiliate.name}</h1>
+            <p className="mt-4 text-xs uppercase tracking-[0.2em] text-muted">Your Affiliate Code</p>
+            <p className="mt-1 font-mono text-3xl text-gold-ink">{summary.code ?? "—"}</p>
           </div>
           <Link
             href="/hq"
-            className="border border-gold px-5 py-2.5 text-xs uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black"
+            className="border border-gold px-5 py-2.5 text-xs uppercase tracking-[0.2em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
           >
             Go to HQ →
           </Link>
         </div>
 
         {checklistDone < checklist.length && (
-          <section className="mt-8 border border-gold/20 bg-white/[0.02] p-5">
+          <section className="mt-8 border border-gold/20 bg-surface p-5">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Getting Started</h2>
-              <span className="text-xs text-white/40">
+              <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Getting Started</h2>
+              <span className="text-xs text-muted">
                 {checklistDone} / {checklist.length}
               </span>
             </div>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface">
               <div
                 className="h-full bg-gold transition-all"
                 style={{ width: `${(checklistDone / checklist.length) * 100}%` }}
@@ -145,8 +145,8 @@ export default async function PartnerPage() {
             <ul className="mt-4 space-y-2">
               {checklist.map((item) => (
                 <li key={item.label} className="flex items-center gap-3 text-sm">
-                  <span className={item.done ? "text-gold" : "text-white/20"}>{item.done ? "✓" : "○"}</span>
-                  <span className={item.done ? "text-white/40 line-through" : "text-white/70"}>{item.label}</span>
+                  <span className={item.done ? "text-gold-ink" : "text-muted/50"}>{item.done ? "✓" : "○"}</span>
+                  <span className={item.done ? "text-muted line-through" : "text-muted"}>{item.label}</span>
                 </li>
               ))}
             </ul>
@@ -154,19 +154,19 @@ export default async function PartnerPage() {
         )}
 
         {tier && currentTierInfo && (
-          <section className="mt-10 border-t border-white/10 pt-8">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Tier Status</h2>
+          <section className="mt-10 border-t border-hairline pt-8">
+            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Tier Status</h2>
             <div className="mt-4 flex flex-wrap items-center gap-6">
               <div className="border border-gold bg-gold/10 px-5 py-3 text-center">
-                <p className="text-[10px] uppercase tracking-[0.15em] text-gold/70">Current Tier</p>
-                <p className="mt-1 font-serif text-xl text-gold">{currentTierInfo.label}</p>
-                <p className="mt-1 text-xs text-white/40">{currentTierInfo.commissionRate}% commission</p>
+                <p className="text-[10px] uppercase tracking-[0.15em] text-gold-ink/70">Current Tier</p>
+                <p className="mt-1 font-serif text-xl text-gold-ink">{currentTierInfo.label}</p>
+                <p className="mt-1 text-xs text-muted">{currentTierInfo.commissionRate}% commission</p>
               </div>
               {nextTier && projectedAtNextTier !== null && (
-                <div className="border border-white/15 px-5 py-3 text-center">
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-white/40">Next Tier</p>
-                  <p className="mt-1 font-serif text-xl text-white">{nextTier.label}</p>
-                  <p className="mt-1 text-xs text-white/40">
+                <div className="border border-hairline px-5 py-3 text-center">
+                  <p className="text-[10px] uppercase tracking-[0.15em] text-muted">Next Tier</p>
+                  <p className="mt-1 font-serif text-xl text-navy">{nextTier.label}</p>
+                  <p className="mt-1 text-xs text-muted">
                     At {nextTier.commissionRate}%, your YTD revenue would earn ${projectedAtNextTier.toFixed(2)}
                   </p>
                 </div>
@@ -175,39 +175,39 @@ export default async function PartnerPage() {
           </section>
         )}
 
-        <section className="mt-10 border-t border-white/10 pt-8">
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Your Production</h2>
+        <section className="mt-10 border-t border-hairline pt-8">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Your Production</h2>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             <Stat label="Orders Driven" value={String(summary.ordersDriven)} />
             <Stat label="Gross Revenue" value={`$${summary.grossRevenue.toFixed(2)}`} />
             <Stat label="YTD Revenue" value={`$${summary.ytdRevenue.toFixed(2)}`} />
           </div>
           {personalBest && (
-            <p className="mt-4 text-sm text-gold">
+            <p className="mt-4 text-sm text-gold-ink">
               🏆 Personal best: ${personalBest[1].toFixed(2)} in {personalBest[0]}
             </p>
           )}
         </section>
 
         {topProducts.length > 0 && (
-          <section className="mt-10 border-t border-white/10 pt-8">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold">What&apos;s Converting</h2>
+          <section className="mt-10 border-t border-hairline pt-8">
+            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">What&apos;s Converting</h2>
             <ul className="mt-4 space-y-2">
               {topProducts.map((p) => (
-                <li key={p.name} className="flex justify-between text-sm text-white/70">
+                <li key={p.name} className="flex justify-between text-sm text-muted">
                   <span>
-                    {p.name} <span className="text-white/30">× {p.units}</span>
+                    {p.name} <span className="text-muted/70">× {p.units}</span>
                   </span>
-                  <span className="font-mono text-white">${p.revenue.toFixed(2)}</span>
+                  <span className="font-mono text-navy">${p.revenue.toFixed(2)}</span>
                 </li>
               ))}
             </ul>
           </section>
         )}
 
-        <section className="mt-10 border-t border-white/10 pt-8">
-          <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Your Commission</h2>
-          <p className="mt-3 text-sm text-white/70">
+        <section className="mt-10 border-t border-hairline pt-8">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Your Commission</h2>
+          <p className="mt-3 text-sm text-muted">
             {affiliate.commissionType === "percent"
               ? `${affiliate.commissionRate}% of each qualifying order`
               : `$${affiliate.commissionFlatAmount.toFixed(2)} flat per qualifying order`}
@@ -221,16 +221,16 @@ export default async function PartnerPage() {
         </section>
 
         {payouts.length > 0 && (
-          <section className="mt-10 border-t border-white/10 pt-8">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Payout History</h2>
+          <section className="mt-10 border-t border-hairline pt-8">
+            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Payout History</h2>
             <ul className="mt-4 space-y-2">
               {payouts.map((p) => (
-                <li key={p.id} className="flex justify-between text-sm text-white/70">
+                <li key={p.id} className="flex justify-between text-sm text-muted">
                   <span>
                     {new Date(p.paidAt).toLocaleDateString()}
-                    {p.note && <span className="ml-2 text-white/30">— {p.note}</span>}
+                    {p.note && <span className="ml-2 text-muted/70">— {p.note}</span>}
                   </span>
-                  <span className="font-mono text-gold">${p.amount.toFixed(2)}</span>
+                  <span className="font-mono text-gold-ink">${p.amount.toFixed(2)}</span>
                 </li>
               ))}
             </ul>
@@ -238,15 +238,15 @@ export default async function PartnerPage() {
         )}
 
         {resources.length > 0 && (
-          <section className="mt-10 border-t border-white/10 pt-8">
-            <h2 className="text-xs uppercase tracking-[0.25em] text-gold">Marketing Assets</h2>
+          <section className="mt-10 border-t border-hairline pt-8">
+            <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Marketing Assets</h2>
             <ul className="mt-4 space-y-2">
               {resources.map((r) => (
                 <li key={r.id}>
-                  <a href={r.fileUrl} target="_blank" rel="noreferrer" className="text-sm text-white/70 hover:text-gold">
+                  <a href={r.fileUrl} target="_blank" rel="noreferrer" className="text-sm text-muted hover:text-gold-ink">
                     {r.title}
                   </a>
-                  {r.description && <span className="ml-2 text-xs text-white/30">— {r.description}</span>}
+                  {r.description && <span className="ml-2 text-xs text-muted/70">— {r.description}</span>}
                 </li>
               ))}
             </ul>

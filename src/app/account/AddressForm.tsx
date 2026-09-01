@@ -46,7 +46,7 @@ export function AddressForm({ initialAddress }: { initialAddress?: SavedAddress 
           defaultValue={initialAddress?.address}
           placeholder="Address"
           required
-          className="input-field sm:col-span-2"
+          className="input-field-light sm:col-span-2"
         />
         <input
           name="city"
@@ -54,7 +54,7 @@ export function AddressForm({ initialAddress }: { initialAddress?: SavedAddress 
           defaultValue={initialAddress?.city}
           placeholder="City"
           required
-          className="input-field"
+          className="input-field-light"
         />
         <input
           name="state"
@@ -62,7 +62,7 @@ export function AddressForm({ initialAddress }: { initialAddress?: SavedAddress 
           defaultValue={initialAddress?.state}
           placeholder="State / Province"
           required
-          className="input-field"
+          className="input-field-light"
         />
         <input
           name="postalCode"
@@ -70,7 +70,7 @@ export function AddressForm({ initialAddress }: { initialAddress?: SavedAddress 
           defaultValue={initialAddress?.postalCode}
           placeholder="Postal code"
           required
-          className="input-field"
+          className="input-field-light"
         />
         <input
           name="country"
@@ -78,15 +78,15 @@ export function AddressForm({ initialAddress }: { initialAddress?: SavedAddress 
           defaultValue={initialAddress?.country}
           placeholder="Country"
           required
-          className="input-field"
+          className="input-field-light"
         />
       </div>
       {error && <p className="text-sm text-red-300">{error}</p>}
-      {saved && <p className="text-sm text-gold">Address saved.</p>}
+      {saved && <p className="text-sm text-gold-ink">Address saved.</p>}
       <button
         type="submit"
         disabled={submitting}
-        className="border border-white/15 px-6 py-2 text-xs uppercase tracking-[0.15em] text-white/80 transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
+        className="border border-hairline px-6 py-2 text-xs uppercase tracking-[0.15em] text-navy transition-colors hover:border-gold hover:text-gold-ink disabled:opacity-40"
       >
         {submitting ? "Saving..." : "Save Address"}
       </button>

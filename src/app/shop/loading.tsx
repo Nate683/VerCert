@@ -3,7 +3,7 @@
 export default function ShopLoading() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
-      <div className="border-b border-white/10 pb-8">
+      <div className="border-b border-hairline pb-8">
         <div className="skeleton h-3 w-24" />
         <div className="skeleton mt-4 h-9 w-72" />
         <div className="skeleton mt-4 h-4 w-full max-w-2xl" />
@@ -21,7 +21,7 @@ export default function ShopLoading() {
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="border border-white/10">
+            <div key={i} className="border border-hairline">
               <div className="skeleton aspect-square w-full" />
               <div className="space-y-3 p-6">
                 <div className="skeleton h-3 w-24" />

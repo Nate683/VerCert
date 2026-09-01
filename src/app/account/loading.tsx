@@ -1,7 +1,7 @@
 export default function AccountLoading() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 lg:px-10">
-      <div className="border-b border-white/10 pb-6">
+      <div className="border-b border-hairline pb-6">
         <div className="skeleton h-3 w-20" />
         <div className="skeleton mt-4 h-8 w-64" />
       </div>

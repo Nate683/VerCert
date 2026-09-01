@@ -92,9 +92,9 @@ export function CryptoPaymentPanel({
   if (status === "paid") {
     return (
       <div className="border border-gold/40 p-8 text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-gold">Payment Confirmed</p>
-        <h2 className="mt-3 font-serif text-2xl text-white">Thank You</h2>
-        <p className="mt-3 text-sm leading-relaxed text-white/50">
+        <p className="text-xs uppercase tracking-[0.3em] text-gold-ink">Payment Confirmed</p>
+        <h2 className="mt-3 font-serif text-2xl text-navy">Thank You</h2>
+        <p className="mt-3 text-sm leading-relaxed text-muted">
           We&apos;ve received your crypto payment for order {reference}. A
           confirmation has been recorded and your order will begin processing.
         </p>
@@ -104,16 +104,16 @@ export function CryptoPaymentPanel({
 
   if (status === "expired" || msRemaining <= 0) {
     return (
-      <div className="border border-white/15 p-8 text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-white/40">Payment Window Expired</p>
-        <h2 className="mt-3 font-serif text-2xl text-white">This Charge Has Expired</h2>
-        <p className="mt-3 text-sm leading-relaxed text-white/50">
+      <div className="border border-hairline p-8 text-center">
+        <p className="text-xs uppercase tracking-[0.3em] text-muted">Payment Window Expired</p>
+        <h2 className="mt-3 font-serif text-2xl text-navy">This Charge Has Expired</h2>
+        <p className="mt-3 text-sm leading-relaxed text-muted">
           The payment window for order {reference} has closed. Please return
           to checkout to generate a new payment request.
         </p>
         <Link
           href="/checkout"
-          className="mt-6 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-black"
+          className="mt-6 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
         >
           Return to Checkout
         </Link>
@@ -122,15 +122,15 @@ export function CryptoPaymentPanel({
   }
 
   return (
-    <div className="border border-white/10 p-6 sm:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-6">
+    <div className="border border-hairline p-6 sm:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-gold">Pay With Crypto</p>
-          <p className="mt-1 text-sm text-white/50">Order {reference}</p>
+          <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">Pay With Crypto</p>
+          <p className="mt-1 text-sm text-muted">Order {reference}</p>
         </div>
         <div className="text-right">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/40">Time Remaining</p>
-          <p className="font-mono text-2xl text-gold">{formatCountdown(msRemaining)}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-muted">Time Remaining</p>
+          <p className="font-mono text-2xl text-gold-ink">{formatCountdown(msRemaining)}</p>
         </div>
       </div>
 
@@ -143,7 +143,7 @@ export function CryptoPaymentPanel({
             className={`border px-4 py-2 text-xs uppercase tracking-[0.15em] transition-colors ${
               selected === currency
                 ? "border-gold bg-gold text-black"
-                : "border-white/15 text-white/60 hover:border-gold hover:text-gold"
+                : "border-hairline text-muted hover:border-gold hover:text-gold-ink"
             }`}
           >
             {CURRENCY_LABELS[currency]}
@@ -158,31 +158,31 @@ export function CryptoPaymentPanel({
             <img
               src={qrDataUrl}
               alt={`QR code for ${CURRENCY_LABELS[selected]} payment address`}
-              className="border border-white/10 bg-white p-3"
+              className="border border-hairline bg-paper p-3"
               width={240}
               height={240}
             />
           ) : (
-            <div className="flex h-[240px] w-[240px] items-center justify-center border border-white/10 text-xs text-white/30">
+            <div className="flex h-[240px] w-[240px] items-center justify-center border border-hairline text-xs text-muted/70">
               Generating QR code...
             </div>
           )}
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-white/40">Amount Due</p>
-          <p className="mt-2 font-serif text-2xl text-white">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted">Amount Due</p>
+          <p className="mt-2 font-serif text-2xl text-navy">
             {amount} {CURRENCY_LABELS[selected]}
           </p>
 
-          <p className="mt-6 text-xs uppercase tracking-[0.2em] text-white/40">
+          <p className="mt-6 text-xs uppercase tracking-[0.2em] text-muted">
             {CURRENCY_LABELS[selected]} Deposit Address
           </p>
-          <p className="mt-2 break-all border border-white/10 bg-white/[0.03] p-3 font-mono text-xs text-white/80">
+          <p className="mt-2 break-all border border-hairline bg-surface p-3 font-mono text-xs text-navy">
             {address}
           </p>
 
-          <p className="mt-6 text-xs leading-relaxed text-white/40">
+          <p className="mt-6 text-xs leading-relaxed text-muted">
             Send exactly the amount shown to this address. This page will
             update automatically once your payment is confirmed on-chain.
           </p>
@@ -191,7 +191,7 @@ export function CryptoPaymentPanel({
             href={crypto.hostedUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-block text-xs uppercase tracking-[0.2em] text-white/50 underline-offset-4 hover:text-gold hover:underline"
+            className="mt-4 inline-block text-xs uppercase tracking-[0.2em] text-muted underline-offset-4 hover:text-gold-ink hover:underline"
           >
             Or pay via Coinbase Commerce →
           </a>

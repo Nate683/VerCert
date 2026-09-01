@@ -88,8 +88,8 @@ export default async function ProductDetailPage({
       />
       <RecordProductView slug={product.slug} />
 
-      <nav aria-label="Breadcrumb" className="text-xs uppercase tracking-[0.2em] text-white/40">
-        <Link href="/shop" className="transition-colors hover:text-gold">
+      <nav aria-label="Breadcrumb" className="text-xs uppercase tracking-[0.2em] text-muted">
+        <Link href="/shop" className="transition-colors hover:text-gold-ink">
           Shop
         </Link>
         <span className="mx-2" aria-hidden="true">
@@ -97,14 +97,14 @@ export default async function ProductDetailPage({
         </span>
         <Link
           href={`/shop?q=${encodeURIComponent(product.category)}`}
-          className="transition-colors hover:text-gold"
+          className="transition-colors hover:text-gold-ink"
         >
           {product.category}
         </Link>
         <span className="mx-2" aria-hidden="true">
           /
         </span>
-        <span className="text-white/70">{product.name}</span>
+        <span className="text-muted">{product.name}</span>
       </nav>
 
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
@@ -117,40 +117,40 @@ export default async function ProductDetailPage({
         </div>
 
         <div>
-          <p className="text-xs uppercase tracking-[0.25em] text-gold">{product.category}</p>
-          <h1 className="mt-3 font-serif text-4xl text-white">{product.name}</h1>
+          <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">{product.category}</p>
+          <h1 className="mt-3 font-serif text-4xl text-navy">{product.name}</h1>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <span className="purity-badge">{product.purityPercent.toFixed(1)}% Purity</span>
             {primaryBatch && (
-              <span className="font-mono text-xs text-white/50">
-                Batch <span className="text-white">{primaryBatch}</span>
+              <span className="font-mono text-xs text-muted">
+                Batch <span className="text-navy">{primaryBatch}</span>
               </span>
             )}
             {primaryBatch && (
               <Link
                 href={`/coa?batch=${primaryBatch}`}
-                className="text-xs uppercase tracking-[0.12em] text-gold underline-offset-4 hover:underline"
+                className="text-xs uppercase tracking-[0.12em] text-gold-ink underline-offset-4 hover:underline"
               >
                 View COA →
               </Link>
             )}
           </div>
 
-          <p className="mt-5 text-sm leading-relaxed text-white/60">{product.summary}</p>
+          <p className="mt-5 text-sm leading-relaxed text-muted">{product.summary}</p>
 
           <div className="mt-8">
             <AddToCartPanel product={product} />
           </div>
 
-          <dl className="mt-10 divide-y divide-white/10 border-y border-white/10">
+          <dl className="mt-10 divide-y divide-hairline border-y border-hairline">
             {specs.map((spec) => (
               <div
                 key={spec.label}
                 className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between"
               >
-                <dt className="text-xs uppercase tracking-[0.15em] text-white/40">{spec.label}</dt>
-                <dd className={`text-sm text-white sm:text-right ${spec.mono ? "font-mono" : ""}`}>
+                <dt className="text-xs uppercase tracking-[0.15em] text-muted">{spec.label}</dt>
+                <dd className={`text-sm text-navy sm:text-right ${spec.mono ? "font-mono" : ""}`}>
                   {spec.value}
                 </dd>
               </div>
@@ -159,18 +159,18 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      <div className="mt-16 grid grid-cols-1 gap-12 border-t border-white/10 pt-12 lg:grid-cols-3">
+      <div className="mt-16 grid grid-cols-1 gap-12 border-t border-hairline pt-12 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <h2 className="font-serif text-2xl text-white">Product Description</h2>
-          <div className="mt-4 space-y-4 text-sm leading-relaxed text-white/60">
+          <h2 className="font-serif text-2xl text-navy">Product Description</h2>
+          <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted">
             {product.description.map((paragraph, i) => (
               <p key={i}>{paragraph}</p>
             ))}
           </div>
         </div>
         <div>
-          <h2 className="font-serif text-2xl text-white">Available Batches</h2>
-          <p className="mt-2 text-xs leading-relaxed text-white/40">
+          <h2 className="font-serif text-2xl text-navy">Available Batches</h2>
+          <p className="mt-2 text-xs leading-relaxed text-muted">
             Each batch is tested independently. Match the number on your vial
             label to pull its certificate.
           </p>
@@ -179,7 +179,7 @@ export default async function ProductDetailPage({
               <li key={batch}>
                 <Link
                   href={`/coa?batch=${batch}`}
-                  className="flex items-center justify-between border border-white/10 px-4 py-3 text-sm text-white/70 transition-colors hover:border-gold hover:text-gold"
+                  className="flex items-center justify-between border border-hairline px-4 py-3 text-sm text-muted transition-colors hover:border-gold hover:text-gold-ink"
                 >
                   <span className="font-mono">{batch}</span>
                   <span className="text-xs uppercase tracking-[0.15em]">View COA →</span>
@@ -189,7 +189,7 @@ export default async function ProductDetailPage({
           </ul>
           <Link
             href="/how-we-test"
-            className="mt-6 inline-block text-xs uppercase tracking-[0.15em] text-white/50 underline-offset-4 transition-colors hover:text-gold hover:underline"
+            className="mt-6 inline-block text-xs uppercase tracking-[0.15em] text-muted underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
           >
             How we test →
           </Link>
@@ -197,12 +197,12 @@ export default async function ProductDetailPage({
       </div>
 
       {related.length > 0 && (
-        <section className="mt-20 border-t border-white/10 pt-12">
+        <section className="mt-20 border-t border-hairline pt-12">
           <div className="flex items-end justify-between">
-            <h2 className="font-serif text-2xl text-white">Related Compounds</h2>
+            <h2 className="font-serif text-2xl text-navy">Related Compounds</h2>
             <Link
               href="/shop"
-              className="underline-draw hidden text-sm uppercase tracking-[0.15em] text-white/60 hover:text-gold sm:block"
+              className="underline-draw hidden text-sm uppercase tracking-[0.15em] text-muted hover:text-gold-ink sm:block"
             >
               View All →
             </Link>
@@ -215,7 +215,7 @@ export default async function ProductDetailPage({
         </section>
       )}
 
-      <RecentlyViewed excludeSlug={product.slug} className="mt-20 border-t border-white/10 pt-12" />
+      <RecentlyViewed excludeSlug={product.slug} className="mt-20 border-t border-hairline pt-12" />
     </div>
   );
 }
