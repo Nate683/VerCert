@@ -34,6 +34,19 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8).max(200),
 });
 
+export const twoFactorCodeSchema = z.object({
+  code: z.string().trim().min(1).max(20),
+});
+
+export const twoFactorVerifySchema = z
+  .object({
+    code: z.string().trim().max(20).optional(),
+    backupCode: z.string().trim().max(40).optional(),
+  })
+  .refine((data) => Boolean(data.code) || Boolean(data.backupCode), {
+    message: "Enter a code.",
+  });
+
 export const changeEmailSchema = z.object({
   newEmail: z.string().trim().toLowerCase().email(),
 });

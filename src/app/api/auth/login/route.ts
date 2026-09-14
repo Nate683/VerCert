@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { getUserByEmail } from "@/lib/users/store";
 import { verifyPassword } from "@/lib/users/password";
-import { CUSTOMER_SESSION_COOKIE, createCustomerSessionToken } from "@/lib/users/session";
+import { setCustomerSessionCookie } from "@/lib/users/session-cookie";
 import { getRealmForEmail, ensureStaffAccount } from "@/lib/executive/staff";
 import { getAffiliateByPortalCode } from "@/lib/affiliates";
+import { requiresTwoFactor } from "@/lib/two-factor/store";
+import { startTwoFactorChallenge } from "@/lib/two-factor/challenge";
 import { loginSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -20,6 +21,16 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   if ("error" in parsed) return parsed.error;
   const { email, password, portalCode } = parsed.data;
 
+  // The per-IP limit above can be sidestepped by spreading guesses at one
+  // account across many addresses; this caps attempts per account wherever
+  // they come from. It counts every attempt, so someone hammering an account
+  // can hold its owner out for up to the 15-minute window.
+  const accountLimit = await checkRateLimit(`login:account:${email}`, {
+    limit: 10,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!accountLimit.allowed) return rateLimitResponse(accountLimit.retryAfterSeconds);
+
   // Affiliate quick-login: a portal code stands in for a password. The code
   // must belong to an affiliate whose email matches what was entered, so a
   // leaked code alone can't be used to log into an arbitrary email address.
@@ -32,15 +43,14 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     if (!user) {
       return NextResponse.json({ error: "Incorrect email or affiliate code." }, { status: 401 });
     }
-    const token = await createCustomerSessionToken(user.id);
-    const cookieStore = await cookies();
-    cookieStore.set(CUSTOMER_SESSION_COOKIE, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    // A portal code stands in for a password, never for a second factor.
+    if (requiresTwoFactor(user)) {
+      return NextResponse.json(
+        { error: "This account must sign in with a password." },
+        { status: 401 }
+      );
+    }
+    await setCustomerSessionCookie(user.id);
     return NextResponse.json({ ok: true });
   }
 
@@ -54,16 +64,14 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
   }
 
-  const token = await createCustomerSessionToken(user.id);
-  const cookieStore = await cookies();
-  cookieStore.set(CUSTOMER_SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  // A password alone never signs in an executive. The browser gets a
+  // short-lived two-factor challenge instead of a session, and /two-factor
+  // finishes signing in (enrolling an authenticator first if there isn't one).
+  if (requiresTwoFactor(user)) {
+    await startTwoFactorChallenge(user.id);
+    return NextResponse.json({ ok: true, twoFactorRequired: true });
+  }
 
+  await setCustomerSessionCookie(user.id);
   return NextResponse.json({ ok: true });
 });
-

@@ -10,12 +10,14 @@ export async function proxy(request: NextRequest) {
   const realm = REALMS.find((r) => pathname === `/${r}` || pathname.startsWith(`/${r}/`));
   if (!realm) return NextResponse.next();
 
-  // Only checks for a logged-in customer session here (Edge-safe, no fs
-  // access) — the page itself verifies the `role` matches this realm.
+  // Only checks the signed session cookie here (Edge-safe, no fs access) —
+  // the page itself verifies the `role` matches this realm. Everyone allowed
+  // into a realm has to have passed two-factor, so a session without that
+  // mark is sent back to sign in before the page even runs.
   const token = request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value;
-  const userId = await verifyCustomerSessionToken(token);
+  const session = await verifyCustomerSessionToken(token);
 
-  if (!userId) {
+  if (!session?.twoFactorVerified) {
     return NextResponse.redirect(new URL(`/login?next=/${realm}`, request.url));
   }
 

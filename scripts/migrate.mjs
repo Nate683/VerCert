@@ -466,6 +466,28 @@ async function main() {
     )
   `;
 
+  // Two-factor authentication (TOTP), required for executive accounts.
+  // totp_secret is AES-256-GCM ciphertext (src/lib/two-factor/secret-box.ts),
+  // never the plaintext key. totp_pending_secret holds a secret during
+  // enrollment until a code from it is confirmed; totp_last_used_step makes
+  // each code single-use.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_pending_secret TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled_at TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_last_used_step INTEGER`;
+
+  // Single-use two-factor backup codes, stored only as salted scrypt hashes.
+  await sql`
+    CREATE TABLE IF NOT EXISTS two_factor_backup_codes (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      code_hash TEXT NOT NULL,
+      used_at TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS two_factor_backup_codes_user_id_idx ON two_factor_backup_codes (user_id)`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

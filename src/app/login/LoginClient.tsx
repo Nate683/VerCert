@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
+import { safeNextPath } from "@/lib/safe-next";
 
 function LoginForm() {
   const router = useRouter();
@@ -16,7 +17,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const next = searchParams.get("next") || "/account";
+  const next = safeNextPath(searchParams.get("next")) ?? "/account";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,6 +33,11 @@ function LoginForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Incorrect email or password.");
+      // Executive accounts finish signing in on the two-factor step.
+      if (data.twoFactorRequired) {
+        router.push(`/two-factor?next=${encodeURIComponent(next)}`);
+        return;
+      }
       await refresh();
       router.push(next);
       router.refresh();

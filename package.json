@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "node scripts/migrate.mjs",
+    "db:reset-2fa": "node scripts/reset-two-factor.mjs",
     "db:seed-products": "node scripts/seed-products.mjs",
     "db:import-sqlite": "node scripts/import-sqlite.mjs",
     "test:email": "node --env-file=.env.local scripts/test-email.mjs"
