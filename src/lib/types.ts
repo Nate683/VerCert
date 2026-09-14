@@ -62,6 +62,9 @@ export type CartItem = {
   sizeLabel: string;
   priceUsd: number;
   quantity: number;
+  // Set on order lines: the lot the item was sold from, so every vial on an
+  // order traces to its certificate of analysis. Cart items don't carry one.
+  lotNumber?: string;
 };
 
 export type PaymentMethod = "crypto" | "bank_transfer";
@@ -207,6 +210,28 @@ export type Customer = {
   // Explicit opt-in, unchecked by default at signup — never text without it.
   phone?: string;
   smsOptIn: boolean;
+  // Collected at registration. The shipping address waits for first checkout.
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+  heardAbout?: string; // a HEARD_ABOUT_OPTIONS value
+  // When the visitor accepted the 21+ age gate. No date of birth is collected.
+  ageAttestedAt?: string;
+  // The affiliate credited with the account (their referral link at signup,
+  // or their promo code on a first order), and the first-visit source.
+  affiliateId?: string;
+  attribution?: Attribution;
+};
+
+// How a visitor first arrived — see lib/marketing/attribution.ts.
+export type Attribution = {
+  ref?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  referrer?: string;
+  landingPath?: string;
+  firstSeenAt?: string;
 };
 
 export type CommissionType = "percent" | "flat";
@@ -335,6 +360,7 @@ export type ActivityLogEntry = {
 
 export type AnalyticsEventType =
   | "page_view"
+  | "product_view"
   | "add_to_cart"
   | "checkout_started"
   | "order_completed";

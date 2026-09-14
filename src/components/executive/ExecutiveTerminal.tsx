@@ -30,6 +30,7 @@ import { ForecastingPanel } from "./ForecastingPanel";
 import { AlertsPanel } from "./AlertsPanel";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { CalendarPanel } from "./CalendarPanel";
+import { SegmentsPanel } from "./SegmentsPanel";
 import { LiveIndicator } from "./LiveIndicator";
 import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
 import { AnimatedNumber } from "./AnimatedNumber";
@@ -48,6 +49,7 @@ type Tab =
   | "alerts"
   | "intelligence"
   | "customers"
+  | "segments"
   | "assistant"
   | "admin"
   | "promotions"
@@ -83,8 +85,10 @@ const BASE_TABS: { id: Tab; label: string }[] = [
 // Promotions and Content editing are /command-only — /office never sees
 // these tabs. Affiliates is shared (both realms), but /office gets a
 // read-only view — see AffiliatesPanel's `variant` prop. Invite codes grant
-// instant affiliate access, so generating them is command-only too.
+// instant affiliate access, so generating them is command-only too, and so
+// are Segments, which export customer contact lists.
 const COMMAND_ONLY_TABS: { id: Tab; label: string }[] = [
+  { id: "segments", label: "Segments" },
   { id: "promotions", label: "Promotions" },
   { id: "invite-codes", label: "Invite Codes" },
   { id: "content", label: "Site Content" },
@@ -237,6 +241,7 @@ export function ExecutiveTerminal({
           {tab === "documents" && <DocumentsPanel variant={variant} />}
           {tab === "calendar" && <CalendarPanel variant={variant} />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
+          {tab === "segments" && isCommand && <SegmentsPanel />}
           {tab === "chat" &&
             (hqMember ? (
               <ChatPanel member={hqMember} />

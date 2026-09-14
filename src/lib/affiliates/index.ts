@@ -3,6 +3,7 @@ export {
   getAffiliateById,
   getAffiliateByEmail,
   getAffiliateByPortalCode,
+  getAffiliateByReferralCode,
   createAffiliate,
   updateAffiliate,
   regeneratePortalCode,

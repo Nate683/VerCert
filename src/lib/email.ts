@@ -125,7 +125,7 @@ export async function sendInviteCodeEmail(input: {
   tierLabel: string;
 }): Promise<void> {
   const subject = "You're Invited to Become a VeriCert Affiliate";
-  const signupUrl = `${siteUrl()}/signup?affiliate=1&code=${encodeURIComponent(input.code)}`;
+  const signupUrl = `${siteUrl()}/register?affiliate=1&code=${encodeURIComponent(input.code)}`;
   const text = [
     `Hi,`,
     "",

@@ -50,6 +50,8 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       sizeLabel: size.label,
       priceUsd: resolveUnitPrice(size, item.quantity),
       quantity: item.quantity,
+      // The batch currently on sale — the first listed, as on the product page.
+      lotNumber: product.batchNumbers[0],
     });
   }
 
@@ -67,6 +69,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   let freeShipping = false;
   let appliedPromoCode: string | undefined;
   let appliedPromoCodeId: string | undefined;
+  let promoAffiliateId: string | undefined;
   if (promoCode) {
     const lineItems = resolvedItems.map((item) => {
       const product = products.find((p) => p.slug === item.slug);
@@ -85,6 +88,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     freeShipping = result.freeShipping;
     appliedPromoCode = result.promo.code;
     appliedPromoCodeId = result.promo.id;
+    promoAffiliateId = result.promo.affiliateId;
   }
 
   const total = Math.max(0, subtotal - discountAmount);
@@ -103,7 +107,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     freeShipping,
   });
 
-  // Remember the shipping address used for next time.
+  // Remember the shipping address used for next time. And if this is the
+  // first time the account has used an affiliate's promo code, credit that
+  // affiliate with the account — the first affiliate credited keeps it.
   await updateUser(currentCustomer.id, {
     savedAddress: {
       address: customer.address,
@@ -112,6 +118,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       postalCode: customer.postalCode,
       country: customer.country,
     },
+    ...(promoAffiliateId && !currentCustomer.affiliateId ? { affiliateId: promoAffiliateId } : {}),
   });
 
   const provider = getPaymentProvider(paymentMethod);

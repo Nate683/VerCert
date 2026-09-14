@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
+import { HEARD_ABOUT_VALUES } from "@/lib/marketing/heard-about";
 
 // Shared zod schemas for the highest-risk request bodies (auth + money
 // paths). Parse with `parseBody` to get a consistent 400 response shape.
@@ -14,15 +15,24 @@ export const loginSchema = z
     message: "Password or affiliate code is required.",
   });
 
-export const signupSchema = z.object({
-  name: z.string().trim().min(1).max(200),
+// Registration asks only for what an account needs. Shipping address comes at
+// first checkout, and there is deliberately no date of birth, ID or free-text
+// use-case field — age is the age-gate attestation.
+export const registerSchema = z.object({
+  firstName: z.string().trim().min(1, "Enter your first name.").max(100),
+  lastName: z.string().trim().min(1, "Enter your last name.").max(100),
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(8).max(200),
+  company: z.string().trim().max(200).optional(),
+  heardAbout: z.enum(HEARD_ABOUT_VALUES).optional(),
   marketingOptIn: z.boolean().optional(),
-  smsOptIn: z.boolean().optional(),
-  phone: z.string().trim().max(30).optional(),
   isAffiliate: z.boolean().optional(),
   inviteCode: z.string().trim().max(40).optional(),
+});
+
+export const accountDeleteSchema = z.object({
+  password: z.string().min(1).max(200),
+  confirm: z.literal("DELETE"),
 });
 
 export const forgotPasswordSchema = z.object({
@@ -235,7 +245,7 @@ export const contactFormSchema = z.object({
 });
 
 export const trackEventSchema = z.object({
-  event: z.enum(["page_view", "add_to_cart", "checkout_started", "order_completed"]),
+  event: z.enum(["page_view", "product_view", "add_to_cart", "checkout_started", "order_completed"]),
   sessionId: z.string().trim().min(1).max(100),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });

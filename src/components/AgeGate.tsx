@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { VeriCertLogo } from "./VeriCertLogo";
 import { useAuth } from "@/lib/auth-context";
+import { AGE_GATE_COOKIE } from "@/lib/age-gate";
 
 // Session cookie — no Max-Age, so the browser drops it when the session ends.
 // That is the brief exactly: quiet for the rest of this visit, asked again on
-// a new one.
-const COOKIE = "vericert_age_ack";
+// a new one. Registration requires it too.
+const COOKIE = AGE_GATE_COOKIE;
 
 const listeners = new Set<() => void>();
 

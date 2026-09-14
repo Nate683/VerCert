@@ -115,14 +115,14 @@ function LoginForm() {
         <Link href="/forgot-password" className="hover:text-gold-ink">
           Forgot password?
         </Link>
-        <Link href={`/signup${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="hover:text-gold-ink">
+        <Link href={`/register${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="hover:text-gold-ink">
           Create an account
         </Link>
       </div>
 
       <p className="mt-8 text-center text-xs text-muted/70">
         Want to become an affiliate?{" "}
-        <Link href="/signup?affiliate=1" className="text-gold-ink hover:underline">
+        <Link href="/register?affiliate=1" className="text-gold-ink hover:underline">
           Sign up here
         </Link>
       </p>

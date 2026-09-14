@@ -11,6 +11,7 @@ import { ResendVerification } from "./ResendVerification";
 import { AccountLogoutButton } from "./AccountLogoutButton";
 import { EmailChangeForm } from "./EmailChangeForm";
 import { ReorderButton } from "./ReorderButton";
+import { AccountDataSection } from "./AccountDataSection";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My Account | VeriCert", robots: { index: false, follow: false } };
@@ -193,6 +194,13 @@ export default async function AccountPage() {
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Email Preferences</h2>
         <div className="mt-4">
           <MarketingToggle initialOptIn={customer.marketingOptIn} />
+        </div>
+      </section>
+
+      <section className="mt-12 border-t border-hairline pt-8">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Your Data</h2>
+        <div className="mt-4">
+          <AccountDataSection />
         </div>
       </section>
     </div>

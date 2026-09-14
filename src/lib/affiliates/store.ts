@@ -77,6 +77,20 @@ export async function getAffiliateByPortalCode(portalCode: string): Promise<Affi
   return rows[0] ? rowToAffiliate(rows[0]) : null;
 }
 
+// Resolves the code in a referral link (?ref=CODE) to its affiliate. The code
+// is the affiliate's customer-facing promo code; an inactive affiliate
+// doesn't get credit.
+export async function getAffiliateByReferralCode(code: string): Promise<Affiliate | null> {
+  const rows = await query<AffiliateRow>(
+    `SELECT a.* FROM affiliates a
+       JOIN promo_codes p ON p.affiliate_id = a.id
+      WHERE p.code = $1 AND a.active
+      LIMIT 1`,
+    [code.toUpperCase()]
+  );
+  return rows[0] ? rowToAffiliate(rows[0]) : null;
+}
+
 export type CreateAffiliateInput = {
   name: string;
   email: string;

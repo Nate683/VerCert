@@ -50,9 +50,10 @@ export function Header() {
           })}
         </nav>
 
-        <div className="ml-auto hidden w-full max-w-xs md:block">
-          <SearchBox />
-        </div>
+        {/* Search reads the catalog, which is for signed-in customers — so it
+            only appears once someone is signed in. The wrapper stays either
+            way to hold the layout. */}
+        <div className="ml-auto hidden w-full max-w-xs md:block">{user && <SearchBox />}</div>
 
         <div className="ml-auto flex shrink-0 items-center gap-4 md:ml-0">
           {user?.role && (
@@ -106,9 +107,11 @@ export function Header() {
 
       {menuOpen && (
         <div className="pop-in border-t border-white/10 px-6 py-4 xl:hidden">
-          <div className="md:hidden">
-            <SearchBox onNavigate={() => setMenuOpen(false)} />
-          </div>
+          {user && (
+            <div className="md:hidden">
+              <SearchBox onNavigate={() => setMenuOpen(false)} />
+            </div>
+          )}
           <nav className="mt-2 flex flex-col">
             {NAV_LINKS.map((link) => (
               <Link

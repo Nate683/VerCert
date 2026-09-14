@@ -488,6 +488,41 @@ async function main() {
   `;
   await sql`CREATE INDEX IF NOT EXISTS two_factor_backup_codes_user_id_idx ON two_factor_backup_codes (user_id)`;
 
+  // Registration profile. The shipping address still comes at first checkout
+  // (saved_address), never at signup.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS company TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS heard_about TEXT`;
+  // When the visitor accepted the 21+ age gate — the attestation itself; a
+  // date of birth is never collected.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS age_attested_at TEXT`;
+  // Marketing attribution: the affiliate credited with the account, and the
+  // first-visit source (referral code, UTM tags, referring site) as JSON.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS affiliate_id TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS attribution TEXT`;
+
+  // Signed-in browsing (product views, cart activity) is tied to the account.
+  await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS user_id TEXT`;
+  await sql`CREATE INDEX IF NOT EXISTS analytics_events_user_id_idx ON analytics_events (user_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS orders_customer_id_idx ON orders (customer_id)`;
+
+  // Email engagement from Resend webhooks — one row per delivery, keyed on
+  // the Svix message id so a redelivered webhook is stored once.
+  await sql`
+    CREATE TABLE IF NOT EXISTS email_events (
+      id TEXT PRIMARY KEY,
+      resend_email_id TEXT,
+      event_type TEXT NOT NULL,
+      recipient TEXT,
+      subject TEXT,
+      link TEXT,
+      user_id TEXT,
+      created_at TEXT NOT NULL
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS email_events_user_id_idx ON email_events (user_id)`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

@@ -2,15 +2,25 @@ import { randomUUID } from "crypto";
 import { query } from "@/lib/db";
 import type { AnalyticsEventType, FunnelStats } from "@/lib/types";
 
+// userId is set when the visitor is signed in, which ties product views and
+// cart activity to the customer's account.
 export async function trackEvent(
   event: AnalyticsEventType,
   sessionId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  userId?: string
 ): Promise<void> {
   await query(
-    `INSERT INTO analytics_events (id, event_type, session_id, metadata, created_at)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [randomUUID(), event, sessionId, metadata ? JSON.stringify(metadata) : null, new Date().toISOString()]
+    `INSERT INTO analytics_events (id, event_type, session_id, metadata, created_at, user_id)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      randomUUID(),
+      event,
+      sessionId,
+      metadata ? JSON.stringify(metadata) : null,
+      new Date().toISOString(),
+      userId ?? null,
+    ]
   );
 }
 

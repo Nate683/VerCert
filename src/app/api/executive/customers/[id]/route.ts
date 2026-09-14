@@ -1,10 +1,32 @@
 import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 import { getUserById, updateUser } from "@/lib/users/store";
+import { buildCustomerRecord } from "@/lib/marketing/customer-record";
 import { customerNotesSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
+
+// A customer's full record, for the /command segments view. Command-only,
+// like the segments themselves.
+export const GET = withApiErrorHandling(async (
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const viewer = await getCurrentCustomer();
+  if (viewer?.role !== "command") {
+    return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const customer = await getUserById(id);
+  if (!customer || customer.role) {
+    return NextResponse.json({ error: "Customer not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({ record: await buildCustomerRecord(customer), notes: customer.notes ?? null });
+});
 
 export const PATCH = withApiErrorHandling(async (
   request: Request,

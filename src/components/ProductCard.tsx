@@ -17,7 +17,9 @@ function priceRange(product: Product): string {
   return min === max ? `$${min}` : `$${min} – $${max}`;
 }
 
-export function ProductCard({ product }: { product: Product }) {
+// pricingLocked is for signed-out visitors: their product arrives without its
+// sizes (see withoutPricing), so the tile offers sign-in instead of a price.
+export function ProductCard({ product, pricingLocked = false }: { product: Product; pricingLocked?: boolean }) {
   const { execMode, beginSave, endSave } = useExecMode();
   const [active, setActive] = useState(product.active ?? true);
   const [priceDraft, setPriceDraft] = useState(String(product.sizes[0]?.priceUsd ?? ""));
@@ -90,7 +92,11 @@ export function ProductCard({ product }: { product: Product }) {
           <p className="mt-1 font-mono text-[11px] text-white/45">CAS {product.casNumber}</p>
 
           <div className="mt-4 flex items-baseline justify-between gap-3">
-            <span className="text-sm text-white">{priceRange(product)}</span>
+            {pricingLocked ? (
+              <span className="text-[11px] uppercase tracking-[0.14em] text-white/60">Members&apos; pricing</span>
+            ) : (
+              <span className="text-sm text-white">{priceRange(product)}</span>
+            )}
             <span className="text-[10px] uppercase tracking-[0.14em] text-gold">
               {product.purityPercent.toFixed(1)}% Purity
             </span>
@@ -99,7 +105,7 @@ export function ProductCard({ product }: { product: Product }) {
           {/* A span, not a button: the whole tile is already one link, and a
               nested interactive element would be invalid and unreachable. */}
           <span className="mt-4 block border border-gold/50 px-4 py-2.5 text-center text-[11px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:bg-gold group-hover:text-black">
-            Select options
+            {pricingLocked ? "Sign in to view" : "Select options"}
           </span>
         </div>
       </Link>

@@ -260,7 +260,7 @@ export default async function PartnerPage() {
     <StatusScreen
       title="Become an Affiliate"
       message="This account isn't registered as an affiliate yet."
-      ctaHref="/signup?affiliate=1"
+      ctaHref="/register?affiliate=1"
       ctaLabel="Sign Up as an Affiliate"
     />
   );

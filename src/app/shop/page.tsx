@@ -1,4 +1,5 @@
 import { listProducts } from "@/lib/products";
+import { toStorefrontProduct } from "@/lib/products/storefront";
 import { ShopClient } from "./ShopClient";
 import { buildMetadata } from "@/lib/seo";
 
@@ -27,7 +28,7 @@ export default async function ShopPage() {
         </p>
       </div>
       <div className="pt-8">
-        <ShopClient products={products} />
+        <ShopClient products={products.map(toStorefrontProduct)} />
       </div>
     </div>
   );

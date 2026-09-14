@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { query } from "@/lib/db";
-import type { Customer, SavedAddress } from "@/lib/types";
+import type { Attribution, Customer, SavedAddress } from "@/lib/types";
 
 // Server-only Postgres-backed customer store. Exported function signatures
 // are unchanged so every caller keeps working unchanged.
@@ -9,6 +9,10 @@ type UserRow = {
   id: string;
   email: string;
   name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
+  heard_about: string | null;
   password_hash: string;
   marketing_opt_in: boolean;
   email_verified: boolean;
@@ -26,13 +30,29 @@ type UserRow = {
   notes: string | null;
   phone: string | null;
   sms_opt_in: boolean;
+  age_attested_at: string | null;
+  affiliate_id: string | null;
+  attribution: string | null;
 };
+
+function parseAttribution(raw: string | null): Attribution | undefined {
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw) as Attribution;
+  } catch {
+    return undefined;
+  }
+}
 
 function rowToUser(row: UserRow): Customer {
   return {
     id: row.id,
     email: row.email,
     name: row.name ?? undefined,
+    firstName: row.first_name ?? undefined,
+    lastName: row.last_name ?? undefined,
+    company: row.company ?? undefined,
+    heardAbout: row.heard_about ?? undefined,
     passwordHash: row.password_hash,
     marketingOptIn: Boolean(row.marketing_opt_in),
     emailVerified: Boolean(row.email_verified),
@@ -50,6 +70,9 @@ function rowToUser(row: UserRow): Customer {
     notes: row.notes ?? undefined,
     phone: row.phone ?? undefined,
     smsOptIn: Boolean(row.sms_opt_in),
+    ageAttestedAt: row.age_attested_at ?? undefined,
+    affiliateId: row.affiliate_id ?? undefined,
+    attribution: parseAttribution(row.attribution),
   };
 }
 
@@ -58,12 +81,19 @@ const SELECT_ALL = "SELECT * FROM users";
 export type CreateUserInput = {
   email: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+  heardAbout?: string;
   passwordHash: string;
   marketingOptIn: boolean;
   smsOptIn?: boolean;
   phone?: string;
   verificationToken: string;
   verificationTokenExpiresAt: string;
+  ageAttestedAt?: string;
+  affiliateId?: string;
+  attribution?: Attribution;
 };
 
 export async function createUser(input: CreateUserInput): Promise<Customer> {
@@ -77,6 +107,10 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
     id: randomUUID(),
     email,
     name: input.name,
+    firstName: input.firstName,
+    lastName: input.lastName,
+    company: input.company,
+    heardAbout: input.heardAbout,
     passwordHash: input.passwordHash,
     marketingOptIn: input.marketingOptIn,
     smsOptIn: input.smsOptIn ?? false,
@@ -85,16 +119,25 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
     createdAt: new Date().toISOString(),
     verificationToken: input.verificationToken,
     verificationTokenExpiresAt: input.verificationTokenExpiresAt,
+    ageAttestedAt: input.ageAttestedAt,
+    affiliateId: input.affiliateId,
+    attribution: input.attribution,
   };
 
   await query(
     `INSERT INTO users
-      (id, email, name, password_hash, marketing_opt_in, sms_opt_in, phone, email_verified, created_at, verification_token, verification_token_expires_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      (id, email, name, first_name, last_name, company, heard_about, password_hash, marketing_opt_in,
+       sms_opt_in, phone, email_verified, created_at, verification_token, verification_token_expires_at,
+       age_attested_at, affiliate_id, attribution)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
     [
       user.id,
       user.email,
       user.name ?? null,
+      user.firstName ?? null,
+      user.lastName ?? null,
+      user.company ?? null,
+      user.heardAbout ?? null,
       user.passwordHash,
       user.marketingOptIn,
       user.smsOptIn,
@@ -103,6 +146,9 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
       user.createdAt,
       user.verificationToken ?? null,
       user.verificationTokenExpiresAt ?? null,
+      user.ageAttestedAt ?? null,
+      user.affiliateId ?? null,
+      user.attribution ? JSON.stringify(user.attribution) : null,
     ]
   );
 
@@ -150,6 +196,10 @@ export async function getUserByPendingEmailToken(token: string): Promise<Custome
 const PATCHABLE_COLUMNS: Record<string, string> = {
   email: "email",
   name: "name",
+  firstName: "first_name",
+  lastName: "last_name",
+  company: "company",
+  heardAbout: "heard_about",
   passwordHash: "password_hash",
   marketingOptIn: "marketing_opt_in",
   emailVerified: "email_verified",
@@ -166,9 +216,12 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   notes: "notes",
   phone: "phone",
   smsOptIn: "sms_opt_in",
+  ageAttestedAt: "age_attested_at",
+  affiliateId: "affiliate_id",
+  attribution: "attribution",
 };
 
-const JSON_FIELDS = new Set(["savedAddress"]);
+const JSON_FIELDS = new Set(["savedAddress", "attribution"]);
 
 export async function updateUser(id: string, patch: Partial<Customer>): Promise<Customer | null> {
   const fields = Object.keys(PATCHABLE_COLUMNS).filter((f) => f in patch);

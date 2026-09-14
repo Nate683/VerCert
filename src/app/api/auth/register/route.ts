@@ -2,12 +2,20 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createUser, getUserByEmail } from "@/lib/users/store";
 import { hashPassword, generateToken } from "@/lib/users/password";
-import { CUSTOMER_SESSION_COOKIE, createCustomerSessionToken } from "@/lib/users/session";
+import { setCustomerSessionCookie } from "@/lib/users/session-cookie";
 import { sendMail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site-url";
 import { getRealmForEmail } from "@/lib/executive/staff";
-import { getInviteCodeByCode, createAffiliate, markInviteCodeUsed, getTierInfo } from "@/lib/affiliates";
-import { signupSchema, parseBody } from "@/lib/validation";
+import {
+  getInviteCodeByCode,
+  createAffiliate,
+  markInviteCodeUsed,
+  getTierInfo,
+  getAffiliateByReferralCode,
+} from "@/lib/affiliates";
+import { ATTRIBUTION_COOKIE, decodeAttribution } from "@/lib/marketing/attribution";
+import { AGE_GATE_COOKIE } from "@/lib/age-gate";
+import { registerSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
@@ -21,9 +29,21 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const limit = await checkRateLimit(`signup:${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfterSeconds);
 
-  const parsed = await parseBody(request, signupSchema);
+  const parsed = await parseBody(request, registerSchema);
   if ("error" in parsed) return parsed.error;
-  const { name, email, password, marketingOptIn, smsOptIn, phone, isAffiliate, inviteCode } = parsed.data;
+  const { firstName, lastName, email, password, company, heardAbout, marketingOptIn, isAffiliate, inviteCode } =
+    parsed.data;
+
+  // The storefront age gate is the site's 21+ attestation. It appears before
+  // this form ever does; this check stops an account skipping it, and the
+  // account records when it was given.
+  const cookieStore = await cookies();
+  if (cookieStore.get(AGE_GATE_COOKIE)?.value !== "1") {
+    return NextResponse.json(
+      { error: "Please confirm you're 21 or older before creating an account.", ageGate: true },
+      { status: 400 }
+    );
+  }
 
   if (getRealmForEmail(email)) {
     return NextResponse.json(
@@ -63,20 +83,28 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     }
   }
 
-  const passwordHash = await hashPassword(password);
-  const verificationToken = generateToken();
-  const verificationTokenExpiresAt = new Date(Date.now() + VERIFICATION_TTL_MS).toISOString();
+  // Where the visitor first came from, recorded by the proxy on arrival. A
+  // referral code only credits an active affiliate, and never applies to
+  // someone signing up as an affiliate themselves.
+  const attribution = decodeAttribution(cookieStore.get(ATTRIBUTION_COOKIE)?.value) ?? undefined;
+  const referrer = attribution?.ref && !inviteRow ? await getAffiliateByReferralCode(attribution.ref) : null;
 
+  const name = `${firstName} ${lastName}`;
+  const verificationToken = generateToken();
   const user = await createUser({
     email,
     name,
-    passwordHash,
+    firstName,
+    lastName,
+    company: company || undefined,
+    heardAbout,
+    passwordHash: await hashPassword(password),
     marketingOptIn: Boolean(marketingOptIn),
-    // Opt-in requires a phone number to be meaningful — never text without both.
-    smsOptIn: Boolean(smsOptIn) && Boolean(phone?.trim()),
-    phone: phone?.trim() || undefined,
     verificationToken,
-    verificationTokenExpiresAt,
+    verificationTokenExpiresAt: new Date(Date.now() + VERIFICATION_TTL_MS).toISOString(),
+    ageAttestedAt: new Date().toISOString(),
+    affiliateId: referrer?.id,
+    attribution,
   });
 
   let affiliateCode: string | null = null;
@@ -98,35 +126,27 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const siteUrl = getSiteUrl();
   const verifyUrl = `${siteUrl}/api/auth/verify-email?token=${verificationToken}`;
-  const text = affiliateCode
-    ? [
-        `Welcome to VeriCert.`,
-        "",
-        `Please verify your email address by visiting:`,
-        verifyUrl,
-        "",
-        `This link expires in 24 hours.`,
-        "",
-        `You're also set up as a VeriCert affiliate. Your referral code is: ${affiliateCode}`,
-        `View your production and commission dashboard any time at ${siteUrl}/partner`,
-      ].join("\n")
-    : `Welcome to VeriCert.\n\nPlease verify your email address by visiting:\n${verifyUrl}\n\nThis link expires in 24 hours.`;
+  const lines = [
+    `Welcome to VeriCert, ${firstName}.`,
+    "",
+    "Please verify your email address by visiting:",
+    verifyUrl,
+    "",
+    "This link expires in 24 hours.",
+  ];
+  if (affiliateCode) {
+    lines.push(
+      "",
+      `You're also set up as a VeriCert affiliate. Your referral code is: ${affiliateCode}`,
+      `View your production and commission dashboard any time at ${siteUrl}/partner`
+    );
+  }
   try {
-    await sendMail(user.email, "Verify your VeriCert account", text);
+    await sendMail(user.email, "Verify your VeriCert account", lines.join("\n"));
   } catch (err) {
     console.error("Failed to send verification email:", err);
   }
 
-  const token = await createCustomerSessionToken(user.id);
-  const cookieStore = await cookies();
-  cookieStore.set(CUSTOMER_SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
-
+  await setCustomerSessionCookie(user.id);
   return NextResponse.json({ ok: true, isAffiliate: Boolean(affiliateCode) });
 });
-

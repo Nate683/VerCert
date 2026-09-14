@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductBySlug, listProducts } from "@/lib/products";
+import { toStorefrontProduct } from "@/lib/products/storefront";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductCard } from "@/components/ProductCard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -140,7 +141,7 @@ export default async function ProductDetailPage({
           <p className="mt-5 text-sm leading-relaxed text-muted">{product.summary}</p>
 
           <div className="mt-8">
-            <AddToCartPanel product={product} />
+            <AddToCartPanel product={toStorefrontProduct(product)} />
           </div>
 
           <dl className="mt-10 divide-y divide-hairline border-y border-hairline">
@@ -209,7 +210,7 @@ export default async function ProductDetailPage({
           </div>
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((item) => (
-              <ProductCard key={item.slug} product={item} />
+              <ProductCard key={item.slug} product={toStorefrontProduct(item)} />
             ))}
           </div>
         </section>

@@ -58,6 +58,7 @@ real order. Grouped by what kind of decision/action it is.
 | `TOTP_ENCRYPTION_KEY` | **Required.** Encrypts executive two-factor secrets in the database — 32 random bytes, base64 (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`). Use the same value everywhere that shares the database (including a local `.env.local` pointed at production), and don't change it casually: a different key can't read existing enrollments. |
 | `COMMAND_PASSWORD` / `OFFICE_PASSWORD` | Only used to seed each executive's account the very first time they log in — after that, they control their password via the normal "Forgot password" flow. Set these to strong one-time values before the first real login. |
 | `RESEND_API_KEY` / `MARKETING_EMAIL_FROM` | Optional — marketing email compose feature |
+| `RESEND_WEBHOOK_SECRET` | Optional — records email opens, clicks, bounces and spam complaints for the /command Segments tab. Add a webhook in Resend pointing at `/api/webhooks/resend` (events: email.opened, email.clicked, email.bounced, email.complained) and turn on open/click tracking for your sending domain. |
 | `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | Optional — executive Assistant tab |
 
 ## 4. Infrastructure

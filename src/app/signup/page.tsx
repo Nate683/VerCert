@@ -1,12 +1,16 @@
-import type { Metadata } from "next";
-import SignupClient from "./SignupClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Create an Account | VeriCert",
-  description: "Create a VeriCert account to complete a purchase and track your order history.",
-  robots: { index: false, follow: false },
-};
-
-export default function SignupPage() {
-  return <SignupClient />;
+// Registration lives at /register now. This keeps older links working —
+// including affiliate invite emails already sent (?affiliate=1&code=…).
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(await searchParams)) {
+    if (typeof value === "string") params.set(key, value);
+  }
+  const query = params.toString();
+  redirect(query ? `/register?${query}` : "/register");
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { listProducts } from "@/lib/products";
+import { toStorefrontProduct, withoutPricing } from "@/lib/products/storefront";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 import { HomeFeaturedGrid } from "@/components/HomeFeaturedGrid";
 import { VialGlyph } from "@/components/VialGlyph";
 import { VeriCertLogo } from "@/components/VeriCertLogo";
@@ -39,11 +41,12 @@ const TRUST_POINTS = [
 ];
 
 export default async function Home() {
-  const [products, hero, featuredContent, sections] = await Promise.all([
+  const [products, hero, featuredContent, sections, customer] = await Promise.all([
     listProducts(),
     getContent("home_hero", DEFAULT_HOME_HERO),
     getContent("featured_products", DEFAULT_FEATURED),
     getContent("home_sections", DEFAULT_HOME_SECTIONS),
+    getCurrentCustomer(),
   ]);
   const featured =
     featuredContent.slugs.length > 0
@@ -51,6 +54,10 @@ export default async function Home() {
           .map((slug) => products.find((p) => p.slug === slug))
           .filter((p): p is (typeof products)[number] => Boolean(p))
       : products.slice(0, 4);
+  // Pricing is for signed-in customers. Visitors see the tiles, and the
+  // prices never leave the server.
+  const signedIn = Boolean(customer);
+  const featuredForView = featured.map(signedIn ? toStorefrontProduct : withoutPricing);
 
   return (
     <div>
@@ -163,7 +170,16 @@ export default async function Home() {
               View All →
             </Link>
           </div>
-          <HomeFeaturedGrid products={featured} />
+          <HomeFeaturedGrid products={featuredForView} pricingLocked={!signedIn} />
+          {!signedIn && (
+            <p className="mt-8 text-center text-sm text-muted">
+              Pricing and batch certificates are for registered researchers.{" "}
+              <Link href="/register" className="text-gold-ink underline underline-offset-4 hover:text-navy">
+                Create a free account
+              </Link>{" "}
+              to see them.
+            </p>
+          )}
         </section>
       </ScrollReveal>
 
