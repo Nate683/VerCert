@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUserByEmail, updateUser } from "@/lib/users/store";
 import { generateToken } from "@/lib/users/password";
-import { sendMail } from "@/lib/email";
+import { sendTransactionalEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site-url";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -33,7 +33,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       const siteUrl = getSiteUrl();
       const resetUrl = `${siteUrl}/reset-password?token=${resetToken}`;
       try {
-        await sendMail(
+        await sendTransactionalEmail(
           user.email,
           "Reset your VeriCert password",
           `We received a request to reset your password.\n\nVisit this link to choose a new password:\n${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, you can ignore this email.`

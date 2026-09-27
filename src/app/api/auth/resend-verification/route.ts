@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { updateUser } from "@/lib/users/store";
 import { generateToken } from "@/lib/users/password";
-import { sendMail } from "@/lib/email";
+import { sendTransactionalEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site-url";
 import { withApiErrorHandling } from "@/lib/api-error";
 
@@ -21,7 +21,7 @@ export const POST = withApiErrorHandling(async () => {
   const siteUrl = getSiteUrl();
   const verifyUrl = `${siteUrl}/api/auth/verify-email?token=${verificationToken}`;
   try {
-    await sendMail(
+    await sendTransactionalEmail(
       user.email,
       "Verify your VeriCert account",
       `Please verify your email address by visiting:\n${verifyUrl}\n\nThis link expires in 24 hours.`

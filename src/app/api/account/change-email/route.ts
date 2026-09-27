@@ -3,7 +3,7 @@ import { getCurrentCustomer } from "@/lib/users/current-user";
 import { getUserByEmail, updateUser } from "@/lib/users/store";
 import { generateToken } from "@/lib/users/password";
 import { getRealmForEmail } from "@/lib/executive/staff";
-import { sendMail } from "@/lib/email";
+import { sendTransactionalEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site-url";
 import { changeEmailSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -46,7 +46,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const siteUrl = getSiteUrl();
   const confirmUrl = `${siteUrl}/api/account/change-email/confirm?token=${pendingEmailToken}`;
   try {
-    await sendMail(
+    await sendTransactionalEmail(
       newEmail,
       "Confirm your new VeriCert email address",
       `Please confirm this is your new email address by visiting:\n${confirmUrl}\n\nThis link expires in 24 hours. If you didn't request this change, you can ignore this email.`

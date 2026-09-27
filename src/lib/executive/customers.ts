@@ -4,7 +4,7 @@ export type CustomerSummary = {
   id: string;
   email: string;
   signupDate: string;
-  marketingOptIn: boolean;
+  marketingConsent: boolean;
   emailVerified: boolean;
   orderCount: number;
   lifetimeValue: number;
@@ -21,7 +21,7 @@ export function computeCustomerSummaries(users: Customer[], orders: Order[]): Cu
         id: user.id,
         email: user.email,
         signupDate: user.createdAt,
-        marketingOptIn: user.marketingOptIn,
+        marketingConsent: user.marketingConsent,
         emailVerified: user.emailVerified,
         orderCount: customerOrders.length,
         lifetimeValue: paidOrders.reduce((sum, o) => sum + o.total, 0),

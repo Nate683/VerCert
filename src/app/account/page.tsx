@@ -193,7 +193,10 @@ export default async function AccountPage() {
       <section className="mt-12 border-t border-hairline pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Email Preferences</h2>
         <div className="mt-4">
-          <MarketingToggle initialOptIn={customer.marketingOptIn} />
+          <MarketingToggle
+            initialConsent={customer.marketingConsent}
+            initialConsentAt={customer.marketingConsentAt}
+          />
         </div>
       </section>
 

@@ -3,7 +3,9 @@ import { getCurrentCustomer } from "@/lib/users/current-user";
 import { listCustomerMetrics } from "@/lib/marketing/customer-metrics";
 import {
   describeSegment,
+  forExport,
   matchesSegment,
+  parseMarketingEligibleOnly,
   parseSegmentFilters,
   segmentOptions,
   segmentToCsv,
@@ -30,11 +32,18 @@ export const GET = withApiErrorHandling(async (request: Request) => {
   const matched = all.filter((c) => matchesSegment(c, filters, now));
 
   if (url.searchParams.get("format") === "csv") {
-    await logActivity(viewer.email, "segment.exported", `${matched.length} customer(s): ${describeSegment(filters)}`);
-    return new NextResponse(segmentToCsv(matched), {
+    const marketingEligibleOnly = parseMarketingEligibleOnly(url.searchParams);
+    const rows = forExport(matched, marketingEligibleOnly);
+    const label = marketingEligibleOnly ? "marketing" : "internal-all-customers";
+    await logActivity(
+      viewer.email,
+      "segment.exported",
+      `${rows.length} customer(s), ${marketingEligibleOnly ? "marketing-eligible only" : "INCLUDING customers without marketing consent"}: ${describeSegment(filters)}`
+    );
+    return new NextResponse(segmentToCsv(rows), {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="vericert-segment-${new Date(now).toISOString().slice(0, 10)}.csv"`,
+        "Content-Disposition": `attachment; filename="vericert-segment-${label}-${new Date(now).toISOString().slice(0, 10)}.csv"`,
         "Cache-Control": "no-store",
       },
     });
@@ -42,7 +51,7 @@ export const GET = withApiErrorHandling(async (request: Request) => {
 
   return NextResponse.json({
     customers: matched,
-    summary: summarizeSegment(all, matched, filters, now),
+    summary: summarizeSegment(all, matched),
     options: segmentOptions(all),
   });
 });

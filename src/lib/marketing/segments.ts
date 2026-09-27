@@ -6,6 +6,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type PurchaseHistory = "all" | "never" | "first-time" | "repeat";
 export type ReferralFilter = "all" | "affiliate" | "direct";
+export type ConsentFilter = "all" | "consented" | "not-consented";
 
 export type SegmentFilters = {
   history: PurchaseHistory;
@@ -18,9 +19,8 @@ export type SegmentFilters = {
   affiliateId?: string;
   /** Left a cart within this many days. */
   abandonedWithinDays?: number;
-  // On unless explicitly turned off: segments feed email campaigns, and
-  // customers who haven't opted in must not end up in one.
-  optedInOnly: boolean;
+  /** Marketing email consent. Browsing a segment can include everyone; exports are narrowed separately. */
+  consent: ConsentFilter;
 };
 
 function positiveNumber(value: string | null): number | undefined {
@@ -32,6 +32,7 @@ function positiveNumber(value: string | null): number | undefined {
 export function parseSegmentFilters(params: URLSearchParams): SegmentFilters {
   const history = params.get("history");
   const referral = params.get("referral");
+  const consent = params.get("consent");
   return {
     history: history === "never" || history === "first-time" || history === "repeat" ? history : "all",
     lapsedDays: positiveNumber(params.get("lapsedDays")),
@@ -40,8 +41,19 @@ export function parseSegmentFilters(params: URLSearchParams): SegmentFilters {
     referral: referral === "affiliate" || referral === "direct" ? referral : "all",
     affiliateId: params.get("affiliateId") || undefined,
     abandonedWithinDays: positiveNumber(params.get("abandonedWithinDays")),
-    optedInOnly: params.get("optedInOnly") !== "false",
+    consent: consent === "consented" || consent === "not-consented" ? consent : "all",
   };
+}
+
+// A CSV export is marketing-eligible only unless explicitly turned off:
+// exported lists end up in email tools, and a customer without consent must
+// not land in one. The full list is for internal analysis.
+export function parseMarketingEligibleOnly(params: URLSearchParams): boolean {
+  return params.get("marketingEligibleOnly") !== "false";
+}
+
+export function forExport(matched: CustomerMetrics[], marketingEligibleOnly: boolean): CustomerMetrics[] {
+  return marketingEligibleOnly ? matched.filter((c) => c.marketingConsent) : matched;
 }
 
 export function matchesSegment(c: CustomerMetrics, f: SegmentFilters, now = Date.now()): boolean {
@@ -62,7 +74,8 @@ export function matchesSegment(c: CustomerMetrics, f: SegmentFilters, now = Date
   ) {
     return false;
   }
-  if (f.optedInOnly && !c.marketingOptIn) return false;
+  if (f.consent === "consented" && !c.marketingConsent) return false;
+  if (f.consent === "not-consented" && c.marketingConsent) return false;
   return true;
 }
 
@@ -71,24 +84,24 @@ export type SegmentSummary = {
   matched: number;
   lifetimeValue: number;
   averageLifetimeValue: number;
-  /** Fit every other filter but haven't opted in to marketing email. */
-  withoutConsent: number;
+  /** Matched customers with marketing email consent — who a marketing export would include. */
+  consented: number;
+  /** Consented customers across the whole customer base. */
+  totalConsented: number;
 };
 
 export function summarizeSegment(
   all: CustomerMetrics[],
-  matched: CustomerMetrics[],
-  filters: SegmentFilters,
-  now = Date.now()
+  matched: CustomerMetrics[]
 ): SegmentSummary {
   const lifetimeValue = matched.reduce((sum, c) => sum + c.lifetimeValue, 0);
-  const ignoringConsent = { ...filters, optedInOnly: false };
   return {
     totalCustomers: all.length,
     matched: matched.length,
     lifetimeValue: Math.round(lifetimeValue * 100) / 100,
     averageLifetimeValue: matched.length ? Math.round((lifetimeValue / matched.length) * 100) / 100 : 0,
-    withoutConsent: all.filter((c) => !c.marketingOptIn && matchesSegment(c, ignoringConsent, now)).length,
+    consented: matched.filter((c) => c.marketingConsent).length,
+    totalConsented: all.filter((c) => c.marketingConsent).length,
   };
 }
 
@@ -127,8 +140,9 @@ export function describeSegment(f: SegmentFilters): string {
   if (f.referral === "direct") parts.push("not affiliate-referred");
   if (f.affiliateId) parts.push(`one affiliate (${f.affiliateId})`);
   if (f.abandonedWithinDays) parts.push(`abandoned a cart in the last ${f.abandonedWithinDays} days`);
-  parts.push(f.optedInOnly ? "email opt-ins only" : "including customers without email consent");
-  return parts.join(", ");
+  if (f.consent === "consented") parts.push("marketing consent given");
+  if (f.consent === "not-consented") parts.push("no marketing consent");
+  return parts.length ? parts.join(", ") : "all customers";
 }
 
 const CSV_COLUMNS = [
@@ -136,7 +150,9 @@ const CSV_COLUMNS = [
   "first_name",
   "last_name",
   "company",
-  "marketing_opt_in",
+  "marketing_consent",
+  "marketing_consent_at",
+  "marketing_consent_source",
   "order_count",
   "lifetime_value",
   "average_order_value",
@@ -162,7 +178,9 @@ export function segmentToCsv(customers: CustomerMetrics[]): string {
       first_name: c.firstName,
       last_name: c.lastName,
       company: c.company ?? "",
-      marketing_opt_in: c.marketingOptIn ? "yes" : "no",
+      marketing_consent: c.marketingConsent ? "yes" : "no",
+      marketing_consent_at: c.marketingConsentAt ?? "",
+      marketing_consent_source: c.marketingConsentSource ?? "",
       order_count: c.orderCount,
       lifetime_value: c.lifetimeValue.toFixed(2),
       average_order_value: c.averageOrderValue.toFixed(2),

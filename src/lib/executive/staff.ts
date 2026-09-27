@@ -70,7 +70,7 @@ export async function ensureStaffAccount(realm: ExecutiveRealm): Promise<Custome
     const created = await createUser({
       email,
       passwordHash: await hashPassword(seedPassword),
-      marketingOptIn: false,
+      marketingConsent: false,
       verificationToken: generateToken(),
       verificationTokenExpiresAt: new Date().toISOString(),
     });

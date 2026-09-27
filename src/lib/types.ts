@@ -187,7 +187,12 @@ export type Customer = {
   email: string;
   name?: string;
   passwordHash: string;
-  marketingOptIn: boolean;
+  // Marketing email only. Transactional email ignores it — see lib/email.ts.
+  // Change it through setMarketingConsent so the timestamp and source move
+  // with it; updateUser deliberately can't touch these.
+  marketingConsent: boolean;
+  marketingConsentAt?: string;
+  marketingConsentSource?: MarketingConsentSource;
   emailVerified: boolean;
   createdAt: string;
   savedAddress?: SavedAddress;
@@ -222,6 +227,14 @@ export type Customer = {
   affiliateId?: string;
   attribution?: Attribution;
 };
+
+// Where a marketing consent decision was last made.
+export type MarketingConsentSource =
+  | "registration"
+  | "account_settings"
+  | "newsletter_signup"
+  | "unsubscribe_link"
+  | "spam_complaint";
 
 // How a visitor first arrived — see lib/marketing/attribution.ts.
 export type Attribution = {

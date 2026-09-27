@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 type AuthUser = {
   id: string;
   email: string;
-  marketingOptIn: boolean;
+  marketingConsent: boolean;
   emailVerified: boolean;
   role: "command" | "office" | null;
 };

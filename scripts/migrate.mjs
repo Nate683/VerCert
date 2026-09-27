@@ -523,6 +523,14 @@ async function main() {
   `;
   await sql`CREATE INDEX IF NOT EXISTS email_events_user_id_idx ON email_events (user_id)`;
 
+  // Marketing email consent, with when and where it last changed. Accounts
+  // that existed before these columns start at FALSE with no timestamp — they
+  // were never shown the current opt-in, so nothing is carried over from the
+  // older marketing_opt_in column, which the app no longer reads or writes.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS marketing_consent BOOLEAN NOT NULL DEFAULT FALSE`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS marketing_consent_at TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS marketing_consent_source TEXT`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

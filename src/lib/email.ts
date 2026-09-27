@@ -3,12 +3,21 @@ import { getBankTransferDetails } from "@/lib/bank-details";
 import { getSiteUrl } from "@/lib/site-url";
 import { renderEmailHtml, renderEmailShell, renderCalloutBox, renderButton } from "@/lib/email-template";
 
+// TRANSACTIONAL email: order confirmations, payment and shipping notices,
+// email verification, password resets, 2FA and account-security alerts,
+// replies to messages the customer sent us. These go to everyone involved and
+// deliberately IGNORE marketing_consent — a customer who unsubscribed from
+// marketing still has to get their order and security email. Don't add a
+// consent check here, and don't send promotional content through here:
+// product updates, restocks, offers and campaigns belong in
+// lib/marketing/marketing-email.ts, which enforces consent and unsubscribe.
+//
 // Sends via the Resend API with a branded black-and-gold HTML version
 // auto-generated from the plain-text body, so every transactional email is
 // on-brand with no per-email template work. Falls back to a console log if
 // RESEND_API_KEY isn't configured yet, so auth/checkout flows still
 // complete end-to-end in dev.
-export async function sendMail(
+export async function sendTransactionalEmail(
   to: string,
   subject: string,
   text: string,
@@ -48,12 +57,12 @@ export async function sendMail(
 
 export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
   const subject = `VeriCert Order ${order.reference} Confirmed`;
-  await sendMail(order.customer.email, subject, buildConfirmationBody(order));
+  await sendTransactionalEmail(order.customer.email, subject, buildConfirmationBody(order));
 }
 
 export async function sendPaymentConfirmedEmail(order: Order): Promise<void> {
   const subject = `Payment Received — VeriCert Order ${order.reference}`;
-  await sendMail(
+  await sendTransactionalEmail(
     order.customer.email,
     subject,
     [
@@ -72,14 +81,14 @@ export async function sendPaymentConfirmedEmail(order: Order): Promise<void> {
 
 export async function sendShippingNotificationEmail(order: Order): Promise<void> {
   const subject = `Your VeriCert Order ${order.reference} Has Shipped`;
-  await sendMail(order.customer.email, subject, buildShippingBody(order));
+  await sendTransactionalEmail(order.customer.email, subject, buildShippingBody(order));
 }
 
 // Internal admin alerts (new order / low stock) — sent to whatever address
 // is configured in the executive Notification Settings, not to the customer.
 export async function sendAdminNotification(to: string, subject: string, text: string): Promise<void> {
   if (!to.trim()) return;
-  await sendMail(to, `[VeriCert Admin] ${subject}`, text);
+  await sendTransactionalEmail(to, `[VeriCert Admin] ${subject}`, text);
 }
 
 // Sent when an executive adds a new affiliate (or clicks "Resend Invite"),
@@ -172,7 +181,7 @@ export async function sendAffiliateApplicationVerificationEmail(input: {
     "",
     "— VeriCert Research",
   ].join("\n");
-  await sendMail(input.email, subject, text);
+  await sendTransactionalEmail(input.email, subject, text);
 }
 
 // Sent when /command approves a pending application — the affiliate is now
@@ -222,7 +231,7 @@ export async function sendContactFormEmail(input: {
     "",
     input.message,
   ].join("\n");
-  await sendMail(input.to, subject, text, { replyTo: input.fromEmail });
+  await sendTransactionalEmail(input.to, subject, text, { replyTo: input.fromEmail });
 }
 
 // Auto-acknowledgment sent to the visitor themselves, confirming receipt.
@@ -235,7 +244,7 @@ export async function sendContactAutoAckEmail(input: { toName: string; toEmail: 
     "",
     "— VeriCert Research",
   ].join("\n");
-  await sendMail(input.toEmail, subject, text);
+  await sendTransactionalEmail(input.toEmail, subject, text);
 }
 
 // Sent when an executive raises an affiliate to a higher tier (detected by

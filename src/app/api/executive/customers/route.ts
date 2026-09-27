@@ -12,7 +12,7 @@ const CSV_COLUMNS = [
   "signupDate",
   "orderCount",
   "lifetimeValue",
-  "marketingOptIn",
+  "marketingConsent",
   "emailVerified",
 ];
 
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         signupDate: c.signupDate,
         orderCount: c.orderCount,
         lifetimeValue: c.lifetimeValue.toFixed(2),
-        marketingOptIn: c.marketingOptIn ? "yes" : "no",
+        marketingConsent: c.marketingConsent ? "yes" : "no",
         emailVerified: c.emailVerified ? "yes" : "no",
       })),
       CSV_COLUMNS

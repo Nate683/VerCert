@@ -64,6 +64,11 @@ export async function recordResendEvent(messageId: string, event: ResendWebhookE
   );
 
   if (event.type === "email.complained" && recipient) {
-    await query("UPDATE users SET marketing_opt_in = FALSE WHERE email = $1", [recipient]);
+    await query(
+      `UPDATE users
+          SET marketing_consent = FALSE, marketing_consent_at = $2, marketing_consent_source = 'spam_complaint'
+        WHERE email = $1 AND marketing_consent`,
+      [recipient, new Date().toISOString()]
+    );
   }
 }

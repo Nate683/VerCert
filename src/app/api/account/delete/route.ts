@@ -8,7 +8,7 @@ import { getOrdersByCustomer } from "@/lib/orders/store";
 import { getAffiliateByEmail } from "@/lib/affiliates";
 import { requiresTwoFactor } from "@/lib/two-factor/store";
 import { ATTRIBUTION_COOKIE } from "@/lib/marketing/attribution";
-import { sendMail } from "@/lib/email";
+import { sendTransactionalEmail } from "@/lib/email";
 import { logActivity } from "@/lib/activity-log";
 import { accountDeleteSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, rateLimitResponse } from "@/lib/rate-limit";
@@ -65,7 +65,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   await logActivity("self-service", "account.deleted", `${ordersAnonymized} order record(s) kept, anonymized`);
 
   try {
-    await sendMail(
+    await sendTransactionalEmail(
       user.email,
       "Your VeriCert account has been deleted",
       [

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { createUser, getUserByEmail } from "@/lib/users/store";
 import { hashPassword, generateToken } from "@/lib/users/password";
 import { setCustomerSessionCookie } from "@/lib/users/session-cookie";
-import { sendMail } from "@/lib/email";
+import { sendTransactionalEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site-url";
 import { getRealmForEmail } from "@/lib/executive/staff";
 import {
@@ -31,7 +31,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, registerSchema);
   if ("error" in parsed) return parsed.error;
-  const { firstName, lastName, email, password, company, heardAbout, marketingOptIn, isAffiliate, inviteCode } =
+  const { firstName, lastName, email, password, company, heardAbout, marketingConsent, isAffiliate, inviteCode } =
     parsed.data;
 
   // The storefront age gate is the site's 21+ attestation. It appears before
@@ -99,7 +99,8 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     company: company || undefined,
     heardAbout,
     passwordHash: await hashPassword(password),
-    marketingOptIn: Boolean(marketingOptIn),
+    marketingConsent: marketingConsent === true,
+    marketingConsentSource: "registration",
     verificationToken,
     verificationTokenExpiresAt: new Date(Date.now() + VERIFICATION_TTL_MS).toISOString(),
     ageAttestedAt: new Date().toISOString(),
@@ -142,7 +143,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     );
   }
   try {
-    await sendMail(user.email, "Verify your VeriCert account", lines.join("\n"));
+    await sendTransactionalEmail(user.email, "Verify your VeriCert account", lines.join("\n"));
   } catch (err) {
     console.error("Failed to send verification email:", err);
   }

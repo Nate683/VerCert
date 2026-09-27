@@ -15,7 +15,7 @@ type Filters = {
   referral: "all" | "affiliate" | "direct";
   affiliateId: string;
   abandonedWithinDays: string;
-  optedInOnly: boolean;
+  consent: "all" | "consented" | "not-consented";
 };
 
 const DEFAULT_FILTERS: Filters = {
@@ -26,7 +26,7 @@ const DEFAULT_FILTERS: Filters = {
   referral: "all",
   affiliateId: "",
   abandonedWithinDays: "",
-  optedInOnly: true,
+  consent: "all",
 };
 
 // Starting points for the campaigns that come up most. Each one only sets
@@ -55,7 +55,7 @@ function toQuery(f: Filters): string {
   if (f.referral !== "all") params.set("referral", f.referral);
   if (f.referral === "affiliate" && f.affiliateId) params.set("affiliateId", f.affiliateId);
   if (f.abandonedWithinDays) params.set("abandonedWithinDays", f.abandonedWithinDays);
-  if (!f.optedInOnly) params.set("optedInOnly", "false");
+  if (f.consent !== "all") params.set("consent", f.consent);
   return params.toString();
 }
 
@@ -99,6 +99,8 @@ export function SegmentsPanel() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [records, setRecords] = useState<Record<string, CustomerRecord | "error">>({});
+  // Kept apart from the filters: it shapes the export, not the segment.
+  const [marketingEligibleOnly, setMarketingEligibleOnly] = useState(true);
 
   const query = toQuery(filters);
 
@@ -145,7 +147,11 @@ export function SegmentsPanel() {
     }
   }
 
-  const exportHref = `/api/executive/segments?${query ? `${query}&` : ""}format=csv`;
+  const exportParams = new URLSearchParams(query);
+  exportParams.set("format", "csv");
+  if (!marketingEligibleOnly) exportParams.set("marketingEligibleOnly", "false");
+  const exportHref = `/api/executive/segments?${exportParams}`;
+  const exportCount = summary ? (marketingEligibleOnly ? summary.consented : summary.matched) : 0;
 
   return (
     <div className="space-y-4">
@@ -285,28 +291,31 @@ export function SegmentsPanel() {
               <option value="90">In the last 90 days</option>
             </select>
           </Field>
+          <Field id="segment-consent" label="Marketing consent">
+            <select
+              id="segment-consent"
+              value={filters.consent}
+              onChange={(e) => update("consent", e.target.value as Filters["consent"])}
+              className="input-field"
+            >
+              <option value="all">Everyone</option>
+              <option value="consented">Consented to marketing email</option>
+              <option value="not-consented">No marketing consent</option>
+            </select>
+          </Field>
         </div>
 
-        <label htmlFor="segment-consent" className="mt-6 flex items-start gap-3 text-sm text-[var(--cmd-bone-dim)]">
-          <input
-            id="segment-consent"
-            type="checkbox"
-            checked={filters.optedInOnly}
-            onChange={(e) => update("optedInOnly", e.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-gold"
-          />
-          <span>
-            Only customers who opted in to marketing email
-            <span className="block text-[11px] text-[var(--cmd-bone-faint)]">Leave this on for any list you&apos;ll email.</span>
-          </span>
-        </label>
       </Panel>
 
       <Panel
         variant="command"
         title="Segment"
         tone="blood"
-        meta={summary ? `${summary.matched} of ${summary.totalCustomers} customers` : "Loading"}
+        meta={
+          summary
+            ? `${summary.matched} of ${summary.totalCustomers} customers · ${summary.totalConsented} consented overall`
+            : "Loading"
+        }
         bodyClassName="px-2 py-4"
       >
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -320,28 +329,40 @@ export function SegmentsPanel() {
             <Readout variant="command" label="Average lifetime value" size="lg" className="px-4 py-2">
               {usd(summary?.averageLifetimeValue ?? 0)}
             </Readout>
-            <Readout
-              variant="command"
-              label={filters.optedInOnly ? "Left out: no email consent" : "Without email consent"}
-              size="lg"
-              className="px-4 py-2"
-            >
-              {summary?.withoutConsent ?? 0}
+            <Readout variant="command" label="Marketing consent" size="lg" className="px-4 py-2">
+              {summary?.consented ?? 0}
             </Readout>
           </dl>
-          {summary && summary.matched > 0 ? (
-            <a
-              href={exportHref}
-              className="mx-4 mb-2 border border-[var(--cmd-brass)]/60 px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] text-[var(--cmd-brass-bright)] transition-colors hover:bg-[var(--cmd-brass)] hover:text-black"
-            >
-              Export CSV
-            </a>
-          ) : (
-            <span className="mx-4 mb-2 border border-white/10 px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] text-white/25">
-              Export CSV
-            </span>
-          )}
+          <div className="mx-4 mb-2 flex flex-col items-end gap-2">
+            {exportCount > 0 ? (
+              <a
+                href={exportHref}
+                className="border border-[var(--cmd-brass)]/60 px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] text-[var(--cmd-brass-bright)] transition-colors hover:bg-[var(--cmd-brass)] hover:text-black"
+              >
+                Export {exportCount} to CSV
+              </a>
+            ) : (
+              <span className="border border-white/10 px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] text-white/25">
+                Export CSV
+              </span>
+            )}
+            <label htmlFor="segment-export-eligible" className="flex items-center gap-2 text-xs text-[var(--cmd-bone-dim)]">
+              <input
+                id="segment-export-eligible"
+                type="checkbox"
+                checked={marketingEligibleOnly}
+                onChange={(e) => setMarketingEligibleOnly(e.target.checked)}
+                className="h-4 w-4 accent-gold"
+              />
+              Marketing-eligible only
+            </label>
+          </div>
         </div>
+        <p className="px-4 pt-2 text-[11px] text-[var(--cmd-bone-faint)]">
+          {marketingEligibleOnly
+            ? "The export includes only customers who consented to marketing email. Leave this on for any list you'll email."
+            : "Internal use only: this export includes customers who have NOT consented to marketing email. Don't load it into an email tool."}
+        </p>
       </Panel>
 
       <Panel variant="command" title="Customers in Segment" meta={`${customers.length}`} bodyClassName="px-4 pb-4 pt-2">
@@ -400,8 +421,8 @@ export function SegmentsPanel() {
                         {c.emailOpens || c.emailClicks ? `${c.emailOpens} / ${c.emailClicks}` : "—"}
                       </td>
                       <td className="py-3 text-xs">
-                        {c.marketingOptIn ? (
-                          <span className="text-[var(--cmd-brass-bright)]">Opted in</span>
+                        {c.marketingConsent ? (
+                          <span className="text-[var(--cmd-brass-bright)]">Consented</span>
                         ) : (
                           <span className="text-white/30">No</span>
                         )}

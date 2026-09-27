@@ -12,7 +12,7 @@ export const GET = withApiErrorHandling(async () => {
     user: {
       id: user.id,
       email: user.email,
-      marketingOptIn: user.marketingOptIn,
+      marketingConsent: user.marketingConsent,
       emailVerified: user.emailVerified,
       role: user.role ?? null,
     },

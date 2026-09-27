@@ -45,6 +45,7 @@ const UNGATED_API = [
   "/api/track",
   "/api/contact",
   "/api/subscribe",
+  "/api/unsubscribe",
   "/api/hq",
   "/api/executive",
 ];

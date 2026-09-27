@@ -135,7 +135,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
   const cardClass = isCommand
     ? "command-panel p-6"
     : "office-card";
-  const optedInCount = customers.filter((c) => c.marketingOptIn).length;
+  const optedInCount = customers.filter((c) => c.marketingConsent).length;
 
   return (
     <div className="space-y-8">
@@ -186,7 +186,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                       <td className="py-3">
                         <input
                           type="checkbox"
-                          disabled={!c.marketingOptIn}
+                          disabled={!c.marketingConsent}
                           checked={selected.has(c.email)}
                           onChange={() => toggleSelected(c.email)}
                           className="h-4 w-4 accent-gold disabled:opacity-20"
@@ -205,7 +205,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                         ${c.lifetimeValue.toFixed(2)}
                       </td>
                       <td className="py-3 text-xs">
-                        {c.marketingOptIn ? (
+                        {c.marketingConsent ? (
                           <span className="text-gold">Opted In</span>
                         ) : (
                           <span className="text-white/30">Opted Out</span>

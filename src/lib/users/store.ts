@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { query } from "@/lib/db";
-import type { Attribution, Customer, SavedAddress } from "@/lib/types";
+import type { Attribution, Customer, MarketingConsentSource, SavedAddress } from "@/lib/types";
 
 // Server-only Postgres-backed customer store. Exported function signatures
 // are unchanged so every caller keeps working unchanged.
@@ -14,7 +14,9 @@ type UserRow = {
   company: string | null;
   heard_about: string | null;
   password_hash: string;
-  marketing_opt_in: boolean;
+  marketing_consent: boolean;
+  marketing_consent_at: string | null;
+  marketing_consent_source: string | null;
   email_verified: boolean;
   created_at: string;
   saved_address: string | null;
@@ -54,7 +56,9 @@ function rowToUser(row: UserRow): Customer {
     company: row.company ?? undefined,
     heardAbout: row.heard_about ?? undefined,
     passwordHash: row.password_hash,
-    marketingOptIn: Boolean(row.marketing_opt_in),
+    marketingConsent: Boolean(row.marketing_consent),
+    marketingConsentAt: row.marketing_consent_at ?? undefined,
+    marketingConsentSource: (row.marketing_consent_source as MarketingConsentSource) ?? undefined,
     emailVerified: Boolean(row.email_verified),
     createdAt: row.created_at,
     savedAddress: row.saved_address ? (JSON.parse(row.saved_address) as SavedAddress) : undefined,
@@ -86,7 +90,9 @@ export type CreateUserInput = {
   company?: string;
   heardAbout?: string;
   passwordHash: string;
-  marketingOptIn: boolean;
+  marketingConsent: boolean;
+  /** Where the visitor made the choice. Leave unset for accounts that were never asked (staff, affiliates). */
+  marketingConsentSource?: MarketingConsentSource;
   smsOptIn?: boolean;
   phone?: string;
   verificationToken: string;
@@ -103,6 +109,7 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
     throw new Error("An account with this email already exists.");
   }
 
+  const createdAt = new Date().toISOString();
   const user: Customer = {
     id: randomUUID(),
     email,
@@ -112,11 +119,14 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
     company: input.company,
     heardAbout: input.heardAbout,
     passwordHash: input.passwordHash,
-    marketingOptIn: input.marketingOptIn,
+    marketingConsent: input.marketingConsent,
+    // A decline is recorded too: it's the evidence they were asked.
+    marketingConsentAt: input.marketingConsentSource ? createdAt : undefined,
+    marketingConsentSource: input.marketingConsentSource,
     smsOptIn: input.smsOptIn ?? false,
     phone: input.phone,
     emailVerified: false,
-    createdAt: new Date().toISOString(),
+    createdAt,
     verificationToken: input.verificationToken,
     verificationTokenExpiresAt: input.verificationTokenExpiresAt,
     ageAttestedAt: input.ageAttestedAt,
@@ -126,10 +136,11 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
 
   await query(
     `INSERT INTO users
-      (id, email, name, first_name, last_name, company, heard_about, password_hash, marketing_opt_in,
+      (id, email, name, first_name, last_name, company, heard_about, password_hash, marketing_consent,
+       marketing_consent_at, marketing_consent_source,
        sms_opt_in, phone, email_verified, created_at, verification_token, verification_token_expires_at,
        age_attested_at, affiliate_id, attribution)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
     [
       user.id,
       user.email,
@@ -139,7 +150,9 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
       user.company ?? null,
       user.heardAbout ?? null,
       user.passwordHash,
-      user.marketingOptIn,
+      user.marketingConsent,
+      user.marketingConsentAt ?? null,
+      user.marketingConsentSource ?? null,
       user.smsOptIn,
       user.phone ?? null,
       false,
@@ -192,6 +205,23 @@ export async function getUserByPendingEmailToken(token: string): Promise<Custome
   return rows[0] ? rowToUser(rows[0]) : null;
 }
 
+// Marketing consent never goes through updateUser: every change has to carry
+// its timestamp and source, so it has this one door. Setting the value it
+// already has changes nothing, keeping the timestamp at the actual decision.
+export async function setMarketingConsent(
+  id: string,
+  consent: boolean,
+  source: MarketingConsentSource
+): Promise<Customer | null> {
+  await query(
+    `UPDATE users
+        SET marketing_consent = $2, marketing_consent_at = $3, marketing_consent_source = $4
+      WHERE id = $1 AND marketing_consent IS DISTINCT FROM $2`,
+    [id, consent, new Date().toISOString(), source]
+  );
+  return getUserById(id);
+}
+
 // Maps Customer (camelCase) fields to their Postgres column names.
 const PATCHABLE_COLUMNS: Record<string, string> = {
   email: "email",
@@ -201,7 +231,6 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   company: "company",
   heardAbout: "heard_about",
   passwordHash: "password_hash",
-  marketingOptIn: "marketing_opt_in",
   emailVerified: "email_verified",
   savedAddress: "saved_address",
   verificationToken: "verification_token",

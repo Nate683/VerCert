@@ -25,7 +25,7 @@ export async function issueAffiliateSetPasswordToken(affiliate: Affiliate): Prom
   const user = await createUser({
     email: affiliate.email,
     passwordHash: placeholderHash,
-    marketingOptIn: false,
+    marketingConsent: false,
     verificationToken: generateToken(),
     verificationTokenExpiresAt: expiresAt,
   });

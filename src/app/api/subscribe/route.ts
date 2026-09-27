@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getUserByEmail, createUser, updateUser } from "@/lib/users/store";
+import { getUserByEmail, createUser, setMarketingConsent } from "@/lib/users/store";
 import { hashPassword, generateToken } from "@/lib/users/password";
 import { getRealmForEmail } from "@/lib/executive/staff";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Lightweight email capture — reuses the same Customer record + marketingOptIn
+// Lightweight email capture — reuses the same Customer record + marketing consent
 // field as full signup, without requiring a password up front.
 export const POST = withApiErrorHandling(async (request: Request) => {
   let body: { email?: string };
@@ -25,13 +25,14 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const existing = await getUserByEmail(email);
   if (existing) {
-    await updateUser(existing.id, { marketingOptIn: true });
+    await setMarketingConsent(existing.id, true, "newsletter_signup");
   } else {
     const passwordHash = await hashPassword(generateToken());
     await createUser({
       email,
       passwordHash,
-      marketingOptIn: true,
+      marketingConsent: true,
+      marketingConsentSource: "newsletter_signup",
       verificationToken: generateToken(),
       verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     });

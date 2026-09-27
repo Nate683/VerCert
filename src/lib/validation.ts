@@ -25,7 +25,8 @@ export const registerSchema = z.object({
   password: z.string().min(8).max(200),
   company: z.string().trim().max(200).optional(),
   heardAbout: z.enum(HEARD_ABOUT_VALUES).optional(),
-  marketingOptIn: z.boolean().optional(),
+  // Absent means no: consent is only ever what the form actually sent.
+  marketingConsent: z.boolean().optional(),
   isAffiliate: z.boolean().optional(),
   inviteCode: z.string().trim().max(40).optional(),
 });

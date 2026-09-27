@@ -17,7 +17,7 @@ function RegisterForm() {
   const [password, setPassword] = useState("");
   const [company, setCompany] = useState("");
   const [heardAbout, setHeardAbout] = useState("");
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(true);
   const [isAffiliate, setIsAffiliate] = useState(searchParams.get("affiliate") === "1");
   const [inviteCode, setInviteCode] = useState(searchParams.get("code")?.toUpperCase() ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ function RegisterForm() {
           password,
           company: company.trim() || undefined,
           heardAbout: heardAbout || undefined,
-          marketingOptIn,
+          marketingConsent,
           isAffiliate: asAffiliate,
           inviteCode: asAffiliate ? inviteCode : undefined,
         }),
@@ -157,11 +157,11 @@ function RegisterForm() {
           <input
             id="register-marketing"
             type="checkbox"
-            checked={marketingOptIn}
-            onChange={(e) => setMarketingOptIn(e.target.checked)}
+            checked={marketingConsent}
+            onChange={(e) => setMarketingConsent(e.target.checked)}
             className="mt-0.5 h-4 w-4 accent-gold"
           />
-          Email me about new compounds and testing results. Unsubscribe any time.
+          Send me product updates, restock notices, and offers. You can unsubscribe anytime.
         </label>
         <label className="flex items-center gap-3 text-xs text-muted">
           <input

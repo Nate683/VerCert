@@ -23,7 +23,7 @@ export type CustomerRecord = {
     heardAboutUs?: string;
     createdAt: string;
     emailVerified: boolean;
-    marketingEmailOptIn: boolean;
+    marketingEmail: { consent: boolean; lastChangedAt?: string; source?: string };
     smsOptIn: boolean;
     phone?: string;
     savedShippingAddress?: SavedAddress;
@@ -101,7 +101,11 @@ export async function buildCustomerRecord(user: Customer): Promise<CustomerRecor
       heardAboutUs: heardAboutLabel(user.heardAbout),
       createdAt: user.createdAt,
       emailVerified: user.emailVerified,
-      marketingEmailOptIn: user.marketingOptIn,
+      marketingEmail: {
+        consent: user.marketingConsent,
+        lastChangedAt: user.marketingConsentAt,
+        source: user.marketingConsentSource,
+      },
       smsOptIn: user.smsOptIn,
       phone: user.phone,
       savedShippingAddress: user.savedAddress,

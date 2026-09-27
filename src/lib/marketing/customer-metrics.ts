@@ -22,7 +22,9 @@ export type CustomerMetrics = {
   lastName: string;
   company?: string;
   signedUpAt: string;
-  marketingOptIn: boolean;
+  marketingConsent: boolean;
+  marketingConsentAt?: string;
+  marketingConsentSource?: string;
   heardAbout?: string;
   affiliateId?: string;
   affiliateName?: string;
@@ -53,7 +55,9 @@ type MetricsRow = {
   last_name: string | null;
   company: string | null;
   created_at: string;
-  marketing_opt_in: boolean;
+  marketing_consent: boolean;
+  marketing_consent_at: string | null;
+  marketing_consent_source: string | null;
   heard_about: string | null;
   affiliate_id: string | null;
   affiliate_name: string | null;
@@ -131,7 +135,7 @@ const METRICS_SQL = `
      GROUP BY user_id
   )
   SELECT u.id, u.email, u.name, u.first_name, u.last_name, u.company, u.created_at,
-         u.marketing_opt_in, u.heard_about, u.affiliate_id, a.name AS affiliate_name, u.attribution,
+         u.marketing_consent, u.marketing_consent_at, u.marketing_consent_source, u.heard_about, u.affiliate_id, a.name AS affiliate_name, u.attribution,
          COALESCE(s.order_count, 0) AS order_count,
          COALESCE(s.lifetime_value, 0) AS lifetime_value,
          s.first_order_at, s.last_order_at,
@@ -191,7 +195,9 @@ function toMetrics(row: MetricsRow, now: number): CustomerMetrics {
     lastName: row.last_name ?? nameLast,
     company: row.company ?? undefined,
     signedUpAt: row.created_at,
-    marketingOptIn: Boolean(row.marketing_opt_in),
+    marketingConsent: Boolean(row.marketing_consent),
+    marketingConsentAt: row.marketing_consent_at ?? undefined,
+    marketingConsentSource: row.marketing_consent_source ?? undefined,
     heardAbout: row.heard_about ?? undefined,
     affiliateId: row.affiliate_id ?? undefined,
     affiliateName: row.affiliate_name ?? undefined,
