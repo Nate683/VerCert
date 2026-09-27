@@ -9,6 +9,7 @@ import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { RecordProductView } from "@/components/RecordProductView";
 import { AddToCartPanel } from "./AddToCartPanel";
 import { buildMetadata } from "@/lib/seo";
+import { productImageAlt, productImageSources } from "@/lib/products/images";
 
 type Params = { slug: string };
 
@@ -108,16 +109,18 @@ export default async function ProductDetailPage({
         <span className="text-muted">{product.name}</span>
       </nav>
 
-      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
-        <div className="lg:sticky lg:top-28 lg:self-start">
+      {/* The photo takes the wider column; the COA panel sits in the column
+          beside it rather than further down the page. */}
+      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
+        <div className="lg:sticky lg:top-28 lg:col-span-7 lg:self-start">
           <ProductGallery
             name={product.name}
-            primaryImageUrl={product.primaryImageUrl}
-            galleryImageUrls={product.galleryImageUrls}
+            alt={productImageAlt(product)}
+            sources={[...productImageSources(product), ...(product.galleryImageUrls ?? [])]}
           />
         </div>
 
-        <div>
+        <div className="lg:col-span-5">
           <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">{product.category}</p>
           <h1 className="mt-3 font-serif text-4xl text-navy">{product.name}</h1>
 
@@ -128,14 +131,6 @@ export default async function ProductDetailPage({
                 Batch <span className="text-navy">{primaryBatch}</span>
               </span>
             )}
-            {primaryBatch && (
-              <Link
-                href={`/coa?batch=${primaryBatch}`}
-                className="text-xs uppercase tracking-[0.12em] text-gold-ink underline-offset-4 hover:underline"
-              >
-                View COA →
-              </Link>
-            )}
           </div>
 
           <p className="mt-5 text-sm leading-relaxed text-muted">{product.summary}</p>
@@ -143,6 +138,41 @@ export default async function ProductDetailPage({
           <div className="mt-8">
             <AddToCartPanel product={toStorefrontProduct(product)} />
           </div>
+
+          <section aria-labelledby="coa-heading" className="mt-8 border border-hairline bg-surface p-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id="coa-heading" className="text-xs uppercase tracking-[0.25em] text-gold-ink">
+                Certificate of Analysis
+              </h2>
+              <Link
+                href="/how-we-test"
+                className="text-[11px] uppercase tracking-[0.15em] text-muted underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
+              >
+                How we test →
+              </Link>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-muted">
+              Each batch is tested independently. Match the number on your vial
+              label to pull its certificate.
+            </p>
+            {product.batchNumbers.length > 0 ? (
+              <ul className="mt-4 space-y-2">
+                {product.batchNumbers.map((batch) => (
+                  <li key={batch}>
+                    <Link
+                      href={`/coa?batch=${batch}`}
+                      className="flex items-center justify-between border border-hairline bg-paper px-4 py-3 text-sm text-muted transition-colors hover:border-gold hover:text-gold-ink"
+                    >
+                      <span className="font-mono">{batch}</span>
+                      <span className="text-xs uppercase tracking-[0.15em]">View COA →</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-4 text-xs text-muted">Certificates are published as each batch clears testing.</p>
+            )}
+          </section>
 
           <dl className="mt-10 divide-y divide-hairline border-y border-hairline">
             {specs.map((spec) => (
@@ -160,40 +190,14 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      <div className="mt-16 grid grid-cols-1 gap-12 border-t border-hairline pt-12 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="mt-16 border-t border-hairline pt-12">
+        <div className="max-w-3xl">
           <h2 className="font-serif text-2xl text-navy">Product Description</h2>
           <div className="mt-4 space-y-4 text-sm leading-relaxed text-muted">
             {product.description.map((paragraph, i) => (
               <p key={i}>{paragraph}</p>
             ))}
           </div>
-        </div>
-        <div>
-          <h2 className="font-serif text-2xl text-navy">Available Batches</h2>
-          <p className="mt-2 text-xs leading-relaxed text-muted">
-            Each batch is tested independently. Match the number on your vial
-            label to pull its certificate.
-          </p>
-          <ul className="mt-4 space-y-3">
-            {product.batchNumbers.map((batch) => (
-              <li key={batch}>
-                <Link
-                  href={`/coa?batch=${batch}`}
-                  className="flex items-center justify-between border border-hairline px-4 py-3 text-sm text-muted transition-colors hover:border-gold hover:text-gold-ink"
-                >
-                  <span className="font-mono">{batch}</span>
-                  <span className="text-xs uppercase tracking-[0.15em]">View COA →</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <Link
-            href="/how-we-test"
-            className="mt-6 inline-block text-xs uppercase tracking-[0.15em] text-muted underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
-          >
-            How we test →
-          </Link>
         </div>
       </div>
 

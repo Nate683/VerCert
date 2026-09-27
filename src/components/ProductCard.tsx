@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "./ProductImage";
 import { useExecMode } from "@/lib/exec-mode-context";
+import { productImageAlt, productImageSources } from "@/lib/products/images";
 
 // "from $40" hid the spread on products whose sizes differ by an order of
 // magnitude. Show the range, and collapse to a single figure when there is
@@ -66,8 +67,9 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
         {/* Image area, with the two badges pinned to its corners. */}
         <div className="relative">
           <ProductImage
-            src={product.primaryImageUrl}
+            sources={productImageSources(product)}
             name={product.name}
+            alt={productImageAlt(product)}
             zoom
             sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
           />

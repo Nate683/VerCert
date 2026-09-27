@@ -2,30 +2,51 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { PRODUCT_IMAGE_PX } from "@/lib/products/images";
 import { VialGlyph } from "./VialGlyph";
 
 // Product imagery with a hover magnifier on pointer devices and a full-screen
 // lightbox on click. The magnifier tracks the cursor by moving the image's
 // transform-origin, which keeps whatever the customer is pointing at under the
 // cursor as it scales.
+//
+// Sources that fail to load (the slug photo before it's been added) drop out
+// of the set; with none left it shows the placeholder. Photos are transparent
+// PNGs on a light well, padded, with no shadow.
 export function ProductGallery({
   name,
-  primaryImageUrl,
-  galleryImageUrls,
+  alt,
+  sources,
 }: {
   name: string;
-  primaryImageUrl?: string;
-  galleryImageUrls?: string[];
+  alt: string;
+  sources: (string | undefined)[];
 }) {
-  const images = [primaryImageUrl, ...(galleryImageUrls ?? [])].filter(
-    (url): url is string => Boolean(url)
-  );
+  const [failed, setFailed] = useState<ReadonlySet<string>>(new Set());
+  const images = [...new Set(sources)].filter((url): url is string => Boolean(url) && !failed.has(url!));
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [origin, setOrigin] = useState("50% 50%");
   const [zooming, setZooming] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const current = images[Math.min(active, images.length - 1)];
+
+  const markFailed = useCallback((url: string) => {
+    setFailed((prev) => new Set(prev).add(url));
+    setActive(0);
+    setLoaded(false);
+  }, []);
+
+  // A server-rendered <img> can finish (or fail) before React attaches its
+  // handlers, and then neither event ever reaches us — so check on mount.
+  useEffect(() => {
+    const img = imgRef.current;
+    if (!current || !img?.complete) return;
+    if (img.naturalWidth > 0) setLoaded(true);
+    else markFailed(current);
+  }, [current, markFailed]);
 
   const step = useCallback(
     (delta: number) => {
@@ -78,7 +99,7 @@ export function ProductGallery({
         onMouseEnter={() => setZooming(true)}
         onMouseLeave={() => setZooming(false)}
         onMouseMove={handleMove}
-        className="group relative aspect-square w-full cursor-zoom-in overflow-hidden border border-hairline bg-surface"
+        className="group relative aspect-square w-full cursor-zoom-in overflow-hidden border border-hairline bg-paper"
         onClick={() => setLightbox(true)}
         role="button"
         tabIndex={0}
@@ -92,14 +113,19 @@ export function ProductGallery({
       >
         {!loaded && <div className="skeleton absolute inset-0" />}
         <Image
-          key={images[active]}
-          src={images[active]}
-          alt={name}
-          fill
+          ref={imgRef}
+          key={current}
+          src={current}
+          alt={alt}
+          width={PRODUCT_IMAGE_PX}
+          height={PRODUCT_IMAGE_PX}
           priority
-          sizes="(min-width: 1024px) 45vw, 100vw"
+          sizes="(min-width: 1024px) 58vw, 100vw"
           onLoad={() => setLoaded(true)}
-          className="object-cover transition-transform duration-300 ease-out"
+          onError={() => markFailed(current)}
+          className={`h-full w-full object-contain p-[8%] transition-[transform,opacity] duration-300 ease-out ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
           style={{
             transformOrigin: origin,
             transform: zooming ? "scale(2)" : "scale(1)",
@@ -121,12 +147,19 @@ export function ProductGallery({
                 setLoaded(false);
               }}
               aria-label={`View image ${i + 1} of ${images.length}`}
-              aria-current={active === i}
-              className={`relative h-16 w-16 shrink-0 overflow-hidden border transition-colors ${
-                active === i ? "border-gold" : "border-hairline hover:border-control"
+              aria-current={current === url}
+              className={`relative h-16 w-16 shrink-0 overflow-hidden border bg-paper transition-colors ${
+                current === url ? "border-gold" : "border-hairline hover:border-control"
               }`}
             >
-              <Image src={url} alt="" fill sizes="64px" className="object-cover" />
+              <Image
+                src={url}
+                alt={alt}
+                width={64}
+                height={64}
+                onError={() => markFailed(url)}
+                className="h-full w-full object-contain p-1"
+              />
             </button>
           ))}
         </div>
@@ -175,15 +208,16 @@ export function ProductGallery({
             </>
           )}
           <div
-            className="relative h-[85vh] w-full max-w-4xl"
+            className="relative flex h-[85vh] w-full max-w-4xl items-center justify-center bg-paper p-[4%]"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
-              src={images[active]}
-              alt={name}
-              fill
+              src={current}
+              alt={alt}
+              width={PRODUCT_IMAGE_PX * 2}
+              height={PRODUCT_IMAGE_PX * 2}
               sizes="100vw"
-              className="object-contain"
+              className="h-full w-full object-contain"
             />
           </div>
         </div>

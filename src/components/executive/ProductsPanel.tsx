@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { BulkPriceTier, CoaDocument, Product, SizeOption } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
 import { ProductImage } from "@/components/ProductImage";
+import { productImageAlt, productImageSources } from "@/lib/products/images";
 
 type ProductWithStock = Product & { stock: { quantity: number; threshold: number } | null };
 
@@ -350,7 +351,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               return (
                 <div key={p.slug} className={`border bg-black/40 ${active ? "border-white/10" : "border-white/5 opacity-60"}`}>
                   <div className="relative">
-                    <ProductImage src={p.primaryImageUrl} name={p.name} />
+                    <ProductImage sources={productImageSources(p)} name={p.name} alt={productImageAlt(p)} />
                     <span
                       className={`absolute left-2 top-2 border px-2 py-0.5 text-[9px] uppercase tracking-[0.15em] ${
                         active
@@ -679,7 +680,11 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                     onDragLeave={() => setDragTarget(null)}
                     onDrop={(e) => handleDropUpload(e, editingProduct.slug, "primary")}
                   >
-                    <ProductImage src={editingProduct.primaryImageUrl} name={editingProduct.name} />
+                    <ProductImage
+                      sources={[editingProduct.primaryImageUrl]}
+                      name={editingProduct.name}
+                      alt={productImageAlt(editingProduct)}
+                    />
                   </div>
                   <div className="mt-2 flex gap-2">
                     <label className="cursor-pointer border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold">
@@ -713,7 +718,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                   <div className="flex flex-wrap gap-2">
                     {(editingProduct.galleryImageUrls ?? []).map((url, i) => (
                       <div key={url} className="relative h-24 w-24">
-                        <ProductImage src={url} name={editingProduct.name} />
+                        <ProductImage sources={[url]} name={editingProduct.name} alt={productImageAlt(editingProduct)} />
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(editingProduct.slug, url)}
