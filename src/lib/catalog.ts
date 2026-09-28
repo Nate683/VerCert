@@ -25,7 +25,7 @@ export function toCatalogEntry(product: Product): CatalogEntry {
     minPriceUsd: prices.length > 0 ? Math.min(...prices) : 0,
     maxPriceUsd: prices.length > 0 ? Math.max(...prices) : 0,
     batchNumber: product.batchNumbers[0],
-    imageUrl: product.primaryImageUrl,
+    imageUrl: product.imageUrl ?? product.primaryImageUrl,
   };
 }
 

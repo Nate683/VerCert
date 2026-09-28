@@ -239,6 +239,10 @@ body {
     animation: none;
     transform: none;
   }
+  /* The elapsed-seconds counter still shows the upload is alive. */
+  .upload-progress-fill::after {
+    animation: none;
+  }
 }
 
 /* Subtle V-mark watermark — large, low-opacity, non-interactive. */
@@ -269,6 +273,21 @@ body {
     transparent 100%
   );
   animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+/* Upload progress: a light sweeps along the filled part of the bar, so it
+   visibly moves between progress events on a slow connection. */
+.upload-progress-fill {
+  position: relative;
+  overflow: hidden;
+}
+.upload-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+  animation: skeleton-sweep 1.2s ease-in-out infinite;
+  transform: translateX(-100%);
 }
 
 @keyframes skeleton-sweep {

@@ -10,20 +10,26 @@ import { VialGlyph } from "./VialGlyph";
 // transform-origin, which keeps whatever the customer is pointing at under the
 // cursor as it scales.
 //
-// Sources that fail to load (the slug photo before it's been added) drop out
-// of the set; with none left it shows the placeholder. Photos are transparent
-// PNGs on a light well, padded, with no shadow.
+// The main photo is the first of mainSources that loads — a fallback chain,
+// so only one of them is ever shown, never as extra gallery images. Gallery
+// images follow it. Anything that fails to load drops out; with nothing left
+// it shows the placeholder. Photos sit contained and padded on a light well.
 export function ProductGallery({
   name,
   alt,
-  sources,
+  mainSources,
+  galleryImageUrls = [],
 }: {
   name: string;
   alt: string;
-  sources: (string | undefined)[];
+  mainSources: string[];
+  galleryImageUrls?: string[];
 }) {
   const [failed, setFailed] = useState<ReadonlySet<string>>(new Set());
-  const images = [...new Set(sources)].filter((url): url is string => Boolean(url) && !failed.has(url!));
+  const main = mainSources.find((url) => !failed.has(url));
+  const images = [...new Set([main, ...galleryImageUrls])].filter(
+    (url): url is string => Boolean(url) && !failed.has(url!)
+  );
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [origin, setOrigin] = useState("50% 50%");
@@ -33,11 +39,18 @@ export function ProductGallery({
   const imgRef = useRef<HTMLImageElement>(null);
   const current = images[Math.min(active, images.length - 1)];
 
-  const markFailed = useCallback((url: string) => {
-    setFailed((prev) => new Set(prev).add(url));
-    setActive(0);
-    setLoaded(false);
-  }, []);
+  // Only the image on screen resets the frame; a thumbnail failing in the
+  // background must not blank a photo that has already loaded.
+  const markFailed = useCallback(
+    (url: string) => {
+      setFailed((prev) => new Set(prev).add(url));
+      if (url === current) {
+        setActive(0);
+        setLoaded(false);
+      }
+    },
+    [current]
+  );
 
   // A server-rendered <img> can finish (or fail) before React attaches its
   // handlers, and then neither event ever reaches us — so check on mount.
@@ -123,7 +136,7 @@ export function ProductGallery({
           sizes="(min-width: 1024px) 58vw, 100vw"
           onLoad={() => setLoaded(true)}
           onError={() => markFailed(current)}
-          className={`h-full w-full object-contain p-[8%] transition-[transform,opacity] duration-300 ease-out ${
+          className={`h-full w-full object-contain object-center p-[8%] transition-[transform,opacity] duration-300 ease-out ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
           style={{

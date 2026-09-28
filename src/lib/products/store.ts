@@ -17,6 +17,7 @@ type ProductRow = {
   batch_numbers: string;
   summary: string;
   description: string;
+  image_url: string | null;
   primary_image_url: string | null;
   gallery_image_urls: string | null;
   sort_order: number;
@@ -41,6 +42,7 @@ function rowToProduct(row: ProductRow): Product {
     batchNumbers: JSON.parse(row.batch_numbers),
     summary: row.summary,
     description: JSON.parse(row.description),
+    imageUrl: row.image_url ?? undefined,
     primaryImageUrl: row.primary_image_url ?? undefined,
     galleryImageUrls: row.gallery_image_urls ? JSON.parse(row.gallery_image_urls) : undefined,
     sortOrder: row.sort_order,
@@ -175,6 +177,17 @@ export async function updateProduct(
     );
   }
 
+  return getProductBySlug(slug);
+}
+
+// Sets or clears the product photo. It replaces the older primary image
+// outright, so a product has one main photo. The caller deletes the blobs
+// this leaves unreferenced (see lib/products/blob-images.ts).
+export async function setProductImage(slug: string, imageUrl: string | null): Promise<Product | null> {
+  await query(
+    "UPDATE products SET image_url = $2, primary_image_url = NULL, updated_at = $3 WHERE slug = $1",
+    [slug, imageUrl, new Date().toISOString()]
+  );
   return getProductBySlug(slug);
 }
 

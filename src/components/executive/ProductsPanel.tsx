@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { BulkPriceTier, CoaDocument, Product, SizeOption } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
 import { ProductImage } from "@/components/ProductImage";
+import { ProductImageUploader } from "./ProductImageUploader";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
 
 type ProductWithStock = Product & { stock: { quantity: number; threshold: number } | null };
@@ -217,7 +218,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     await load();
   }
 
-  async function handleUpload(slug: string, file: File, kind: "primary" | "gallery") {
+  async function handleUpload(slug: string, file: File, kind: "gallery") {
     setUploadingFor(slug);
     try {
       const body = new FormData();
@@ -269,17 +270,11 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     await handleInlinePatch(product.slug, { active: !(product.active ?? true) });
   }
 
-  function handleDropUpload(e: React.DragEvent, slug: string, kind: "primary" | "gallery") {
+  function handleDropUpload(e: React.DragEvent, slug: string, kind: "gallery") {
     e.preventDefault();
     setDragTarget(null);
     const file = e.dataTransfer.files?.[0];
     if (file) handleUpload(slug, file, kind);
-  }
-
-  async function handleSetPrimary(product: ProductWithStock, url: string) {
-    const gallery = (product.galleryImageUrls ?? []).filter((u) => u !== url);
-    if (product.primaryImageUrl) gallery.push(product.primaryImageUrl);
-    await handleInlinePatch(product.slug, { primaryImageUrl: url, galleryImageUrls: gallery });
   }
 
   async function handleReorderGallery(product: ProductWithStock, index: number, direction: -1 | 1) {
@@ -669,51 +664,18 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               <p className="text-xs uppercase tracking-[0.2em] text-gold">Images</p>
               <p className="mt-1 text-[10px] text-white/30">Drag and drop a photo onto a box, or use the buttons.</p>
               <div className="mt-3 flex flex-wrap gap-4">
-                <div>
-                  <p className="mb-2 text-[10px] uppercase tracking-[0.15em] text-white/40">Primary</p>
-                  <div
-                    className={`h-24 w-24 ${dragTarget === "primary" ? "ring-2 ring-gold" : ""}`}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setDragTarget("primary");
-                    }}
-                    onDragLeave={() => setDragTarget(null)}
-                    onDrop={(e) => handleDropUpload(e, editingProduct.slug, "primary")}
-                  >
-                    <ProductImage
-                      sources={[editingProduct.primaryImageUrl]}
-                      name={editingProduct.name}
-                      alt={productImageAlt(editingProduct)}
-                    />
-                  </div>
-                  <div className="mt-2 flex gap-2">
-                    <label className="cursor-pointer border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold">
-                      {uploadingFor === editingProduct.slug ? "Uploading..." : "Upload"}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleUpload(editingProduct.slug, file, "primary");
-                        }}
-                      />
-                    </label>
-                    {editingProduct.primaryImageUrl && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(editingProduct.slug, editingProduct.primaryImageUrl!)}
-                        className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
+                <div className="w-full">
+                  <ProductImageUploader
+                    slug={editingProduct.slug}
+                    name={editingProduct.name}
+                    currentUrl={editingProduct.imageUrl ?? editingProduct.primaryImageUrl}
+                    onSaved={load}
+                  />
                 </div>
 
                 <div>
                   <p className="mb-2 text-[10px] uppercase tracking-[0.15em] text-white/40">
-                    Gallery (drag to reorder with the arrows, or set as primary)
+                    Gallery (reorder with the arrows)
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {(editingProduct.galleryImageUrls ?? []).map((url, i) => (
@@ -735,14 +697,6 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                             className="text-[10px] text-white/60 hover:text-gold disabled:opacity-20"
                           >
                             ←
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSetPrimary(editingProduct, url)}
-                            title="Set as primary"
-                            className="text-[9px] uppercase tracking-[0.05em] text-white/60 hover:text-gold"
-                          >
-                            ★
                           </button>
                           <button
                             type="button"

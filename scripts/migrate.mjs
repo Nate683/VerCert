@@ -531,6 +531,11 @@ async function main() {
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS marketing_consent_at TEXT`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS marketing_consent_source TEXT`;
 
+  // The product photo uploaded from the Products tab: a processed image in
+  // Vercel Blob. Null until one is uploaded; the storefront falls back to the
+  // older primary_image_url, then /products/<slug>.png, then a placeholder.
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

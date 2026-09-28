@@ -8,5 +8,6 @@ export {
   createProduct,
   updateProduct,
   deleteProduct,
+  setProductImage,
   type CreateProductInput,
 } from "./store";

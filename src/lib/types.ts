@@ -23,6 +23,9 @@ export type Product = {
   batchNumbers: string[];
   summary: string;
   description: string[];
+  // The product photo, uploaded and processed from the Products tab. Set only
+  // through setProductImage. primaryImageUrl is the older upload it replaces.
+  imageUrl?: string;
   primaryImageUrl?: string;
   galleryImageUrls?: string[];
   sortOrder?: number;

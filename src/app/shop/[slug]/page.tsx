@@ -116,7 +116,8 @@ export default async function ProductDetailPage({
           <ProductGallery
             name={product.name}
             alt={productImageAlt(product)}
-            sources={[...productImageSources(product), ...(product.galleryImageUrls ?? [])]}
+            mainSources={productImageSources(product)}
+            galleryImageUrls={product.galleryImageUrls}
           />
         </div>
 
