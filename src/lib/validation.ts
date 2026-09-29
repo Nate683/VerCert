@@ -117,9 +117,11 @@ export const productSchema = z.object({
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "slug must be lowercase letters, numbers, and hyphens"),
   name: z.string().trim().min(1).max(200),
   category: z.string().trim().min(1).max(100),
-  casNumber: z.string().trim().min(1).max(50),
-  molecularFormula: z.string().trim().min(1).max(100),
-  molecularWeight: z.string().trim().min(1).max(50),
+  // Blank until verified: the storefront leaves unset specs off the page
+  // (lib/products/specs.ts), and purity 0 means "not yet tested".
+  casNumber: z.string().trim().max(50),
+  molecularFormula: z.string().trim().max(100),
+  molecularWeight: z.string().trim().max(50),
   purityPercent: z.number().min(0).max(100),
   sequenceOrForm: z.string().trim().min(1).max(2000),
   storage: z.string().trim().min(1).max(500),

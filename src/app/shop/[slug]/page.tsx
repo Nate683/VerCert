@@ -10,6 +10,7 @@ import { RecordProductView } from "@/components/RecordProductView";
 import { AddToCartPanel } from "./AddToCartPanel";
 import { buildMetadata } from "@/lib/seo";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
+import { formatPurity, specText } from "@/lib/products/specs";
 
 type Params = { slug: string };
 
@@ -49,14 +50,16 @@ export default async function ProductDetailPage({
     ...allProducts.filter((p) => p.slug !== product.slug && p.category !== product.category),
   ].slice(0, 4);
 
+  // Unset values are left out entirely rather than shown as 0 or blank.
+  const purity = formatPurity(product.purityPercent);
   const specs = [
-    { label: "CAS Number", value: product.casNumber, mono: true },
-    { label: "Molecular Formula", value: product.molecularFormula, mono: true },
-    { label: "Molecular Weight", value: product.molecularWeight, mono: true },
-    { label: "Purity", value: `${product.purityPercent.toFixed(1)}%`, mono: true },
-    { label: "Sequence / Form", value: product.sequenceOrForm, mono: false },
-    { label: "Storage", value: product.storage, mono: false },
-  ];
+    { label: "CAS Number", value: specText(product.casNumber), mono: true },
+    { label: "Molecular Formula", value: specText(product.molecularFormula), mono: true },
+    { label: "Molecular Weight", value: specText(product.molecularWeight), mono: true },
+    { label: "Purity", value: purity, mono: true },
+    { label: "Sequence / Form", value: specText(product.sequenceOrForm), mono: false },
+    { label: "Storage", value: specText(product.storage), mono: false },
+  ].filter((spec): spec is { label: string; value: string; mono: boolean } => spec.value !== null);
 
   const primaryBatch = product.batchNumbers[0];
   const minPrice = Math.min(...product.sizes.map((s) => s.priceUsd));
@@ -68,10 +71,12 @@ export default async function ProductDetailPage({
     category: product.category,
     brand: { "@type": "Brand", name: "VeriCert" },
     additionalProperty: [
-      { "@type": "PropertyValue", name: "CAS Number", value: product.casNumber },
-      { "@type": "PropertyValue", name: "Molecular Formula", value: product.molecularFormula },
-      { "@type": "PropertyValue", name: "Purity", value: `${product.purityPercent.toFixed(1)}%` },
-    ],
+      { name: "CAS Number", value: specText(product.casNumber) },
+      { name: "Molecular Formula", value: specText(product.molecularFormula) },
+      { name: "Purity", value: purity },
+    ]
+      .filter((p) => p.value !== null)
+      .map((p) => ({ "@type": "PropertyValue", ...p })),
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "USD",
@@ -125,14 +130,16 @@ export default async function ProductDetailPage({
           <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">{product.category}</p>
           <h1 className="mt-3 font-serif text-4xl text-navy">{product.name}</h1>
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span className="purity-badge">{product.purityPercent.toFixed(1)}% Purity</span>
-            {primaryBatch && (
-              <span className="font-mono text-xs text-muted">
-                Batch <span className="text-navy">{primaryBatch}</span>
-              </span>
-            )}
-          </div>
+          {(purity || primaryBatch) && (
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              {purity && <span className="purity-badge">{purity} Purity</span>}
+              {primaryBatch && (
+                <span className="font-mono text-xs text-muted">
+                  Batch <span className="text-navy">{primaryBatch}</span>
+                </span>
+              )}
+            </div>
+          )}
 
           <p className="mt-5 text-sm leading-relaxed text-muted">{product.summary}</p>
 
@@ -175,19 +182,21 @@ export default async function ProductDetailPage({
             )}
           </section>
 
-          <dl className="mt-10 divide-y divide-hairline border-y border-hairline">
-            {specs.map((spec) => (
-              <div
-                key={spec.label}
-                className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between"
-              >
-                <dt className="text-xs uppercase tracking-[0.15em] text-muted">{spec.label}</dt>
-                <dd className={`text-sm text-navy sm:text-right ${spec.mono ? "font-mono" : ""}`}>
-                  {spec.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
+          {specs.length > 0 && (
+            <dl className="mt-10 divide-y divide-hairline border-y border-hairline">
+              {specs.map((spec) => (
+                <div
+                  key={spec.label}
+                  className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between"
+                >
+                  <dt className="text-xs uppercase tracking-[0.15em] text-muted">{spec.label}</dt>
+                  <dd className={`text-sm text-navy sm:text-right ${spec.mono ? "font-mono" : ""}`}>
+                    {spec.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
       </div>
 

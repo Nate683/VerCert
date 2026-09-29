@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { BulkPriceTier, CoaDocument, Product, SizeOption } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
 import { ProductImage } from "@/components/ProductImage";
 import { ProductImageUploader } from "./ProductImageUploader";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
+import { formatPurity } from "@/lib/products/specs";
 
 type ProductWithStock = Product & { stock: { quantity: number; threshold: number } | null };
 
@@ -65,7 +66,7 @@ function productToForm(p: ProductWithStock): FormState {
     casNumber: p.casNumber,
     molecularFormula: p.molecularFormula,
     molecularWeight: p.molecularWeight,
-    purityPercent: String(p.purityPercent),
+    purityPercent: p.purityPercent > 0 ? String(p.purityPercent) : "",
     sequenceOrForm: p.sequenceOrForm,
     storage: p.storage,
     summary: p.summary,
@@ -142,6 +143,14 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
   const [dragTarget, setDragTarget] = useState<string | null>(null);
   const [coaDocuments, setCoaDocuments] = useState<Record<string, CoaDocument>>({});
   const [uploadingCoaFor, setUploadingCoaFor] = useState<string | null>(null);
+  // The edit form renders below the whole catalog grid, so opening it has to
+  // bring it into view (and closing it has to return to the card), or a click
+  // on Edit looks like it did nothing. `at` makes a repeat request distinct.
+  const [scrollTarget, setScrollTarget] = useState<
+    { to: "form"; at: number } | { to: "card"; slug: string; at: number } | null
+  >(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const openedFrom = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -171,13 +180,40 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     setForm(emptyForm());
     setEditing("new");
     setError(null);
+    openedFrom.current = null;
+    setScrollTarget({ to: "form", at: Date.now() });
   }
 
   function startEdit(product: ProductWithStock) {
     setForm(productToForm(product));
     setEditing(product.slug);
     setError(null);
+    openedFrom.current = product.slug;
+    setScrollTarget({ to: "form", at: Date.now() });
   }
+
+  function closeEditor(returnTo: string | null = openedFrom.current) {
+    setEditing(null);
+    setScrollTarget(returnTo ? { to: "card", slug: returnTo, at: Date.now() } : null);
+  }
+
+  useEffect(() => {
+    if (!scrollTarget || loading) return;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const behavior: ScrollBehavior = smooth ? "smooth" : "auto";
+    if (scrollTarget.to === "form") {
+      const form = formRef.current;
+      if (!form) return;
+      form.scrollIntoView({ behavior, block: "start" });
+      form.querySelector<HTMLElement>("input:not([disabled]), select, textarea")?.focus({ preventScroll: true });
+    } else {
+      const card = document.querySelector<HTMLElement>(`[data-product-card="${CSS.escape(scrollTarget.slug)}"]`);
+      if (!card) return;
+      card.scrollIntoView({ behavior, block: "center" });
+      card.querySelector<HTMLElement>("[data-edit-button]")?.focus({ preventScroll: true });
+    }
+    setScrollTarget(null);
+  }, [scrollTarget, loading]);
 
   function updateSize(index: number, patch: Partial<SizeForm>) {
     setForm((f) => ({
@@ -203,7 +239,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to save product.");
-      setEditing(null);
+      closeEditor(isNew ? form.slug : openedFrom.current);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save product.");
@@ -344,7 +380,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             products.map((p) => {
               const active = p.active ?? true;
               return (
-                <div key={p.slug} className={`border bg-black/40 ${active ? "border-white/10" : "border-white/5 opacity-60"}`}>
+                <div key={p.slug} data-product-card={p.slug} className={`border bg-black/40 ${active ? "border-white/10" : "border-white/5 opacity-60"}`}>
                   <div className="relative">
                     <ProductImage sources={productImageSources(p)} name={p.name} alt={productImageAlt(p)} />
                     <span
@@ -360,7 +396,9 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                   <div className="p-4">
                     <p className="text-[10px] uppercase tracking-[0.15em] text-gold/70">{p.category}</p>
                     <p className="mt-1 font-serif text-lg text-white">{p.name}</p>
-                    <p className="mt-1 text-xs text-white/40">{p.purityPercent.toFixed(1)}% purity</p>
+                    <p className="mt-1 text-xs text-white/40">
+                      {formatPurity(p.purityPercent) ? `${formatPurity(p.purityPercent)} purity` : "Purity not set"}
+                    </p>
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <label className="block">
@@ -392,6 +430,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                       <button
                         type="button"
                         onClick={() => startEdit(p)}
+                        data-edit-button
                         className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
                       >
                         Edit
@@ -420,7 +459,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
       </div>
 
       {editing && (
-        <form onSubmit={handleSave} className={cardClass}>
+        <form ref={formRef} onSubmit={handleSave} className={`${cardClass} scroll-mt-6`}>
           <p className="text-xs uppercase tracking-[0.2em] text-gold">
             {editing === "new" ? "New Product" : `Edit — ${form.name}`}
           </p>
@@ -468,36 +507,37 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                 {form.active ? "Active — visible in shop" : "Hidden — pulled from shop"}
               </span>
             </label>
+            {/* Specs are optional: anything left blank stays off the storefront. */}
             <input
-              required
               value={form.casNumber}
               onChange={(e) => setForm((f) => ({ ...f, casNumber: e.target.value }))}
-              placeholder="CAS Number"
+              placeholder="CAS Number (optional)"
+              aria-label="CAS Number"
               className="input-field"
             />
             <input
-              required
               value={form.molecularFormula}
               onChange={(e) => setForm((f) => ({ ...f, molecularFormula: e.target.value }))}
-              placeholder="Molecular Formula"
+              placeholder="Molecular Formula (optional)"
+              aria-label="Molecular Formula"
               className="input-field"
             />
             <input
-              required
               value={form.molecularWeight}
               onChange={(e) => setForm((f) => ({ ...f, molecularWeight: e.target.value }))}
-              placeholder="Molecular Weight (e.g. 1419.53 g/mol)"
+              placeholder="Molecular Weight, e.g. 1419.53 g/mol (optional)"
+              aria-label="Molecular Weight"
               className="input-field"
             />
             <input
-              required
               type="number"
               step="0.1"
-              min="0"
+              min="0.1"
               max="100"
               value={form.purityPercent}
               onChange={(e) => setForm((f) => ({ ...f, purityPercent: e.target.value }))}
-              placeholder="Purity %"
+              placeholder="Purity % (blank until tested)"
+              aria-label="Purity %"
               className="input-field"
             />
             <input
@@ -748,7 +788,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             </button>
             <button
               type="button"
-              onClick={() => setEditing(null)}
+              onClick={() => closeEditor()}
               className="border border-white/15 px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-white/50 hover:text-white"
             >
               Cancel

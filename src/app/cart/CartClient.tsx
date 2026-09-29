@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatPurity } from "@/lib/products/specs";
 import Image from "next/image";
 import { useCart } from "@/lib/cart-context";
 import { useCatalog } from "@/lib/use-catalog";
@@ -68,7 +69,7 @@ export default function CartClient() {
                   </Link>
                   <p className="mt-1 text-xs uppercase tracking-[0.15em] text-muted">
                     {item.sizeLabel}
-                    {entry && ` · ${entry.purityPercent.toFixed(1)}% purity`}
+                    {entry && formatPurity(entry.purityPercent) && ` · ${formatPurity(entry.purityPercent)} purity`}
                   </p>
                   <p className="mt-1 font-mono text-xs text-muted">
                     ${item.priceUsd.toFixed(2)} each

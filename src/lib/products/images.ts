@@ -1,16 +1,15 @@
 import type { Product } from "@/lib/types";
 
-// A product's photo comes from, in order: the image uploaded from the
-// Products tab (image_url), the older primary upload, a file committed at
-// public/products/<slug>.png, and finally the placeholder.
-export const productImagePath = (slug: string) => `/products/${slug}.png`;
+// A product's photo is the image uploaded from the Products tab (image_url),
+// else the older primary upload, else the placeholder. No URL is guessed: a
+// product without an image makes no image request at all.
 
 // Intrinsic size given to every product <img> (the photos are square), so the
 // browser reserves the space before the file arrives.
 export const PRODUCT_IMAGE_PX = 800;
 
-export function productImageSources(product: Pick<Product, "slug" | "imageUrl" | "primaryImageUrl">): string[] {
-  return [product.imageUrl, product.primaryImageUrl, productImagePath(product.slug)].filter(
+export function productImageSources(product: Pick<Product, "imageUrl" | "primaryImageUrl">): string[] {
+  return [product.imageUrl, product.primaryImageUrl].filter(
     (src): src is string => Boolean(src)
   );
 }

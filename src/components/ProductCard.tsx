@@ -6,6 +6,7 @@ import type { Product } from "@/lib/types";
 import { ProductImage } from "./ProductImage";
 import { useExecMode } from "@/lib/exec-mode-context";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
+import { formatPurity, specText } from "@/lib/products/specs";
 
 // "from $40" hid the spread on products whose sizes differ by an order of
 // magnitude. Show the range, and collapse to a single figure when there is
@@ -61,6 +62,9 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
     await patchProduct({ initialStock: value });
   }
 
+  const cas = specText(product.casNumber);
+  const purity = formatPurity(product.purityPercent);
+
   return (
     <div className={`card-elevate flex flex-col overflow-hidden border bg-navy transition-colors duration-300 ${active ? "border-gold/20 hover:border-gold/60" : "border-hairline opacity-50"}`}>
       <Link href={`/shop/${product.slug}`} className="group flex flex-1 flex-col">
@@ -91,7 +95,7 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
             reads as one object and the image sits on a matching ground. */}
         <div className="flex flex-1 flex-col bg-navy p-5">
           <h3 className="font-serif text-lg leading-snug text-white">{product.name}</h3>
-          <p className="mt-1 font-mono text-[11px] text-white/45">CAS {product.casNumber}</p>
+          {cas && <p className="mt-1 font-mono text-[11px] text-white/45">CAS {cas}</p>}
 
           <div className="mt-4 flex items-baseline justify-between gap-3">
             {pricingLocked ? (
@@ -99,9 +103,9 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
             ) : (
               <span className="text-sm text-white">{priceRange(product)}</span>
             )}
-            <span className="text-[10px] uppercase tracking-[0.14em] text-gold">
-              {product.purityPercent.toFixed(1)}% Purity
-            </span>
+            {purity && (
+              <span className="text-[10px] uppercase tracking-[0.14em] text-gold">{purity} Purity</span>
+            )}
           </div>
 
           {/* A span, not a button: the whole tile is already one link, and a

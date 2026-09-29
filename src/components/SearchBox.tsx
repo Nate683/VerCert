@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { formatPurity, specText } from "@/lib/products/specs";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { searchCatalog } from "@/lib/catalog";
@@ -9,6 +10,12 @@ import { useCatalog } from "@/lib/use-catalog";
 // Instant search across product name and CAS number. The catalog is small
 // enough to hold in memory, so results appear as the customer types — there
 // is no request per keystroke and therefore no lag.
+// "CAS 300801-03-0 · 99.1%", with any part that isn't set left out.
+function searchMeta(entry: { casNumber: string; purityPercent: number }): string | null {
+  const cas = specText(entry.casNumber);
+  return [cas && `CAS ${cas}`, formatPurity(entry.purityPercent)].filter(Boolean).join(" · ") || null;
+}
+
 export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
   const router = useRouter();
   // The catalog is only fetched once someone actually engages with search, so
@@ -173,9 +180,9 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm text-white">{entry.name}</span>
-                        <span className="block truncate font-mono text-[11px] text-white/40">
-                          CAS {entry.casNumber} · {entry.purityPercent.toFixed(1)}%
-                        </span>
+                        {searchMeta(entry) && (
+                          <span className="block truncate font-mono text-[11px] text-white/40">{searchMeta(entry)}</span>
+                        )}
                       </span>
                       <span className="shrink-0 text-sm text-gold">${entry.minPriceUsd}</span>
                     </button>
