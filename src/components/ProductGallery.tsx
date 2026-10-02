@@ -112,7 +112,7 @@ export function ProductGallery({
         onMouseEnter={() => setZooming(true)}
         onMouseLeave={() => setZooming(false)}
         onMouseMove={handleMove}
-        className="group relative aspect-square w-full cursor-zoom-in overflow-hidden border border-hairline bg-paper"
+        className="group relative aspect-square w-full cursor-zoom-in overflow-hidden border border-navy bg-navy"
         onClick={() => setLightbox(true)}
         role="button"
         tabIndex={0}
@@ -136,7 +136,7 @@ export function ProductGallery({
           sizes="(min-width: 1024px) 58vw, 100vw"
           onLoad={() => setLoaded(true)}
           onError={() => markFailed(current)}
-          className={`h-full w-full object-contain object-center p-[8%] transition-[transform,opacity] duration-300 ease-out ${
+          className={`h-full w-full object-cover object-center transition-[transform,opacity] duration-300 ease-out ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
           style={{
@@ -161,8 +161,8 @@ export function ProductGallery({
               }}
               aria-label={`View image ${i + 1} of ${images.length}`}
               aria-current={current === url}
-              className={`relative h-16 w-16 shrink-0 overflow-hidden border bg-paper transition-colors ${
-                current === url ? "border-gold" : "border-hairline hover:border-control"
+              className={`relative h-16 w-16 shrink-0 overflow-hidden border bg-navy transition-colors ${
+                current === url ? "border-gold" : "border-navy hover:border-control"
               }`}
             >
               <Image
@@ -171,7 +171,7 @@ export function ProductGallery({
                 width={64}
                 height={64}
                 onError={() => markFailed(url)}
-                className="h-full w-full object-contain p-1"
+                className="h-full w-full object-cover"
               />
             </button>
           ))}
@@ -221,7 +221,7 @@ export function ProductGallery({
             </>
           )}
           <div
-            className="relative flex h-[85vh] w-full max-w-4xl items-center justify-center bg-paper p-[4%]"
+            className="relative flex h-[85vh] w-full max-w-4xl items-center justify-center bg-navy"
             onClick={(e) => e.stopPropagation()}
           >
             <Image

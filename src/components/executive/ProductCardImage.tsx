@@ -159,7 +159,7 @@ export function ProductCardImage({
           <img
             src={previewUrl}
             alt=""
-            className="pointer-events-none absolute inset-0 h-full w-full border border-hairline bg-paper object-contain p-[10%]"
+            className="pointer-events-none absolute inset-0 h-full w-full border border-navy bg-navy object-cover"
           />
         )}
 

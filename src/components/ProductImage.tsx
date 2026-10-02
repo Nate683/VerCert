@@ -30,11 +30,10 @@ function ProductImagePlaceholder({ name }: { name: string }) {
 // Tries each source in order and moves on when one fails to load (a slug
 // photo that hasn't been added yet 404s), ending at the placeholder.
 //
-// Uploads arrive at any size and shape, so the frame is what normalises them:
-// a fixed 1:1 square with the paper ground of the tile (transparent PNGs blend
-// into it), the image contained and centred — never cropped or stretched — and
-// 10% padding so the subject never touches an edge. A 1200×1600 portrait and a
-// 2000×2000 square both sit in the same square with the same margins.
+// The renders are square with their own dark background, so the image fills
+// the fixed 1:1 frame edge to edge (object-cover, no padding). The frame is
+// navy, so a transparent or off-square source shows a deliberate brand ground
+// rather than a white border; a non-square source is cropped to its centre.
 export function ProductImage({
   sources,
   name,
@@ -75,7 +74,7 @@ export function ProductImage({
   return (
     <div
       className={`group relative aspect-square w-full overflow-hidden border ${
-        src ? "border-hairline bg-paper" : "border-white/10 bg-white/[0.02]"
+        src ? "border-navy bg-navy" : "border-white/10 bg-white/[0.02]"
       }`}
     >
       {src ? (
@@ -92,7 +91,7 @@ export function ProductImage({
             sizes={sizes ?? "(min-width: 1024px) 40vw, 100vw"}
             onLoad={() => setLoaded(true)}
             onError={next}
-            className={`h-full w-full object-contain object-center p-[10%] transition-[transform,opacity] duration-500 ease-out ${
+            className={`h-full w-full object-cover object-center transition-[transform,opacity] duration-500 ease-out ${
               loaded ? "opacity-100" : "opacity-0"
             } ${zoom ? "group-hover:scale-105" : ""}`}
           />
