@@ -4,8 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { BulkPriceTier, CoaDocument, Product, SizeOption } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
 import { ProductImage } from "@/components/ProductImage";
-import { ProductImageUploader } from "./ProductImageUploader";
-import { productImageAlt, productImageSources } from "@/lib/products/images";
+import { ProductCardImage } from "./ProductCardImage";
+import { productImageAlt } from "@/lib/products/images";
 import { formatPurity } from "@/lib/products/specs";
 
 type ProductWithStock = Product & { stock: { quantity: number; threshold: number } | null };
@@ -271,6 +271,16 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     }
   }
 
+  // The card's photo control saves on its own; merge the result in place
+  // rather than reloading, which would blank the grid.
+  function handlePhotoChange(updated: Product) {
+    setProducts((ps) =>
+      ps.map((p) =>
+        p.slug === updated.slug ? { ...p, imageUrl: updated.imageUrl, primaryImageUrl: updated.primaryImageUrl } : p
+      )
+    );
+  }
+
   async function handleRemoveImage(slug: string, url: string) {
     await fetch(`/api/executive/products/${slug}/images?url=${encodeURIComponent(url)}`, {
       method: "DELETE",
@@ -381,10 +391,9 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               const active = p.active ?? true;
               return (
                 <div key={p.slug} data-product-card={p.slug} className={`border bg-black/40 ${active ? "border-white/10" : "border-white/5 opacity-60"}`}>
-                  <div className="relative">
-                    <ProductImage sources={productImageSources(p)} name={p.name} alt={productImageAlt(p)} />
+                  <ProductCardImage product={p} onChange={handlePhotoChange}>
                     <span
-                      className={`absolute left-2 top-2 border px-2 py-0.5 text-[9px] uppercase tracking-[0.15em] ${
+                      className={`pointer-events-none absolute left-2 top-2 border px-2 py-0.5 text-[9px] uppercase tracking-[0.15em] ${
                         active
                           ? "border-gold/50 bg-black/70 text-gold"
                           : "border-white/30 bg-black/70 text-white/50"
@@ -392,7 +401,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                     >
                       {active ? "Active" : "Hidden"}
                     </span>
-                  </div>
+                  </ProductCardImage>
                   <div className="p-4">
                     <p className="text-[10px] uppercase tracking-[0.15em] text-gold/70">{p.category}</p>
                     <p className="mt-1 font-serif text-lg text-white">{p.name}</p>
@@ -702,16 +711,10 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
           {editingProduct && (
             <div className="mt-6">
               <p className="text-xs uppercase tracking-[0.2em] text-gold">Images</p>
-              <p className="mt-1 text-[10px] text-white/30">Drag and drop a photo onto a box, or use the buttons.</p>
+              <p className="mt-1 text-[10px] text-white/30">
+                The main photo is set from the product&apos;s card above: click its image, or drop a file on it.
+              </p>
               <div className="mt-3 flex flex-wrap gap-4">
-                <div className="w-full">
-                  <ProductImageUploader
-                    slug={editingProduct.slug}
-                    name={editingProduct.name}
-                    currentUrl={editingProduct.imageUrl ?? editingProduct.primaryImageUrl}
-                    onSaved={load}
-                  />
-                </div>
 
                 <div>
                   <p className="mb-2 text-[10px] uppercase tracking-[0.15em] text-white/40">

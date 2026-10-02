@@ -6,6 +6,8 @@ import { InvalidProductImageError, processProductImage } from "@/lib/products/im
 import { deleteBlobs, isIncomingUpload, sweepAbandonedUploads } from "@/lib/products/blob-images";
 import { PRODUCT_IMAGE_MAX_BYTES } from "@/lib/products/image-rules";
 import { withApiErrorHandling } from "@/lib/api-error";
+import { logActivity } from "@/lib/activity-log";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 
 export const dynamic = "force-dynamic";
 // Decoding and re-encoding a large render takes a few seconds.
@@ -55,6 +57,11 @@ export const PUT = withApiErrorHandling(async (request: Request, { params }: Par
     }
     await deleteBlobs([product.imageUrl, product.primaryImageUrl]);
 
+    const actor = await getCurrentCustomer();
+    if (actor) {
+      await logActivity(actor.email, "product.image_updated", `${slug}: ${processed.width}×${processed.height}, ${Math.round(processed.data.length / 1024)} KB`);
+    }
+
     return NextResponse.json({
       product: updated,
       image: { url: stored.url, width: processed.width, height: processed.height, bytes: processed.data.length },
@@ -80,5 +87,9 @@ export const DELETE = withApiErrorHandling(async (_request: Request, { params }:
 
   const updated = await setProductImage(slug, null);
   await deleteBlobs([product.imageUrl, product.primaryImageUrl]);
+
+  const actor = await getCurrentCustomer();
+  if (actor) await logActivity(actor.email, "product.image_removed", slug);
+
   return NextResponse.json({ product: updated });
 });
