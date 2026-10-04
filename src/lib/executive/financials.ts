@@ -182,7 +182,7 @@ export function computeFinancials(
 
   const categoryAgg = new Map<string, number>();
   for (const [slug, agg] of productAgg.entries()) {
-    const category = products.find((p) => p.slug === slug)?.category ?? "Unknown";
+    const category = products.find((p) => p.slug === slug)?.category ?? "Uncategorized";
     categoryAgg.set(category, (categoryAgg.get(category) ?? 0) + agg.revenue);
   }
   const revenueByCategory = [...categoryAgg.entries()]

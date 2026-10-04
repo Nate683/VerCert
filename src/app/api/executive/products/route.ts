@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
-import { listProducts, createProduct, getProductBySlug } from "@/lib/products";
+import { listProducts, createProduct, getProductBySlug, pricedSizes } from "@/lib/products";
 import { upsertInventory, listInventory } from "@/lib/inventory";
 import { productSchema, parseBody } from "@/lib/validation";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -33,6 +33,10 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const parsed = await parseBody(request, productSchema);
   if ("error" in parsed) return parsed.error;
   const { initialStock, ...input } = parsed.data;
+
+  if (input.active !== false && pricedSizes(input).length === 0) {
+    return NextResponse.json({ error: "Set a price on at least one size before making this product active." }, { status: 400 });
+  }
 
   if (await getProductBySlug(input.slug)) {
     return NextResponse.json(

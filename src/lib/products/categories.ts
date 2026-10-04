@@ -3,4 +3,5 @@ export const CATEGORIES = [
   "Lyophilized Peptides",
   "Peptide Blends",
   "Small Molecules",
+  "Lab Supplies",
 ] as const;

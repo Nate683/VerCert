@@ -12,8 +12,9 @@ type ProductWithStock = Product & { stock: { quantity: number; threshold: number
 
 type SizeForm = {
   label: string;
-  priceUsd: string;
+  priceUsd: string; // blank = not yet priced
   bulkTiers: string; // "minQty:price, minQty:price"
+  composition?: SizeOption["composition"]; // not edited here; carried through a save
 };
 
 type FormState = {
@@ -62,11 +63,11 @@ function productToForm(p: ProductWithStock): FormState {
   return {
     slug: p.slug,
     name: p.name,
-    category: p.category,
-    casNumber: p.casNumber,
-    molecularFormula: p.molecularFormula,
-    molecularWeight: p.molecularWeight,
-    purityPercent: p.purityPercent > 0 ? String(p.purityPercent) : "",
+    category: p.category ?? "",
+    casNumber: p.casNumber ?? "",
+    molecularFormula: p.molecularFormula ?? "",
+    molecularWeight: p.molecularWeight ?? "",
+    purityPercent: p.purityPercent !== null && p.purityPercent > 0 ? String(p.purityPercent) : "",
     sequenceOrForm: p.sequenceOrForm,
     storage: p.storage,
     summary: p.summary,
@@ -74,8 +75,9 @@ function productToForm(p: ProductWithStock): FormState {
     batchNumbers: p.batchNumbers.join(", "),
     sizes: p.sizes.map((s) => ({
       label: s.label,
-      priceUsd: String(s.priceUsd),
+      priceUsd: s.priceUsd !== null ? String(s.priceUsd) : "",
       bulkTiers: (s.bulkTiers ?? []).map((t) => `${t.minQuantity}:${t.priceUsd}`).join(", "),
+      composition: s.composition,
     })),
     initialStock: String(p.stock?.quantity ?? 0),
     active: p.active ?? true,
@@ -97,22 +99,24 @@ function parseBulkTiers(text: string): BulkPriceTier[] | undefined {
 }
 
 function formToPayload(form: FormState) {
+  // A size with no price is kept, unpriced, rather than dropped.
   const sizes: SizeOption[] = form.sizes
-    .filter((s) => s.label.trim() && s.priceUsd.trim())
+    .filter((s) => s.label.trim())
     .map((s) => ({
       label: s.label.trim(),
-      priceUsd: Number(s.priceUsd),
+      priceUsd: s.priceUsd.trim() ? Number(s.priceUsd) : null,
       bulkTiers: parseBulkTiers(s.bulkTiers),
+      ...(s.composition?.length ? { composition: s.composition } : {}),
     }));
 
   return {
     slug: form.slug.trim().toLowerCase(),
     name: form.name.trim(),
-    category: form.category,
-    casNumber: form.casNumber.trim(),
-    molecularFormula: form.molecularFormula.trim(),
-    molecularWeight: form.molecularWeight.trim(),
-    purityPercent: Number(form.purityPercent),
+    category: form.category || null,
+    casNumber: form.casNumber.trim() || null,
+    molecularFormula: form.molecularFormula.trim() || null,
+    molecularWeight: form.molecularWeight.trim() || null,
+    purityPercent: form.purityPercent.trim() ? Number(form.purityPercent) : null,
     sequenceOrForm: form.sequenceOrForm.trim(),
     storage: form.storage.trim(),
     summary: form.summary.trim(),
@@ -291,19 +295,26 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
   // Inline edits from the catalog grid (price of the first size, stock,
   // active/hidden) — saved immediately on blur/change, no full form needed.
   async function handleInlinePatch(slug: string, patch: Record<string, unknown>) {
-    await fetch(`/api/executive/products/${slug}`, {
+    setError(null);
+    const res = await fetch(`/api/executive/products/${slug}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Failed to save product.");
+    }
     await load();
   }
 
+  // A blank box means "still unpriced" — never $0.
   async function handleInlinePriceChange(product: ProductWithStock, value: string) {
+    const first = product.sizes[0];
     const priceUsd = Number(value);
-    if (!Number.isFinite(priceUsd) || priceUsd < 0) return;
-    const sizes = product.sizes.map((s, i) => (i === 0 ? { ...s, priceUsd } : s));
-    await handleInlinePatch(product.slug, { sizes });
+    if (!first || !value.trim() || !Number.isFinite(priceUsd) || priceUsd < 0) return;
+    if (priceUsd === first.priceUsd) return;
+    await handleInlinePatch(product.slug, { sizePrice: { label: first.label, priceUsd } });
   }
 
   async function handleInlineStockChange(product: ProductWithStock, value: string) {
@@ -403,7 +414,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                     </span>
                   </ProductCardImage>
                   <div className="p-4">
-                    <p className="text-[10px] uppercase tracking-[0.15em] text-gold/70">{p.category}</p>
+                    <p className="text-[10px] uppercase tracking-[0.15em] text-gold/70">{p.category ?? "Uncategorized"}</p>
                     <p className="mt-1 font-serif text-lg text-white">{p.name}</p>
                     <p className="mt-1 text-xs text-white/40">
                       {formatPurity(p.purityPercent) ? `${formatPurity(p.purityPercent)} purity` : "Purity not set"}
@@ -418,7 +429,8 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                           type="number"
                           step="0.01"
                           min="0"
-                          defaultValue={p.sizes[0]?.priceUsd ?? 0}
+                          defaultValue={p.sizes[0]?.priceUsd ?? ""}
+                          placeholder="Unpriced"
                           onBlur={(e) => handleInlinePriceChange(p, e.target.value)}
                           className="input-field mt-1 py-1.5 text-xs"
                         />
@@ -499,6 +511,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
               className="input-field"
             >
+              <option value="">Uncategorized</option>
               {CATEGORIES.filter((c) => c !== "All").map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -568,17 +581,15 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               className="input-field"
             />
             <input
-              required
               value={form.sequenceOrForm}
               onChange={(e) => setForm((f) => ({ ...f, sequenceOrForm: e.target.value }))}
-              placeholder="Sequence / Form"
+              placeholder="Sequence / Form (optional)"
               className="input-field sm:col-span-2"
             />
             <input
-              required
               value={form.storage}
               onChange={(e) => setForm((f) => ({ ...f, storage: e.target.value }))}
-              placeholder="Storage instructions"
+              placeholder="Storage instructions (optional)"
               className="input-field sm:col-span-2"
             />
             <input
@@ -588,18 +599,16 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               className="input-field sm:col-span-2"
             />
             <textarea
-              required
               value={form.summary}
               onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
-              placeholder="Short summary (shown on product card)"
+              placeholder="Short summary (optional)"
               rows={2}
               className="input-field sm:col-span-2"
             />
             <textarea
-              required
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Description — one paragraph per line"
+              placeholder="Description — one paragraph per line (optional)"
               rows={4}
               className="input-field sm:col-span-2"
             />
@@ -674,7 +683,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                     min="0"
                     value={size.priceUsd}
                     onChange={(e) => updateSize(i, { priceUsd: e.target.value })}
-                    placeholder="Price USD"
+                    placeholder="Price USD (blank = not for sale)"
                     className="input-field"
                   />
                   <input

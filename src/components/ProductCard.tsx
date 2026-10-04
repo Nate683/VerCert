@@ -7,12 +7,13 @@ import { ProductImage } from "./ProductImage";
 import { useExecMode } from "@/lib/exec-mode-context";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
 import { formatPurity, specText } from "@/lib/products/specs";
+import { pricedSizes } from "@/lib/products/pricing";
 
 // "from $40" hid the spread on products whose sizes differ by an order of
 // magnitude. Show the range, and collapse to a single figure when there is
 // only one size or every size costs the same.
 function priceRange(product: Product): string {
-  const prices = product.sizes.map((s) => s.priceUsd);
+  const prices = pricedSizes(product).map((s) => s.priceUsd);
   if (prices.length === 0) return "—";
   const min = Math.min(...prices);
   const max = Math.max(...prices);
@@ -27,7 +28,7 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
   const [priceDraft, setPriceDraft] = useState(String(product.sizes[0]?.priceUsd ?? ""));
   const [stockDraft, setStockDraft] = useState("");
 
-  async function patchProduct(patch: Record<string, unknown>) {
+  async function patchProduct(patch: Record<string, unknown>): Promise<boolean> {
     beginSave();
     try {
       const res = await fetch(`/api/executive/products/${product.slug}`, {
@@ -37,22 +38,27 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
       });
       if (!res.ok) throw new Error("Failed to save.");
       endSave(true);
+      return true;
     } catch {
       endSave(false);
+      return false;
     }
   }
 
   async function handleToggleActive() {
     const next = !active;
     setActive(next);
-    await patchProduct({ active: next });
+    // The server refuses to activate a product with no priced size.
+    if (!(await patchProduct({ active: next }))) setActive(!next);
   }
 
+  // Prices one size by label. The tile only carries the sizes on sale, so it
+  // must not send a whole size list back — that would drop unpriced sizes.
   async function handlePriceBlur() {
     const value = Number(priceDraft);
-    if (!Number.isFinite(value) || value < 0) return;
-    const sizes = product.sizes.map((s, i) => (i === 0 ? { ...s, priceUsd: value } : s));
-    await patchProduct({ sizes });
+    const first = product.sizes[0];
+    if (!first || !priceDraft.trim() || !Number.isFinite(value) || value < 0) return;
+    await patchProduct({ sizePrice: { label: first.label, priceUsd: value } });
   }
 
   async function handleStockBlur() {
@@ -77,9 +83,11 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
             zoom
             sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
           />
-          <span className="pointer-events-none absolute left-3 top-3 border border-gold/40 bg-black/70 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-gold backdrop-blur-sm">
-            {product.category}
-          </span>
+          {product.category && (
+            <span className="pointer-events-none absolute left-3 top-3 border border-gold/40 bg-black/70 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-gold backdrop-blur-sm">
+              {product.category}
+            </span>
+          )}
           <span
             className={`pointer-events-none absolute right-3 top-3 border px-2 py-1 text-[10px] uppercase tracking-[0.16em] backdrop-blur-sm ${
               active

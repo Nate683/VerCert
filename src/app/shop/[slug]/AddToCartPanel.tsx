@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
-import { resolveUnitPrice } from "@/lib/products";
+import { pricedSizes, resolveUnitPrice } from "@/lib/products";
 import type { Product } from "@/lib/types";
 
 export function AddToCartPanel({ product }: { product: Product }) {
@@ -14,7 +14,8 @@ export function AddToCartPanel({ product }: { product: Product }) {
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
 
-  const size = product.sizes[sizeIndex];
+  const sizes = pricedSizes(product);
+  const size = sizes[Math.min(sizeIndex, sizes.length - 1)];
   const unitPrice = resolveUnitPrice(size, quantity);
   const listPrice = size.priceUsd;
   const lineTotal = unitPrice * quantity;
@@ -44,7 +45,7 @@ export function AddToCartPanel({ product }: { product: Product }) {
       <fieldset>
         <legend className="text-xs uppercase tracking-[0.25em] text-gold-ink">Size</legend>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {product.sizes.map((s, i) => (
+          {sizes.map((s, i) => (
             <button
               key={s.label}
               type="button"
@@ -64,6 +65,21 @@ export function AddToCartPanel({ product }: { product: Product }) {
           ))}
         </div>
       </fieldset>
+
+      {/* A blend's vial holds several compounds; say exactly what and how much. */}
+      {size.composition && size.composition.length > 0 && (
+        <div className="mt-4 border border-hairline bg-paper px-4 py-3">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">Per vial ({size.label})</p>
+          <ul className="mt-2 space-y-1">
+            {size.composition.map((c) => (
+              <li key={c.name} className="flex justify-between gap-3 text-sm text-navy">
+                <span>{c.name}</span>
+                <span className="font-mono">{c.amount}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
         <div>

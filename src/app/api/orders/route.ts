@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listProducts, resolveUnitPrice } from "@/lib/products";
+import { listProducts, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import { createOrder, updateOrder } from "@/lib/orders/store";
 import { validatePromoCode } from "@/lib/promotions";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
@@ -40,7 +40,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const resolvedItems: CartItem[] = [];
   for (const item of items) {
     const product = products.find((p) => p.slug === item.slug);
-    const size = product?.sizes.find((s) => s.label === item.sizeLabel);
+    const size = product && pricedSizes(product).find((s) => s.label === item.sizeLabel);
     if (!product || !size) {
       return NextResponse.json({ error: `Invalid cart item: ${item.slug}` }, { status: 400 });
     }

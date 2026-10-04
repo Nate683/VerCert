@@ -536,6 +536,18 @@ async function main() {
   // older primary_image_url, then /products/<slug>.png, then a placeholder.
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT`;
 
+  // Chemical data and category are null until actually known — never a
+  // placeholder. Only the constraints change here; the '' and 0 placeholders
+  // already in production are cleared by scripts/catalog-expansion.mjs once
+  // the code that reads null has shipped.
+  await sql`ALTER TABLE products ALTER COLUMN cas_number DROP NOT NULL`;
+  await sql`ALTER TABLE products ALTER COLUMN molecular_formula DROP NOT NULL`;
+  await sql`ALTER TABLE products ALTER COLUMN molecular_weight DROP NOT NULL`;
+  await sql`ALTER TABLE products ALTER COLUMN purity_percent DROP NOT NULL`;
+  await sql`ALTER TABLE products ALTER COLUMN category DROP NOT NULL`;
+  // Other names a product is sold or searched under (JSON array of strings).
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS alternate_names TEXT`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

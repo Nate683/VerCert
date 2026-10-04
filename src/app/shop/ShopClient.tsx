@@ -3,6 +3,7 @@
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CATEGORIES } from "@/lib/products";
+import { pricedSizes } from "@/lib/products/pricing";
 import type { Product } from "@/lib/types";
 import { ProductCard } from "@/components/ProductCard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -23,18 +24,19 @@ const PURITY_OPTIONS = [
 ];
 
 function minPrice(product: Product): number {
-  return Math.min(...product.sizes.map((s) => s.priceUsd));
+  return Math.min(...pricedSizes(product).map((s) => s.priceUsd));
 }
 
 function matchesQuery(product: Product, query: string): boolean {
   if (query.length === 0) return true;
   const digits = query.replace(/[^a-z0-9]/g, "");
-  const cas = product.casNumber.toLowerCase();
+  const cas = (product.casNumber ?? "").toLowerCase();
   return (
     product.name.toLowerCase().includes(query) ||
-    cas.includes(query) ||
+    (product.alternateNames ?? []).some((n) => n.toLowerCase().includes(query)) ||
+    (cas.length > 0 && cas.includes(query)) ||
     (digits.length >= 3 && cas.replace(/[^a-z0-9]/g, "").includes(digits)) ||
-    product.category.toLowerCase().includes(query)
+    (product.category ?? "").toLowerCase().includes(query)
   );
 }
 
@@ -76,7 +78,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
       (p) =>
         (category === "All" || p.category === category) &&
         matchesQuery(p, q) &&
-        p.purityPercent >= minPurity &&
+        (p.purityPercent ?? 0) >= minPurity &&
         minPrice(p) <= maxPrice
     );
 
@@ -87,7 +89,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
         case "price-desc":
           return minPrice(b) - minPrice(a);
         case "purity":
-          return b.purityPercent - a.purityPercent;
+          return (b.purityPercent ?? 0) - (a.purityPercent ?? 0);
         default:
           return a.name.localeCompare(b.name);
       }

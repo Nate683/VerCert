@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getProductBySlug, listProducts } from "@/lib/products";
+import { getProductBySlug, isOnSale, listProducts, pricedSizes } from "@/lib/products";
 import { toStorefrontProduct } from "@/lib/products/storefront";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductCard } from "@/components/ProductCard";
@@ -25,7 +25,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
-  if (!product || product.active === false)
+  if (!product || !isOnSale(product))
     return buildMetadata({ title: "Product Not Found | VeriCert", noIndex: true });
   return buildMetadata({
     title: `${product.name} | VeriCert`,
@@ -41,7 +41,7 @@ export default async function ProductDetailPage({
 }) {
   const { slug } = await params;
   const [product, allProducts] = await Promise.all([getProductBySlug(slug), listProducts()]);
-  if (!product || product.active === false) notFound();
+  if (!product || !isOnSale(product)) notFound();
 
   // Related = same category first, then anything else, so the rail is never
   // short on a thin category.
@@ -62,13 +62,13 @@ export default async function ProductDetailPage({
   ].filter((spec): spec is { label: string; value: string; mono: boolean } => spec.value !== null);
 
   const primaryBatch = product.batchNumbers[0];
-  const minPrice = Math.min(...product.sizes.map((s) => s.priceUsd));
+  const prices = pricedSizes(product).map((s) => s.priceUsd);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
     description: product.summary,
-    category: product.category,
+    category: product.category ?? undefined,
     brand: { "@type": "Brand", name: "VeriCert" },
     additionalProperty: [
       { name: "CAS Number", value: specText(product.casNumber) },
@@ -80,9 +80,9 @@ export default async function ProductDetailPage({
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "USD",
-      lowPrice: minPrice,
-      highPrice: Math.max(...product.sizes.map((s) => s.priceUsd)),
-      offerCount: product.sizes.length,
+      lowPrice: Math.min(...prices),
+      highPrice: Math.max(...prices),
+      offerCount: prices.length,
       availability: "https://schema.org/InStock",
     },
   };
@@ -102,15 +102,19 @@ export default async function ProductDetailPage({
         <span className="mx-2" aria-hidden="true">
           /
         </span>
-        <Link
-          href={`/shop?q=${encodeURIComponent(product.category)}`}
-          className="transition-colors hover:text-gold-ink"
-        >
-          {product.category}
-        </Link>
-        <span className="mx-2" aria-hidden="true">
-          /
-        </span>
+        {product.category && (
+          <>
+            <Link
+              href={`/shop?q=${encodeURIComponent(product.category)}`}
+              className="transition-colors hover:text-gold-ink"
+            >
+              {product.category}
+            </Link>
+            <span className="mx-2" aria-hidden="true">
+              /
+            </span>
+          </>
+        )}
         <span className="text-muted">{product.name}</span>
       </nav>
 
@@ -127,7 +131,9 @@ export default async function ProductDetailPage({
         </div>
 
         <div className="lg:col-span-5">
-          <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">{product.category}</p>
+          {product.category && (
+            <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">{product.category}</p>
+          )}
           <h1 className="mt-3 font-serif text-4xl text-navy">{product.name}</h1>
 
           {(purity || primaryBatch) && (

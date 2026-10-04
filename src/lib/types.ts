@@ -3,20 +3,36 @@ export type BulkPriceTier = {
   priceUsd: number; // price per unit once minQuantity is reached
 };
 
+// One compound in a blend vial, e.g. { name: "BPC-157", amount: "10mg" }.
+export type BlendComponent = {
+  name: string;
+  amount: string;
+};
+
 export type SizeOption = {
   label: string;
-  priceUsd: number;
+  // Null until an executive sets it. An unpriced size is never sold: it is
+  // left off the storefront, and checkout rejects it.
+  priceUsd: number | null;
   bulkTiers?: BulkPriceTier[];
+  // What's in the vial, for blends. Per size, since sizes of one blend can
+  // split differently.
+  composition?: BlendComponent[];
 };
+
+export type PricedSize = SizeOption & { priceUsd: number };
 
 export type Product = {
   slug: string;
   name: string;
-  category: string;
-  casNumber: string;
-  molecularFormula: string;
-  molecularWeight: string;
-  purityPercent: number;
+  // Null for a product not yet classified. Chemical fields are null until
+  // verified; nothing is shown for them until then.
+  category: string | null;
+  alternateNames?: string[];
+  casNumber: string | null;
+  molecularFormula: string | null;
+  molecularWeight: string | null;
+  purityPercent: number | null;
   sequenceOrForm: string;
   storage: string;
   sizes: SizeOption[];
@@ -44,8 +60,8 @@ export type CoaDocument = {
 export type CoaResult = {
   batchNumber: string;
   productName: string;
-  casNumber: string;
-  purityPercent: number;
+  casNumber: string | null;
+  purityPercent: number | null;
   testMethod: string;
   dateTested: string;
   dateIssued: string;

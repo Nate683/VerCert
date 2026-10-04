@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { getOrdersByCustomer } from "@/lib/orders/store";
 import { getAffiliateByEmail } from "@/lib/affiliates";
-import { listProducts, resolveUnitPrice } from "@/lib/products";
+import { listProducts, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import type { CartItem, OrderStatus } from "@/lib/types";
 import { AddressForm } from "./AddressForm";
 import { MarketingToggle } from "./MarketingToggle";
@@ -55,7 +55,7 @@ export default async function AccountPage() {
     const unavailable: string[] = [];
     for (const item of order.items) {
       const product = products.find((p) => p.slug === item.slug);
-      const size = product?.sizes.find((s) => s.label === item.sizeLabel);
+      const size = product && pricedSizes(product).find((s) => s.label === item.sizeLabel);
       if (!product || !size || product.active === false) {
         unavailable.push(item.name);
         continue;

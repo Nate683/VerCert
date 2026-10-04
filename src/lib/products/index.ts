@@ -1,5 +1,5 @@
 export { CATEGORIES } from "./categories";
-export { resolveUnitPrice } from "./pricing";
+export { resolveUnitPrice, isPriced, pricedSizes } from "./pricing";
 export {
   listProducts,
   getProductBySlug,
@@ -9,5 +9,6 @@ export {
   updateProduct,
   deleteProduct,
   setProductImage,
+  isOnSale,
   type CreateProductInput,
 } from "./store";

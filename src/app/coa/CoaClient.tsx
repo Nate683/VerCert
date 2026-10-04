@@ -116,7 +116,7 @@ function CoaLookupForm() {
               <h2 className="mt-2 font-serif text-2xl text-navy">{result.productName}</h2>
               <p className="mt-1 font-mono text-xs text-muted">Batch {result.batchNumber}</p>
               <p className="mt-3 font-mono text-3xl text-gold-ink">
-                {result.purityPercent.toFixed(1)}%
+                {result.purityPercent !== null ? `${result.purityPercent.toFixed(1)}%` : "—"}
                 <span className="ml-2 font-sans text-xs uppercase tracking-[0.18em] text-muted">
                   Purity
                 </span>

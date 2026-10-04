@@ -50,7 +50,7 @@ export async function lookupCoa(batchNumber: string): Promise<CoaResult | null> 
       {
         parameter: "Purity (HPLC Area %)",
         method: "RP-HPLC, 220 nm",
-        result: `${product.purityPercent.toFixed(1)}%`,
+        result: product.purityPercent !== null ? `${product.purityPercent.toFixed(1)}%` : "Not reported",
       },
       {
         parameter: "Water Content",

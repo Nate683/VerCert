@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listProducts, resolveUnitPrice } from "@/lib/products";
+import { listProducts, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import { validatePromoCode } from "@/lib/promotions";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { promoValidateSchema, parseBody } from "@/lib/validation";
@@ -25,13 +25,13 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   let subtotal = 0;
   for (const item of items) {
     const product = products.find((p) => p.slug === item.slug);
-    const size = product?.sizes.find((s) => s.label === item.sizeLabel);
+    const size = product && pricedSizes(product).find((s) => s.label === item.sizeLabel);
     if (!product || !size) {
       return NextResponse.json({ error: `Invalid cart item: ${item.slug}` }, { status: 400 });
     }
     const lineTotal = resolveUnitPrice(size, item.quantity) * item.quantity;
     subtotal += lineTotal;
-    lineItems.push({ slug: product.slug, category: product.category, lineTotal });
+    lineItems.push({ slug: product.slug, category: product.category ?? "", lineTotal });
   }
 
   const customer = await getCurrentCustomer();
