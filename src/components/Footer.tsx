@@ -34,7 +34,6 @@ export function Footer({ contact }: { contact: ContactContent }) {
             <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Shop</h4>
             <ul className="mt-4 space-y-3 text-sm text-white/60">
               <li><Link href="/shop" className="hover:text-white">All Products</Link></li>
-              <li><Link href="/coa" className="hover:text-white">COA Verification</Link></li>
               <li><Link href="/how-we-test" className="hover:text-white">How We Test</Link></li>
               <li><Link href="/cart" className="hover:text-white">Cart</Link></li>
             </ul>

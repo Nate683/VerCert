@@ -8,7 +8,8 @@ export type HomeHeroContent = {
   headline: string; // "\n" renders as a line break
   subtext: string;
   ctaPrimaryLabel: string;
-  ctaSecondaryLabel: string;
+  // No longer shown: certificate lookup is reached from the header emblem.
+  ctaSecondaryLabel?: string;
   heroImageUrl?: string;
 };
 
@@ -18,7 +19,6 @@ export const DEFAULT_HOME_HERO: HomeHeroContent = {
   subtext:
     "VeriCert supplies high-purity synthetic peptides and reference compounds for laboratory research, each accompanied by an independent certificate of analysis.",
   ctaPrimaryLabel: "Shop the Collection",
-  ctaSecondaryLabel: "Verify a COA",
 };
 
 export type FeaturedContent = { slugs: string[] }; // empty = auto (first 4 by sort order)

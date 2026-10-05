@@ -7,10 +7,10 @@ import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { VeriCertLogo } from "./VeriCertLogo";
 import { SearchBox } from "./SearchBox";
+import { CoaEmblem } from "./CoaEmblem";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
-  { href: "/coa", label: "Verify COA" },
   { href: "/how-we-test", label: "How We Test" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
@@ -56,6 +56,7 @@ export function Header() {
         <div className="ml-auto hidden w-full max-w-xs md:block">{user && <SearchBox />}</div>
 
         <div className="ml-auto flex shrink-0 items-center gap-4 md:ml-0">
+          <CoaEmblem className="-mx-1.5" />
           {user?.role && (
             <Link
               href={`/${user.role}`}

@@ -135,20 +135,12 @@ export function SiteContentPanel() {
             rows={3}
             className="input-field"
           />
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <input
-              value={hero.ctaPrimaryLabel}
-              onChange={(e) => setHero({ ...hero, ctaPrimaryLabel: e.target.value })}
-              placeholder="Primary button label"
-              className="input-field"
-            />
-            <input
-              value={hero.ctaSecondaryLabel}
-              onChange={(e) => setHero({ ...hero, ctaSecondaryLabel: e.target.value })}
-              placeholder="Secondary button label"
-              className="input-field"
-            />
-          </div>
+          <input
+            value={hero.ctaPrimaryLabel}
+            onChange={(e) => setHero({ ...hero, ctaPrimaryLabel: e.target.value })}
+            placeholder="Button label"
+            className="input-field"
+          />
           <div className="flex items-center gap-3">
             {hero.heroImageUrl && (
               // eslint-disable-next-line @next/next/no-img-element -- small admin preview thumbnail, not worth next/image config here

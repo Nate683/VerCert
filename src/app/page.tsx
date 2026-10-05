@@ -120,12 +120,6 @@ export default async function Home() {
             >
               {hero.ctaPrimaryLabel}
             </Link>
-            <Link
-              href="/coa"
-              className="card-elevate border border-navy/25 px-8 py-3 text-sm uppercase tracking-[0.2em] text-navy transition-colors hover:border-gold-ink hover:text-gold-ink"
-            >
-              {hero.ctaSecondaryLabel}
-            </Link>
           </div>
         </div>
       </section>
