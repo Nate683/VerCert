@@ -1,4 +1,5 @@
 import { createExpiringToken, verifyExpiringToken } from "@/lib/signed-token";
+import { STAFF_IDLE_TIMEOUT_MS } from "./idle";
 
 export const CUSTOMER_SESSION_COOKIE = "vericert_customer_session";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -26,12 +27,20 @@ function getChallengeSecret(): string {
 
 export type CustomerSession = { userId: string; twoFactorVerified: boolean };
 
+// A customer stays signed in for 30 days. A two-factor (staff) session lasts
+// only the idle timeout and is extended by /api/auth/keepalive while the
+// person is actually using the page, so an unattended terminal signs itself
+// out even if the browser tab was closed.
+export function sessionTtlMs(opts: { twoFactorVerified?: boolean } = {}): number {
+  return opts.twoFactorVerified ? STAFF_IDLE_TIMEOUT_MS : SESSION_TTL_MS;
+}
+
 export async function createCustomerSessionToken(
   userId: string,
   opts: { twoFactorVerified?: boolean } = {}
 ): Promise<string> {
   const payload = opts.twoFactorVerified ? `${userId}${TWO_FACTOR_MARKER}` : userId;
-  return createExpiringToken(getSecret(), payload, SESSION_TTL_MS);
+  return createExpiringToken(getSecret(), payload, sessionTtlMs(opts));
 }
 
 export async function verifyCustomerSessionToken(

@@ -54,6 +54,11 @@ function LoginForm() {
       <p className="mt-3 text-sm text-muted">
         Sign in to check out and view your order history.
       </p>
+      {searchParams.get("reason") === "idle" && (
+        <p role="status" className="mt-4 border border-gold/50 bg-gold/10 p-3 text-sm text-navy">
+          You were signed out after a period of inactivity. Sign in again to continue.
+        </p>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <input
@@ -85,7 +90,7 @@ function LoginForm() {
           />
         )}
         {error && (
-          <p className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+          <p role="alert" className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">
             {error}
           </p>
         )}

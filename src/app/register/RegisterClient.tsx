@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { safeNextPath } from "@/lib/safe-next";
 import { HEARD_ABOUT_OPTIONS } from "@/lib/marketing/heard-about";
+import { PasswordField } from "@/components/PasswordField";
 
 function RegisterForm() {
   const router = useRouter();
@@ -117,17 +118,11 @@ function RegisterForm() {
           autoComplete="email"
           className="input-field-light"
         />
-        <input
+        <PasswordField
           id="register-password"
-          required
-          type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password (min. 8 characters)"
-          aria-label="Password"
-          autoComplete="new-password"
-          minLength={8}
-          className="input-field-light"
+          onChange={setPassword}
+          context={{ email, firstName, lastName }}
         />
         <input
           id="register-company"

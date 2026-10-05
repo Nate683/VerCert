@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { HEARD_ABOUT_VALUES } from "@/lib/marketing/heard-about";
+import { PASSWORD_MAX_LENGTH } from "@/lib/users/password-policy";
 
 // Shared zod schemas for the highest-risk request bodies (auth + money
 // paths). Parse with `parseBody` to get a consistent 400 response shape.
@@ -22,7 +23,8 @@ export const registerSchema = z.object({
   firstName: z.string().trim().min(1, "Enter your first name.").max(100),
   lastName: z.string().trim().min(1, "Enter your last name.").max(100),
   email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(8).max(200),
+  // Length, common-password and personal-word rules: passwordProblem().
+  password: z.string().min(1, "Choose a password.").max(PASSWORD_MAX_LENGTH),
   company: z.string().trim().max(200).optional(),
   heardAbout: z.enum(HEARD_ABOUT_VALUES).optional(),
   // Absent means no: consent is only ever what the form actually sent.
@@ -42,7 +44,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  password: z.string().min(8).max(200),
+  password: z.string().min(1, "Choose a password.").max(PASSWORD_MAX_LENGTH),
 });
 
 export const twoFactorCodeSchema = z.object({

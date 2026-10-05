@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PasswordField } from "@/components/PasswordField";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -66,18 +67,15 @@ function ResetPasswordForm() {
       <h1 className="mt-3 font-serif text-3xl text-navy">Choose a New Password</h1>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <input
-          required
-          type="password"
+        <PasswordField
+          id="reset-password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="New password (min. 8 characters)"
-          minLength={8}
+          onChange={setPassword}
+          placeholder="New password"
           autoFocus
-          className="input-field-light"
         />
         {error && (
-          <p className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-300">
+          <p role="alert" className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">
             {error}
           </p>
         )}

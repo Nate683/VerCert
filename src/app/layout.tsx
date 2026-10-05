@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter, JetBrains_Mono, IBM_Plex_Mono, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { SiteChrome } from "@/components/SiteChrome";
+import { IdleTimeout } from "@/components/IdleTimeout";
 import { CartProvider } from "@/lib/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
 import { ExecModeProvider } from "@/lib/exec-mode-context";
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <CartProvider>
               <SiteChrome saleBanner={saleBanner} contact={contact}>{children}</SiteChrome>
             </CartProvider>
+            <IdleTimeout />
           </ExecModeProvider>
         </AuthProvider>
       </body>

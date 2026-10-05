@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createUser, getUserByEmail } from "@/lib/users/store";
 import { hashPassword, generateToken } from "@/lib/users/password";
+import { passwordProblem } from "@/lib/users/password-policy";
 import { setCustomerSessionCookie } from "@/lib/users/session-cookie";
 import { sendTransactionalEmail } from "@/lib/email";
 import { getSiteUrl } from "@/lib/site-url";
@@ -33,6 +34,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   if ("error" in parsed) return parsed.error;
   const { firstName, lastName, email, password, company, heardAbout, marketingConsent, isAffiliate, inviteCode } =
     parsed.data;
+
+  const weakPassword = await passwordProblem(password, { email, firstName, lastName });
+  if (weakPassword) return NextResponse.json({ error: weakPassword }, { status: 400 });
 
   // The storefront age gate is the site's 21+ attestation. It appears before
   // this form ever does; this check stops an account skipping it, and the
