@@ -11,6 +11,7 @@ import { AddToCartPanel } from "./AddToCartPanel";
 import { buildMetadata } from "@/lib/seo";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
 import { formatPurity, specText } from "@/lib/products/specs";
+import { blendComponents } from "@/lib/products/blend-components";
 
 type Params = { slug: string };
 
@@ -45,8 +46,12 @@ export default async function ProductDetailPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
-  const [product, allProducts] = await Promise.all([getProductBySlug(slug), listProducts()]);
+  // Inactive products are fetched too, only so a blend's component card can
+  // show a compound's photo even when that compound isn't for sale itself.
+  const [product, catalog] = await Promise.all([getProductBySlug(slug), listProducts({ includeInactive: true })]);
   if (!product || !isOnSale(product)) notFound();
+  const allProducts = catalog.filter(isOnSale);
+  const components = blendComponents(product, catalog);
 
   // Related = same category first, then anything else, so the rail is never
   // short on a thin category.
@@ -155,7 +160,7 @@ export default async function ProductDetailPage({
           <p className="mt-5 text-sm leading-relaxed text-muted">{product.summary}</p>
 
           <div className="mt-8">
-            <AddToCartPanel product={toStorefrontProduct(product)} />
+            <AddToCartPanel product={toStorefrontProduct(product)} components={components} />
           </div>
 
           <section aria-labelledby="coa-heading" className="mt-8 border border-hairline bg-surface p-5">

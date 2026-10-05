@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { pricedSizes, resolveUnitPrice } from "@/lib/products";
 import type { Product } from "@/lib/types";
+import type { BlendComponentInfo } from "@/lib/products/blend-components";
+import { VialGlyph } from "@/components/VialGlyph";
 
-export function AddToCartPanel({ product }: { product: Product }) {
+export function AddToCartPanel({
+  product,
+  components = {},
+}: {
+  product: Product;
+  components?: Record<string, BlendComponentInfo>;
+}) {
   const router = useRouter();
   const [sizeIndex, setSizeIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -42,41 +51,85 @@ export function AddToCartPanel({ product }: { product: Product }) {
 
   return (
     <div className="border border-hairline bg-surface p-6">
-      <fieldset>
-        <legend className="text-xs uppercase tracking-[0.25em] text-gold-ink">Size</legend>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {sizes.map((s, i) => (
-            <button
-              key={s.label}
-              type="button"
-              aria-pressed={i === sizeIndex}
-              onClick={() => setSizeIndex(i)}
-              className={`flex flex-col items-start border px-3 py-2 text-left transition-colors ${
-                i === sizeIndex
-                  ? "border-gold bg-gold/10"
-                  : "border-hairline hover:border-gold/60"
-              }`}
-            >
-              <span className={`text-sm ${i === sizeIndex ? "text-gold-ink" : "text-navy"}`}>
-                {s.label}
-              </span>
-              <span className="font-mono text-[11px] text-muted">${s.priceUsd.toFixed(2)}</span>
-            </button>
-          ))}
+      {/* Size chips: each shows its size and price, and the chosen one is
+          filled navy so it reads as selected at a glance. */}
+      <div>
+        <p id="size-label" className="text-xs uppercase tracking-[0.25em] text-gold-ink">
+          Size
+        </p>
+        <div role="radiogroup" aria-labelledby="size-label" className="mt-3 flex flex-wrap gap-2">
+          {sizes.map((s, i) => {
+            const selected = i === sizeIndex;
+            return (
+              <button
+                key={s.label}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setSizeIndex(i)}
+                className={`flex min-h-[52px] min-w-[96px] flex-col items-start justify-center border-2 px-4 py-2 text-left transition-colors ${
+                  selected
+                    ? "border-navy bg-navy text-white"
+                    : "border-hairline bg-paper text-navy hover:border-navy/50"
+                }`}
+              >
+                <span className="flex items-center gap-1.5 text-sm font-medium">
+                  {selected && (
+                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-gold" fill="none" aria-hidden="true">
+                      <path d="M3 8.5l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                  {s.label}
+                </span>
+                <span className={`font-mono text-xs ${selected ? "text-white/80" : "text-muted"}`}>
+                  ${s.priceUsd.toFixed(2)}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </fieldset>
+      </div>
 
-      {/* A blend's vial holds several compounds; say exactly what and how much. */}
+      {/* A blend's vial holds several compounds: one card per compound, with
+          its own photo and page where the catalog has them. */}
       {size.composition && size.composition.length > 0 && (
-        <div className="mt-4 border border-hairline bg-paper px-4 py-3">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">Per vial ({size.label})</p>
-          <ul className="mt-2 space-y-1">
-            {size.composition.map((c) => (
-              <li key={c.name} className="flex justify-between gap-3 text-sm text-navy">
-                <span>{c.name}</span>
-                <span className="font-mono">{c.amount}</span>
-              </li>
-            ))}
+        <div className="mt-6">
+          <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">In each {size.label} vial</p>
+          <ul className={`mt-3 grid gap-3 ${size.composition.length > 2 ? "grid-cols-3" : "grid-cols-2"}`}>
+            {size.composition.map((c) => {
+              const info = components[c.name] ?? {};
+              const body = (
+                <>
+                  <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-navy">
+                    {info.imageUrl ? (
+                      <Image src={info.imageUrl} alt={c.name} fill sizes="160px" className="object-cover" />
+                    ) : (
+                      <VialGlyph className="h-1/2 w-1/2 text-gold/30" />
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm text-navy">{c.name}</p>
+                    <p className="font-mono text-xs text-muted">{c.amount}</p>
+                    {info.href && (
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-navy underline-offset-4 group-hover:underline">
+                        View compound →
+                      </p>
+                    )}
+                  </div>
+                </>
+              );
+              return (
+                <li key={c.name} className="border border-hairline bg-paper">
+                  {info.href ? (
+                    <Link href={info.href} className="group block transition-colors hover:bg-surface">
+                      {body}
+                    </Link>
+                  ) : (
+                    body
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

@@ -32,3 +32,6 @@ export function checkProductImageFile(file: { type: string; size: number; name: 
   }
   return null;
 }
+
+// Extra photos after the main one, per product.
+export const PRODUCT_GALLERY_MAX = 8;

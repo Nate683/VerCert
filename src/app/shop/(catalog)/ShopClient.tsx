@@ -7,6 +7,7 @@ import { pricedSizes } from "@/lib/products/pricing";
 import type { Product } from "@/lib/types";
 import { ProductCard } from "@/components/ProductCard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
+import { searchScore } from "@/lib/search";
 
 type SortOption = "name" | "price-asc" | "price-desc" | "purity";
 
@@ -27,17 +28,11 @@ function minPrice(product: Product): number {
   return Math.min(...pricedSizes(product).map((s) => s.priceUsd));
 }
 
+// Same rules as the header search (lib/search.ts), so a query carried over
+// from the header as ?q= finds the same products here.
 function matchesQuery(product: Product, query: string): boolean {
   if (query.length === 0) return true;
-  const digits = query.replace(/[^a-z0-9]/g, "");
-  const cas = (product.casNumber ?? "").toLowerCase();
-  return (
-    product.name.toLowerCase().includes(query) ||
-    (product.alternateNames ?? []).some((n) => n.toLowerCase().includes(query)) ||
-    (cas.length > 0 && cas.includes(query)) ||
-    (digits.length >= 3 && cas.replace(/[^a-z0-9]/g, "").includes(digits)) ||
-    (product.category ?? "").toLowerCase().includes(query)
-  );
+  return searchScore(product, query) !== null;
 }
 
 export function ShopClient({ products }: { products: Product[] }) {

@@ -52,7 +52,10 @@ export function useCatalog(enabled = true): { entries: CatalogEntry[]; loading: 
     };
   }, [enabled]);
 
-  return { entries, loading };
+  // Between enabling and the effect starting the request there's a render
+  // with nothing loaded and nothing loading; report that as loading, or the
+  // search box flashes "No match" for a query it hasn't searched yet.
+  return { entries, loading: loading || (enabled && !cache) };
 }
 
 /** Seeds the shared cache from server-rendered data, avoiding a second fetch. */

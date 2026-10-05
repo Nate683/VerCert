@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { upload } from "@vercel/blob/client";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "@/components/ProductImage";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
+import { uploadProductOriginal } from "@/lib/products/upload-client";
 import {
   checkProductImageFile,
-  incomingImagePrefix,
   PRODUCT_IMAGE_ALLOWED_LABEL,
   PRODUCT_IMAGE_TYPES,
 } from "@/lib/products/image-rules";
@@ -69,13 +68,9 @@ export function ProductCardImage({
     abortRef.current = controller;
     setStage({ kind: "uploading", previewUrl: preview, loaded: 0, total: file.size });
     try {
-      const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-").slice(-80);
-      const blob = await upload(`${incomingImagePrefix(slug)}${safeName}`, file, {
-        access: "public",
-        handleUploadUrl: `/api/executive/products/${slug}/image/upload`,
-        contentType: file.type,
-        abortSignal: controller.signal,
-        onUploadProgress: ({ loaded, total }) =>
+      const uploadUrl = await uploadProductOriginal(slug, file, {
+        signal: controller.signal,
+        onProgress: (loaded, total) =>
           setStage((s) => (s.kind === "uploading" ? { ...s, loaded, total: total || s.total } : s)),
       });
 
@@ -83,7 +78,7 @@ export function ProductCardImage({
       const res = await fetch(`/api/executive/products/${slug}/image`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadUrl: blob.url }),
+        body: JSON.stringify({ uploadUrl }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.product) throw new Error(data.error ?? `The photo couldn't be saved (${res.status}).`);

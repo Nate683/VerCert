@@ -13,7 +13,9 @@ import { VialGlyph } from "./VialGlyph";
 // The main photo is the first of mainSources that loads — a fallback chain,
 // so only one of them is ever shown, never as extra gallery images. Gallery
 // images follow it. Anything that fails to load drops out; with nothing left
-// it shows the placeholder. Photos sit contained and padded on a light well.
+// it shows the placeholder. Photos fill a navy frame. With more than one,
+// arrows (and a swipe on touch screens) step through them and a thumbnail
+// strip below switches the main view; with one, neither appears.
 export function ProductGallery({
   name,
   alt,
@@ -36,6 +38,7 @@ export function ProductGallery({
   const [zooming, setZooming] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
+  const touchX = useRef<number | null>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const current = images[Math.min(active, images.length - 1)];
 
@@ -114,6 +117,20 @@ export function ProductGallery({
         onMouseMove={handleMove}
         className="group relative aspect-square w-full cursor-zoom-in overflow-hidden border border-navy bg-navy"
         onClick={() => setLightbox(true)}
+        onTouchStart={(e) => {
+          touchX.current = e.touches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={(e) => {
+          // A horizontal swipe steps through the photos on a phone.
+          const start = touchX.current;
+          const end = e.changedTouches[0]?.clientX;
+          touchX.current = null;
+          if (start === null || end === undefined || images.length < 2) return;
+          if (Math.abs(end - start) > 40) {
+            e.preventDefault();
+            step(end < start ? 1 : -1);
+          }
+        }}
         role="button"
         tabIndex={0}
         aria-label={`Enlarge image of ${name}`}
@@ -122,6 +139,8 @@ export function ProductGallery({
             e.preventDefault();
             setLightbox(true);
           }
+          if (e.key === "ArrowRight" && images.length > 1) step(1);
+          if (e.key === "ArrowLeft" && images.length > 1) step(-1);
         }}
       >
         {!loaded && <div className="skeleton absolute inset-0" />}
@@ -144,13 +163,39 @@ export function ProductGallery({
             transform: zooming ? "scale(2)" : "scale(1)",
           }}
         />
-        <span className="pointer-events-none absolute bottom-3 right-3 border border-white/20 bg-black/70 px-2 py-1 text-[10px] uppercase tracking-[0.15em] text-white/70 opacity-0 transition-opacity group-hover:opacity-100">
+        <span className="pointer-events-none absolute bottom-3 right-3 hidden border border-white/20 bg-black/70 px-2 py-1 text-[10px] uppercase tracking-[0.15em] text-white/70 opacity-0 transition-opacity group-hover:opacity-100 md:block">
           Click to enlarge
         </span>
+        {images.length > 1 && (
+          <>
+            {([-1, 1] as const).map((delta) => (
+              <button
+                key={delta}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  step(delta);
+                }}
+                onMouseEnter={() => setZooming(false)}
+                onMouseLeave={() => setZooming(true)}
+                onMouseMove={(e) => e.stopPropagation()}
+                aria-label={delta < 0 ? "Previous image" : "Next image"}
+                className={`absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/25 bg-black/60 text-xl text-white/85 backdrop-blur-sm transition-colors hover:border-gold hover:text-gold ${
+                  delta < 0 ? "left-3" : "right-3"
+                }`}
+              >
+                <span aria-hidden="true">{delta < 0 ? "‹" : "›"}</span>
+              </button>
+            ))}
+            <span className="pointer-events-none absolute bottom-3 left-3 border border-white/20 bg-black/60 px-2 py-1 font-mono text-[11px] text-white/80">
+              {images.indexOf(current) + 1} / {images.length}
+            </span>
+          </>
+        )}
       </div>
 
       {images.length > 1 && (
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-1" aria-label="Product photos">
           {images.map((url, i) => (
             <button
               key={url}
@@ -161,15 +206,15 @@ export function ProductGallery({
               }}
               aria-label={`View image ${i + 1} of ${images.length}`}
               aria-current={current === url}
-              className={`relative h-16 w-16 shrink-0 overflow-hidden border bg-navy transition-colors ${
-                current === url ? "border-gold" : "border-navy hover:border-control"
+              className={`relative h-16 w-16 shrink-0 overflow-hidden border-2 bg-navy transition-[border-color,opacity] sm:h-20 sm:w-20 ${
+                current === url ? "border-gold" : "border-transparent opacity-70 hover:border-navy/40 hover:opacity-100"
               }`}
             >
               <Image
                 src={url}
                 alt={alt}
-                width={64}
-                height={64}
+                width={80}
+                height={80}
                 onError={() => markFailed(url)}
                 className="h-full w-full object-cover"
               />

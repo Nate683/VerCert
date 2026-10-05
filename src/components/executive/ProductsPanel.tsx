@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BulkPriceTier, CoaDocument, Product, SizeOption } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
-import { ProductImage } from "@/components/ProductImage";
 import { ProductCardImage } from "./ProductCardImage";
-import { productImageAlt } from "@/lib/products/images";
+import { ProductGalleryEditor } from "./ProductGalleryEditor";
 import { formatPurity } from "@/lib/products/specs";
 
 type ProductWithStock = Product & { stock: { quantity: number; threshold: number } | null };
@@ -143,8 +142,6 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
   const [form, setForm] = useState<FormState>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
-  const [dragTarget, setDragTarget] = useState<string | null>(null);
   const [coaDocuments, setCoaDocuments] = useState<Record<string, CoaDocument>>({});
   const [uploadingCoaFor, setUploadingCoaFor] = useState<string | null>(null);
   // The edit form renders below the whole catalog grid, so opening it has to
@@ -258,23 +255,6 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     await load();
   }
 
-  async function handleUpload(slug: string, file: File, kind: "gallery") {
-    setUploadingFor(slug);
-    try {
-      const body = new FormData();
-      body.set("file", file);
-      body.set("kind", kind);
-      const res = await fetch(`/api/executive/products/${slug}/images`, { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed.");
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed.");
-    } finally {
-      setUploadingFor(null);
-    }
-  }
-
   // The card's photo control saves on its own; merge the result in place
   // rather than reloading, which would blank the grid.
   function handlePhotoChange(updated: Product) {
@@ -285,11 +265,10 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     );
   }
 
-  async function handleRemoveImage(slug: string, url: string) {
-    await fetch(`/api/executive/products/${slug}/images?url=${encodeURIComponent(url)}`, {
-      method: "DELETE",
-    });
-    await load();
+  function handleGalleryChange(updated: Product) {
+    setProducts((ps) =>
+      ps.map((p) => (p.slug === updated.slug ? { ...p, galleryImageUrls: updated.galleryImageUrls } : p))
+    );
   }
 
   // Inline edits from the catalog grid (price of the first size, stock,
@@ -325,21 +304,6 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
   async function handleToggleActive(product: ProductWithStock) {
     await handleInlinePatch(product.slug, { active: !(product.active ?? true) });
-  }
-
-  function handleDropUpload(e: React.DragEvent, slug: string, kind: "gallery") {
-    e.preventDefault();
-    setDragTarget(null);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleUpload(slug, file, kind);
-  }
-
-  async function handleReorderGallery(product: ProductWithStock, index: number, direction: -1 | 1) {
-    const gallery = [...(product.galleryImageUrls ?? [])];
-    const target = index + direction;
-    if (target < 0 || target >= gallery.length) return;
-    [gallery[index], gallery[target]] = [gallery[target], gallery[index]];
-    await handleInlinePatch(product.slug, { galleryImageUrls: gallery });
   }
 
   async function handleUploadCoa(batch: string, file: File) {
@@ -724,67 +688,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               </p>
               <div className="mt-3 flex flex-wrap gap-4">
 
-                <div>
-                  <p className="mb-2 text-[10px] uppercase tracking-[0.15em] text-white/40">
-                    Gallery (reorder with the arrows)
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {(editingProduct.galleryImageUrls ?? []).map((url, i) => (
-                      <div key={url} className="relative h-24 w-24">
-                        <ProductImage sources={[url]} name={editingProduct.name} alt={productImageAlt(editingProduct)} />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(editingProduct.slug, url)}
-                          className="absolute -right-1 -top-1 h-5 w-5 border border-red-500/40 bg-black text-[10px] text-red-300 hover:bg-red-500/20"
-                        >
-                          ×
-                        </button>
-                        <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-black/80 px-1 py-0.5">
-                          <button
-                            type="button"
-                            onClick={() => handleReorderGallery(editingProduct, i, -1)}
-                            disabled={i === 0}
-                            title="Move left"
-                            className="text-[10px] text-white/60 hover:text-gold disabled:opacity-20"
-                          >
-                            ←
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleReorderGallery(editingProduct, i, 1)}
-                            disabled={i === (editingProduct.galleryImageUrls?.length ?? 1) - 1}
-                            title="Move right"
-                            className="text-[10px] text-white/60 hover:text-gold disabled:opacity-20"
-                          >
-                            →
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    <label
-                      className={`flex h-24 w-24 cursor-pointer items-center justify-center border border-dashed text-[10px] uppercase tracking-[0.1em] hover:border-gold hover:text-gold ${
-                        dragTarget === "gallery" ? "border-gold text-gold" : "border-white/20 text-white/40"
-                      }`}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setDragTarget("gallery");
-                      }}
-                      onDragLeave={() => setDragTarget(null)}
-                      onDrop={(e) => handleDropUpload(e, editingProduct.slug, "gallery")}
-                    >
-                      {uploadingFor === editingProduct.slug ? "..." : "+ Add"}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleUpload(editingProduct.slug, file, "gallery");
-                        }}
-                      />
-                    </label>
-                  </div>
-                </div>
+                <ProductGalleryEditor product={editingProduct} onChange={handleGalleryChange} />
               </div>
             </div>
           )}
