@@ -101,7 +101,7 @@ export function AgeGate() {
         aria-describedby="age-gate-body"
         className="max-h-full w-full max-w-lg overflow-y-auto border border-hairline bg-paper px-7 py-10 text-center shadow-2xl sm:px-10"
       >
-        <VeriCertLogo className="mx-auto h-11 aspect-[441/194]" tone="ink" />
+        <VeriCertLogo className="mx-auto h-11 w-auto" ground="light" />
 
         <p className="mt-7 text-xs uppercase tracking-[0.35em] text-gold-ink">
           Research Use Only

@@ -111,15 +111,6 @@ body {
   font-family: var(--font-display), Georgia, serif;
 }
 
-/* The wordmark asset is a cream lockup drawn for dark grounds. On a light
-   surface it is painted through its own alpha channel as a mask, so it renders
-   in exact brand navy without a second PNG to keep in sync. */
-.logo-ink {
-  background-color: var(--navy);
-  -webkit-mask: url("/logo.png") center / contain no-repeat;
-  mask: url("/logo.png") center / contain no-repeat;
-}
-
 /* thin gold divider */
 .rule-gold {
   border-color: color-mix(in srgb, var(--gold) 40%, transparent);
@@ -248,11 +239,13 @@ body {
   }
 }
 
-/* Subtle V-mark watermark — large, low-opacity, non-interactive. */
+/* Logo watermark (components/Watermark.tsx): the real lockup, whole, faint
+   enough to sit behind text, non-interactive. Unlayered, so an opacity-*
+   utility on the element can't override this; change it here. */
 .v-watermark {
   position: absolute;
   pointer-events: none;
-  opacity: 0.04;
+  opacity: 0.1;
   user-select: none;
 }
 

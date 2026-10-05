@@ -1,20 +1,22 @@
 import Image from "next/image";
 
-// Large, low-opacity V-mark placed in a corner of hero/section backgrounds
-// for subtle brand texture. Purely decorative — hidden from assistive tech.
+// The real VeriCert lockup (public/logo.png, cream on transparent), shown
+// whole and faint in a corner of dark sections as brand texture. Only for
+// dark grounds. Purely decorative, hidden from assistive tech. The size and
+// position come from className; the opacity lives in .v-watermark.
 export function Watermark({
-  className = "-right-16 -top-16 h-80 w-80",
+  className = "bottom-6 right-6 w-96",
 }: {
   className?: string;
 }) {
   return (
     <Image
-      src="/icon.png"
+      src="/logo.png"
       alt=""
       aria-hidden="true"
-      width={512}
-      height={512}
-      className={`v-watermark ${className}`}
+      width={441}
+      height={194}
+      className={`v-watermark h-auto ${className}`}
     />
   );
 }

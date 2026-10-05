@@ -1,32 +1,24 @@
 import Image from "next/image";
 
-// Shared wordmark lockup — used in the header and footer so both stay in
-// sync if the logo asset is ever swapped.
+// Shared wordmark lockup. Both versions are the real logo files in their own
+// colours, never recoloured in code:
+// - "dark" (default): public/logo.png, cream on transparent, for the navy
+//   header, the black footer and other dark grounds.
+// - "light": public/Logo.jpg, navy with a gold check, for white grounds. It
+//   has a solid white background, so only place it on pure white (bg-paper);
+//   on any other colour it shows as a white box.
 export function VeriCertLogo({
   className = "h-10 w-auto",
   priority = false,
-  tone = "default",
+  ground = "dark",
 }: {
   className?: string;
   priority?: boolean;
-  /** "ink" repaints the lockup navy for light grounds. Size it with an
-      explicit height plus aspect-[441/194] — a mask has no intrinsic width,
-      so w-auto collapses it to nothing. */
-  tone?: "default" | "ink";
+  ground?: "dark" | "light";
 }) {
-  if (tone === "ink") {
-    return (
-      <div
-        role="img"
-        aria-label="VeriCert Research Peptides"
-        className={`logo-ink ${className}`}
-      />
-    );
-  }
-
   return (
     <Image
-      src="/logo.png"
+      src={ground === "light" ? "/Logo.jpg" : "/logo.png"}
       alt="VeriCert Research Peptides"
       width={441}
       height={194}

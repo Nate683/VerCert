@@ -19,7 +19,9 @@ export function Footer({ contact }: { contact: ContactContent }) {
 
   return (
     <footer className="relative overflow-hidden border-t border-gold/15 bg-black">
-      <Watermark className="-bottom-24 -right-24 h-72 w-72" />
+      {/* Beside the newsletter row, clear of the disclaimer text. A phone's
+          single column has no empty corner for it. */}
+      <Watermark className="bottom-40 right-8 hidden w-[26rem] lg:block" />
       <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">

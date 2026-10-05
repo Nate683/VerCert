@@ -89,7 +89,7 @@ export default async function Home() {
         )}
 
         <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 py-28 text-center lg:px-10">
-          <VeriCertLogo className="h-14 aspect-[441/194]" tone="ink" />
+          <VeriCertLogo className="h-14 w-auto" ground="light" priority />
           <EditableText
             value={hero.badge}
             as="p"

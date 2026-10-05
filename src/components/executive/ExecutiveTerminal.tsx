@@ -275,7 +275,8 @@ type MastheadProps = {
 function CommandMasthead({ executiveName, executiveTitle, terminalName, stamp, onLogout }: MastheadProps) {
   return (
     <header className="command-marble relative z-10 mb-6 border-b border-[var(--cmd-brass)]/30">
-      <Watermark className="pointer-events-none absolute -top-16 right-4 h-72 w-72 opacity-[0.035]" />
+      {/* Between the name and the date/log-out column, so it sits behind neither. */}
+      <Watermark className="right-64 top-1/2 hidden w-80 -translate-y-1/2 lg:block" />
       <div className="relative mx-auto flex max-w-[1600px] flex-wrap items-end justify-between gap-6 px-4 pb-6 pt-8 lg:px-8">
         <div>
           <p className="command-label text-[13px] tracking-[0.42em]">{terminalName}</p>
