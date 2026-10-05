@@ -12,7 +12,12 @@ import {
   DEFAULT_COMMISSION_STRUCTURE,
 } from "@/lib/site-content";
 import { siteContentUpdateSchema, parseBody } from "@/lib/validation";
-import { findBlockedTerm, blockedTermMessage, SITE_CONTENT_NON_COPY_KEYS } from "@/lib/content-guard";
+import {
+  findBlockedTerm,
+  blockedTermMessage,
+  SITE_CONTENT_NON_COPY_KEYS,
+  GUARD_EXEMPT_CONTENT_KEYS,
+} from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
@@ -55,7 +60,9 @@ export const PATCH = withApiErrorHandling(async (request: Request) => {
   const parsed = await parseBody(request, siteContentUpdateSchema);
   if ("error" in parsed) return parsed.error;
 
-  const blocked = findBlockedTerm(parsed.data.value, SITE_CONTENT_NON_COPY_KEYS, parsed.data.key);
+  const blocked = GUARD_EXEMPT_CONTENT_KEYS.includes(parsed.data.key)
+    ? null
+    : findBlockedTerm(parsed.data.value, SITE_CONTENT_NON_COPY_KEYS, parsed.data.key);
   if (blocked) return NextResponse.json({ error: blockedTermMessage(blocked) }, { status: 400 });
 
   await setContent(parsed.data.key, parsed.data.value);

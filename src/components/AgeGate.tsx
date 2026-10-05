@@ -125,7 +125,7 @@ export function AgeGate() {
             Terms
           </Link>{" "}
           and{" "}
-          <Link href="/terms" className="text-gold-ink underline underline-offset-2">
+          <Link href="/terms#research-use-only" className="text-gold-ink underline underline-offset-2">
             RUO Agreement
           </Link>
           .

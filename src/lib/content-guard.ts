@@ -43,6 +43,11 @@ const allowedPattern = new RegExp(ALLOWED_PHRASES.map(escape).join("|"), "gi");
 export const PRODUCT_NON_COPY_KEYS = ["slug", "batchNumbers", "imageUrl", "imageUrls"];
 export const SITE_CONTENT_NON_COPY_KEYS = ["heroImageUrl", "linkHref", "slugs"];
 
+// site_content keys the guard doesn't check. The legal pages have to name
+// what's prohibited (e.g. "introduction into the human body by any route"),
+// which is exactly the language the blocklist exists to keep out of copy.
+export const GUARD_EXEMPT_CONTENT_KEYS = ["policies"];
+
 export type BlockedTermHit = { term: string; path: string };
 
 // Walks every string in `value` (objects and arrays included) and returns the

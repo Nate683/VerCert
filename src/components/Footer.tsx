@@ -51,7 +51,7 @@ export function Footer({ contact }: { contact: ContactContent }) {
           <div>
             <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Legal</h4>
             <ul className="mt-4 space-y-3 text-sm text-white/60">
-              <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
+              <li><Link href="/terms" className="hover:text-white">Terms of Sale</Link></li>
               <li><Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link></li>
               <li><Link href="/refund-policy" className="hover:text-white">Refund Policy</Link></li>
               <li><Link href="/shipping-policy" className="hover:text-white">Shipping Policy</Link></li>

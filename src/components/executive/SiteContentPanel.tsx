@@ -374,7 +374,7 @@ export function SiteContentPanel() {
           {(
             [
               ["privacy", "Privacy Policy"],
-              ["terms", "Terms of Service"],
+              ["terms", "Terms of Sale (## starts a heading, - starts a list item)"],
               ["refund", "Refund Policy"],
               ["shipping", "Shipping Policy"],
             ] as const
@@ -393,6 +393,15 @@ export function SiteContentPanel() {
             </label>
           ))}
         </div>
+        <label className="mt-4 block">
+          <span className="text-[10px] uppercase tracking-[0.1em] text-white/40">Terms of Sale — last updated</span>
+          <input
+            value={policies.termsUpdated ?? ""}
+            onChange={(e) => setPolicies({ ...policies, termsUpdated: e.target.value })}
+            placeholder="e.g. October 4, 2026 — change this whenever the Terms change"
+            className="input-field mt-1"
+          />
+        </label>
         <SaveButton saving={savingKey === "policies"} onClick={() => save("policies", policies)} />
         {savedKey === "policies" && <span className="ml-3 text-xs text-gold">Saved.</span>}
         {saveError?.key === "policies" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
