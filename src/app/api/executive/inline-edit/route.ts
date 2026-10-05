@@ -11,6 +11,7 @@ import {
   DEFAULT_FAQ,
 } from "@/lib/site-content";
 import { inlineEditSchema, parseBody } from "@/lib/validation";
+import { findBlockedTerm, blockedTermMessage, SITE_CONTENT_NON_COPY_KEYS } from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
 
@@ -46,6 +47,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   if (!DEFAULTS[key]) {
     return NextResponse.json({ error: "This field can't be edited inline." }, { status: 400 });
   }
+
+  const blocked = findBlockedTerm(patch, SITE_CONTENT_NON_COPY_KEYS, key);
+  if (blocked) return NextResponse.json({ error: blockedTermMessage(blocked) }, { status: 400 });
 
   const current = await getContent<Record<string, unknown>>(key, DEFAULTS[key] as Record<string, unknown>);
   const merged = Array.isArray(current) || Array.isArray(patch) ? patch : { ...current, ...patch };

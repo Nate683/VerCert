@@ -3,6 +3,7 @@ import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { listProducts, createProduct, getProductBySlug, pricedSizes } from "@/lib/products";
 import { upsertInventory, listInventory } from "@/lib/inventory";
 import { productSchema, parseBody } from "@/lib/validation";
+import { findBlockedTerm, blockedTermMessage, PRODUCT_NON_COPY_KEYS } from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
 import { getCurrentCustomer } from "@/lib/users/current-user";
@@ -33,6 +34,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const parsed = await parseBody(request, productSchema);
   if ("error" in parsed) return parsed.error;
   const { initialStock, ...input } = parsed.data;
+
+  const blocked = findBlockedTerm(input, PRODUCT_NON_COPY_KEYS);
+  if (blocked) return NextResponse.json({ error: blockedTermMessage(blocked) }, { status: 400 });
 
   if (input.active !== false && pricedSizes(input).length === 0) {
     return NextResponse.json({ error: "Set a price on at least one size before making this product active." }, { status: 400 });

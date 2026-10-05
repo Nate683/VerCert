@@ -3,6 +3,7 @@ import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { getProductBySlug, updateProduct, deleteProduct, pricedSizes } from "@/lib/products";
 import { upsertInventory, deleteInventory } from "@/lib/inventory";
 import { productUpdateSchema, parseBody } from "@/lib/validation";
+import { findBlockedTerm, blockedTermMessage, PRODUCT_NON_COPY_KEYS } from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
 import { getCurrentCustomer } from "@/lib/users/current-user";
@@ -26,6 +27,9 @@ export const PATCH = withApiErrorHandling(async (
   const parsed = await parseBody(request, productUpdateSchema);
   if ("error" in parsed) return parsed.error;
   const { initialStock, sizePrice, ...patch } = parsed.data;
+
+  const blocked = findBlockedTerm(patch, PRODUCT_NON_COPY_KEYS);
+  if (blocked) return NextResponse.json({ error: blockedTermMessage(blocked) }, { status: 400 });
 
   if (sizePrice) {
     const sizes = patch.sizes ?? existing.sizes;

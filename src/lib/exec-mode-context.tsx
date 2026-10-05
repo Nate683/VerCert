@@ -10,8 +10,10 @@ type ExecModeContextValue = {
   execMode: boolean;
   toggleExecMode: () => void;
   saveState: SaveState;
+  // The server's reason when the last save was rejected.
+  saveError: string | null;
   beginSave: () => void;
-  endSave: (ok: boolean) => void;
+  endSave: (ok: boolean, error?: string) => void;
 };
 
 const ExecModeContext = createContext<ExecModeContextValue | null>(null);
@@ -25,6 +27,7 @@ export function ExecModeProvider({ children }: { children: React.ReactNode }) {
   const canUseExecMode = user?.role === "command" || user?.role === "office";
   const [rawExecMode, setRawExecMode] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!canUseExecMode) return;
@@ -49,9 +52,11 @@ export function ExecModeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const beginSave = useCallback(() => setSaveState("saving"), []);
-  const endSave = useCallback((ok: boolean) => {
+  const endSave = useCallback((ok: boolean, error?: string) => {
     setSaveState(ok ? "saved" : "error");
-    setTimeout(() => setSaveState("idle"), 2000);
+    setSaveError(ok ? null : error ?? null);
+    // A rejection with a reason stays up long enough to read.
+    setTimeout(() => setSaveState("idle"), ok || !error ? 2000 : 8000);
   }, []);
 
   const value: ExecModeContextValue = {
@@ -59,6 +64,7 @@ export function ExecModeProvider({ children }: { children: React.ReactNode }) {
     execMode: canUseExecMode && rawExecMode,
     toggleExecMode,
     saveState,
+    saveError,
     beginSave,
     endSave,
   };

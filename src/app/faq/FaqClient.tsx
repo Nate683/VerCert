@@ -9,12 +9,16 @@ export default function FaqClient({ items }: { items: FaqItem[] }) {
   const [localItems, setLocalItems] = useState(items);
 
   async function saveItems(next: FaqItem[]) {
-    setLocalItems(next);
-    await fetch("/api/executive/inline-edit", {
+    const res = await fetch("/api/executive/inline-edit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ key: "faq_items", patch: next }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? "Failed to save.");
+    }
+    setLocalItems(next);
   }
 
   return (

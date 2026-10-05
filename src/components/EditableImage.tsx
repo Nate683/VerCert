@@ -17,7 +17,10 @@ async function defaultSave(contentKey: string, field: string, url: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: contentKey, patch: { [field]: url } }),
   });
-  if (!res.ok) throw new Error("Failed to save.");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? "Failed to save.");
+  }
 }
 
 // Live Edit Mode's click-to-replace image wrapper. Renders children exactly

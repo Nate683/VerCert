@@ -21,7 +21,10 @@ async function defaultSave(contentKey: string, field: string, newValue: string) 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key: contentKey, patch: { [field]: newValue } }),
   });
-  if (!res.ok) throw new Error("Failed to save.");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? "Failed to save.");
+  }
 }
 
 // Live Edit Mode's click-to-edit text field. Renders as plain static text
@@ -50,8 +53,8 @@ export function EditableText({ value, as = "span", className, multiline, onSave,
       if (onSave) await onSave(draft);
       else if (contentKey && field) await defaultSave(contentKey, field, draft);
       endSave(true);
-    } catch {
-      endSave(false);
+    } catch (err) {
+      endSave(false, err instanceof Error ? err.message : undefined);
     }
   }
 

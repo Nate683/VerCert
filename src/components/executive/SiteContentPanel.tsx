@@ -34,6 +34,7 @@ export function SiteContentPanel() {
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<{ key: string; message: string } | null>(null);
   const [uploadingHero, setUploadingHero] = useState(false);
 
   const [hero, setHero] = useState<HomeHeroContent | null>(null);
@@ -73,12 +74,18 @@ export function SiteContentPanel() {
   async function save(key: string, value: unknown) {
     setSavingKey(key);
     setSavedKey(null);
+    setSaveError(null);
     try {
-      await fetch("/api/executive/content", {
+      const res = await fetch("/api/executive/content", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key, value }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setSaveError({ key, message: data.error ?? "Failed to save." });
+        return;
+      }
       setSavedKey(key);
     } finally {
       setSavingKey(null);
@@ -172,6 +179,7 @@ export function SiteContentPanel() {
         </div>
         <SaveButton saving={savingKey === "home_hero"} onClick={() => save("home_hero", hero)} />
         {savedKey === "home_hero" && <span className="ml-3 text-xs text-gold">Saved.</span>}
+        {saveError?.key === "home_hero" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
       </div>
 
       {/* Featured products */}
@@ -204,6 +212,7 @@ export function SiteContentPanel() {
         </div>
         <SaveButton saving={savingKey === "featured_products"} onClick={() => save("featured_products", featured)} />
         {savedKey === "featured_products" && <span className="ml-3 text-xs text-gold">Saved.</span>}
+        {saveError?.key === "featured_products" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
       </div>
 
       {/* About page */}
@@ -269,6 +278,7 @@ export function SiteContentPanel() {
         </div>
         <SaveButton saving={savingKey === "about_page"} onClick={() => save("about_page", about)} />
         {savedKey === "about_page" && <span className="ml-3 text-xs text-gold">Saved.</span>}
+        {saveError?.key === "about_page" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
       </div>
 
       {/* FAQ */}
@@ -311,6 +321,7 @@ export function SiteContentPanel() {
         </div>
         <SaveButton saving={savingKey === "faq_items"} onClick={() => save("faq_items", faq)} />
         {savedKey === "faq_items" && <span className="ml-3 text-xs text-gold">Saved.</span>}
+        {saveError?.key === "faq_items" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
       </div>
 
       {/* Contact */}
@@ -358,6 +369,7 @@ export function SiteContentPanel() {
         </div>
         <SaveButton saving={savingKey === "contact_page"} onClick={() => save("contact_page", contact)} />
         {savedKey === "contact_page" && <span className="ml-3 text-xs text-gold">Saved.</span>}
+        {saveError?.key === "contact_page" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
       </div>
 
       {/* Policies */}
@@ -391,6 +403,7 @@ export function SiteContentPanel() {
         </div>
         <SaveButton saving={savingKey === "policies"} onClick={() => save("policies", policies)} />
         {savedKey === "policies" && <span className="ml-3 text-xs text-gold">Saved.</span>}
+        {saveError?.key === "policies" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
       </div>
     </div>
   );

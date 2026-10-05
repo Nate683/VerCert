@@ -6,7 +6,7 @@ import { useExecMode } from "@/lib/exec-mode-context";
 // (see useExecMode: canUseExecMode is false for customers/logged-out
 // visitors, so this returns null and nothing about the page changes).
 export function ExecModeToggle() {
-  const { canUseExecMode, execMode, toggleExecMode, saveState } = useExecMode();
+  const { canUseExecMode, execMode, toggleExecMode, saveState, saveError } = useExecMode();
 
   if (!canUseExecMode) return null;
 
@@ -25,7 +25,7 @@ export function ExecModeToggle() {
       </button>
       {execMode && saveState !== "idle" && (
         <span
-          className={`border px-2 py-1.5 text-[9px] uppercase tracking-[0.1em] backdrop-blur ${
+          className={`max-w-sm border px-2 py-1.5 text-[9px] uppercase tracking-[0.1em] backdrop-blur ${
             saveState === "saving"
               ? "border-white/30 bg-black/80 text-white/60"
               : saveState === "saved"
@@ -33,7 +33,7 @@ export function ExecModeToggle() {
               : "border-red-500/40 bg-black/80 text-red-300"
           }`}
         >
-          {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : "Error"}
+          {saveState === "saving" ? "Saving..." : saveState === "saved" ? "Saved" : saveError ?? "Error"}
         </span>
       )}
     </div>

@@ -180,7 +180,7 @@ export function AddToCartPanel({ product }: { product: Product }) {
 
       <ul className="mt-5 space-y-1.5 text-xs text-muted">
         <li>Certificate of analysis included with every batch.</li>
-        <li>Discreet packaging · Ships within 1–2 business days.</li>
+        <li>Tracked shipping · Ships within 1–2 business days.</li>
         <li>
           <Link href="/shipping-policy" className="underline-offset-4 hover:text-gold-ink hover:underline">
             Shipping

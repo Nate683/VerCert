@@ -148,7 +148,7 @@ export default function CartClient() {
 
           <ul className="mt-5 space-y-2 text-xs text-muted">
             <li>Certificate of analysis included with every batch.</li>
-            <li>Discreet packaging · ships within 1–2 business days.</li>
+            <li>Tracked shipping · ships within 1–2 business days.</li>
             <li>
               Questions?{" "}
               <Link href="/contact" className="underline-offset-4 hover:text-gold-ink hover:underline">

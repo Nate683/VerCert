@@ -38,7 +38,7 @@ export default async function OrderPage({
     ? [
         "Complete payment using the panel on this page.",
         "We confirm receipt and email you — usually within the hour.",
-        "Your order ships in discreet packaging within 1–2 business days.",
+        "Your order ships with tracking within 1–2 business days.",
       ]
     : [
         "A confirmation has been emailed to " + order.customer.email + ".",
