@@ -402,23 +402,22 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               const active = p.active ?? true;
               return (
                 <div key={p.slug} data-product-card={p.slug} className={`border bg-black/40 ${active ? "border-white/10" : "border-white/5 opacity-60"}`}>
-                  <ProductCardImage product={p} onChange={handlePhotoChange}>
-                    <span
-                      className={`pointer-events-none absolute left-2 top-2 border px-2 py-0.5 text-[9px] uppercase tracking-[0.15em] ${
-                        active
-                          ? "border-gold/50 bg-black/70 text-gold"
-                          : "border-white/30 bg-black/70 text-white/50"
-                      }`}
-                    >
-                      {active ? "Active" : "Hidden"}
-                    </span>
-                  </ProductCardImage>
+                  <ProductCardImage product={p} onChange={handlePhotoChange} />
                   <div className="p-4">
-                    <p className="text-[10px] uppercase tracking-[0.15em] text-gold/70">{p.category ?? "Uncategorized"}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-[10px] uppercase tracking-[0.15em] text-gold/70">{p.category ?? "Uncategorized"}</p>
+                      <span
+                        className={`shrink-0 border px-2 py-0.5 text-[9px] uppercase tracking-[0.15em] ${
+                          active ? "border-gold/50 text-gold" : "border-white/30 text-white/50"
+                        }`}
+                      >
+                        {active ? "Active" : "Hidden"}
+                      </span>
+                    </div>
                     <p className="mt-1 font-serif text-lg text-white">{p.name}</p>
-                    <p className="mt-1 text-xs text-white/40">
-                      {formatPurity(p.purityPercent) ? `${formatPurity(p.purityPercent)} purity` : "Purity not set"}
-                    </p>
+                    {formatPurity(p.purityPercent) && (
+                      <p className="mt-1 text-xs text-white/40">{formatPurity(p.purityPercent)} purity</p>
+                    )}
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <label className="block">

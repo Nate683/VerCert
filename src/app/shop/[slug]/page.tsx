@@ -16,6 +16,11 @@ type Params = { slug: string };
 
 // Products live in Postgres and can change anytime via the executive
 // Products tab, so this page is rendered on demand rather than prebuilt.
+//
+// There's deliberately no loading.tsx on this route or above it (the /shop
+// listing's skeleton lives in the (catalog) group): a Suspense fallback starts
+// the response as a 200, and notFound() for a missing or inactive product
+// could then only swap in the 404 UI, not the 404 status.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({

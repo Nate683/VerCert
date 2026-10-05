@@ -11,10 +11,11 @@ import { pricedSizes } from "@/lib/products/pricing";
 
 // "from $40" hid the spread on products whose sizes differ by an order of
 // magnitude. Show the range, and collapse to a single figure when there is
-// only one size or every size costs the same.
-function priceRange(product: Product): string {
+// only one size or every size costs the same. Null when nothing is priced:
+// the tile then shows no price line at all.
+function priceRange(product: Product): string | null {
   const prices = pricedSizes(product).map((s) => s.priceUsd);
-  if (prices.length === 0) return "—";
+  if (prices.length === 0) return null;
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   return min === max ? `$${min}` : `$${min} – $${max}`;
@@ -70,51 +71,44 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
 
   const cas = specText(product.casNumber);
   const purity = formatPurity(product.purityPercent);
+  const price = pricingLocked ? null : priceRange(product);
 
   return (
     <div className={`card-elevate flex flex-col overflow-hidden border bg-navy transition-colors duration-300 ${active ? "border-gold/20 hover:border-gold/60" : "border-hairline opacity-50"}`}>
       <Link href={`/shop/${product.slug}`} className="group flex flex-1 flex-col">
-        {/* Image area, with the two badges pinned to its corners. */}
-        <div className="relative">
-          <ProductImage
-            sources={productImageSources(product)}
-            name={product.name}
-            alt={productImageAlt(product)}
-            zoom
-            sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
-          />
-          {product.category && (
-            <span className="pointer-events-none absolute left-3 top-3 border border-gold/40 bg-black/70 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-gold backdrop-blur-sm">
-              {product.category}
-            </span>
-          )}
-          <span
-            className={`pointer-events-none absolute right-3 top-3 border px-2 py-1 text-[10px] uppercase tracking-[0.16em] backdrop-blur-sm ${
-              active
-                ? "border-gold/40 bg-black/70 text-white/80"
-                : "border-white/25 bg-black/80 text-white/50"
-            }`}
-          >
-            {active ? "In Stock" : "Unavailable"}
-          </span>
-        </div>
+        {/* Nothing is drawn over the image: badges there covered the vial cap. */}
+        <ProductImage
+          sources={productImageSources(product)}
+          name={product.name}
+          alt={productImageAlt(product)}
+          zoom
+          sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+        />
 
         {/* Info block. Deliberately dark against the light shell so the tile
             reads as one object and the image sits on a matching ground. */}
-        <div className="flex flex-1 flex-col bg-navy p-5">
+        <div className="flex flex-1 flex-col border-t border-gold/15 bg-navy p-5">
+          <div className="mb-3 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.16em]">
+            {product.category ? <span className="truncate text-gold">{product.category}</span> : <span />}
+            <span className={`shrink-0 ${active ? "text-white/70" : "text-white/50"}`}>
+              {active ? "In Stock" : "Unavailable"}
+            </span>
+          </div>
           <h3 className="font-serif text-lg leading-snug text-white">{product.name}</h3>
           {cas && <p className="mt-1 font-mono text-[11px] text-white/45">CAS {cas}</p>}
 
-          <div className="mt-4 flex items-baseline justify-between gap-3">
-            {pricingLocked ? (
-              <span className="text-[11px] uppercase tracking-[0.14em] text-white/60">Members&apos; pricing</span>
-            ) : (
-              <span className="text-sm text-white">{priceRange(product)}</span>
-            )}
-            {purity && (
-              <span className="text-[10px] uppercase tracking-[0.14em] text-gold">{purity} Purity</span>
-            )}
-          </div>
+          {(pricingLocked || price || purity) && (
+            <div className="mt-4 flex items-baseline justify-between gap-3">
+              {pricingLocked ? (
+                <span className="text-[11px] uppercase tracking-[0.14em] text-white/60">Members&apos; pricing</span>
+              ) : (
+                price && <span className="text-sm text-white">{price}</span>
+              )}
+              {purity && (
+                <span className="ml-auto text-[10px] uppercase tracking-[0.14em] text-gold">{purity} Purity</span>
+              )}
+            </div>
+          )}
 
           {/* A span, not a button: the whole tile is already one link, and a
               nested interactive element would be invalid and unreachable. */}
