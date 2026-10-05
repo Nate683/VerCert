@@ -110,27 +110,31 @@ export default async function ProductDetailPage({
       />
       <RecordProductView slug={product.slug} />
 
-      <nav aria-label="Breadcrumb" className="text-xs uppercase tracking-[0.2em] text-muted">
-        <Link href="/shop" className="transition-colors hover:text-gold-ink">
+      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center text-xs uppercase tracking-[0.2em] text-muted">
+        <Link href="/shop" className="inline-block py-2 transition-colors hover:text-gold-ink">
           Shop
         </Link>
-        <span className="mx-2" aria-hidden="true">
-          /
-        </span>
         {product.category && (
           <>
-            <Link
-              href={`/shop?q=${encodeURIComponent(product.category)}`}
-              className="transition-colors hover:text-gold-ink"
-            >
-              {product.category}
-            </Link>
             <span className="mx-2" aria-hidden="true">
               /
             </span>
+            <Link
+              href={`/shop?q=${encodeURIComponent(product.category)}`}
+              className="inline-block py-2 transition-colors hover:text-gold-ink"
+            >
+              {product.category}
+            </Link>
           </>
         )}
-        <span className="text-muted">{product.name}</span>
+        {/* The heading below names the product, so on a phone the trail stops
+            before it and stays on one line. */}
+        <span className="hidden text-muted sm:inline">
+          <span className="mx-2" aria-hidden="true">
+            /
+          </span>
+          {product.name}
+        </span>
       </nav>
 
       {/* The photo takes the wider column; the COA panel sits in the column
@@ -159,7 +163,7 @@ export default async function ProductDetailPage({
                 // so this is the lot the customer receives.
                 <Link
                   href={`/coa?batch=${encodeURIComponent(primaryBatch)}`}
-                  className="font-mono text-xs text-muted underline-offset-4 hover:underline"
+                  className="inline-block py-1.5 font-mono text-xs text-muted underline-offset-4 hover:underline"
                 >
                   You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
                 </Link>
@@ -251,7 +255,7 @@ export default async function ProductDetailPage({
             <h2 className="font-serif text-2xl text-navy">Related Compounds</h2>
             <Link
               href="/shop"
-              className="underline-draw hidden text-sm uppercase tracking-[0.15em] text-muted hover:text-gold-ink sm:block"
+              className="underline-draw py-2 text-sm uppercase tracking-[0.15em] text-muted hover:text-gold-ink"
             >
               View All →
             </Link>

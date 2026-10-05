@@ -110,7 +110,9 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
             ) : null}
           </div>
           <h3 className="font-serif text-lg leading-snug text-white">{product.name}</h3>
-          {cas && <p className="mt-1 font-mono text-[11px] text-white/45">CAS {cas}</p>}
+          {/* Non-breaking hyphens: a blend lists several numbers, and a line
+              may wrap between them but never inside one. */}
+          {cas && <p className="mt-1 font-mono text-[11px] text-white/45">CAS {cas.replace(/-/g, "‑")}</p>}
 
           {(pricingLocked || price || purity) && (
             <div className="mt-4 flex items-baseline justify-between gap-3">

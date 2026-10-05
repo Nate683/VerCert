@@ -192,7 +192,7 @@ export function AddToCartPanel({
                 subscribing ? "border-navy" : "border-hairline hover:border-navy/50"
               }`}
             >
-              <label className="flex cursor-pointer items-center justify-between gap-3">
+              <label className="-mx-4 -my-3 flex cursor-pointer items-center justify-between gap-3 px-4 py-3">
                 <span className="flex items-center gap-3 text-navy">
                   <input
                     type="radio"
@@ -341,15 +341,15 @@ export function AddToCartPanel({
         <li>Certificate of analysis included with every batch.</li>
         <li>Tracked shipping · Ships within 1–2 business days.</li>
         <li>
-          <Link href="/shipping-policy" className="underline-offset-4 hover:text-gold-ink hover:underline">
+          <Link href="/shipping-policy" className="inline-block py-1.5 underline-offset-4 hover:text-gold-ink hover:underline">
             Shipping
           </Link>
           {" · "}
-          <Link href="/refund-policy" className="underline-offset-4 hover:text-gold-ink hover:underline">
+          <Link href="/refund-policy" className="inline-block py-1.5 underline-offset-4 hover:text-gold-ink hover:underline">
             Returns
           </Link>
           {" · "}
-          <Link href="/contact" className="underline-offset-4 hover:text-gold-ink hover:underline">
+          <Link href="/contact" className="inline-block py-1.5 underline-offset-4 hover:text-gold-ink hover:underline">
             Contact
           </Link>
         </li>

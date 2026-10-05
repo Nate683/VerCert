@@ -109,25 +109,25 @@ function LoginForm() {
           setUseAffiliateCode((v) => !v);
           setError(null);
         }}
-        className="mt-4 text-center text-xs text-muted hover:text-gold-ink"
+        className="mt-2 py-2.5 text-center text-xs text-muted hover:text-gold-ink"
       >
         {useAffiliateCode
           ? "Sign in with your password instead"
           : "Affiliate? Sign in with your affiliate code instead"}
       </button>
 
-      <div className="mt-6 flex justify-between text-xs text-muted">
-        <Link href="/forgot-password" className="hover:text-gold-ink">
+      <div className="mt-2 flex justify-between text-xs text-muted">
+        <Link href="/forgot-password" className="py-2.5 hover:text-gold-ink">
           Forgot password?
         </Link>
-        <Link href={`/register${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="hover:text-gold-ink">
+        <Link href={`/register${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="py-2.5 hover:text-gold-ink">
           Create an account
         </Link>
       </div>
 
       <p className="mt-8 text-center text-xs text-muted/70">
         Want to become an affiliate?{" "}
-        <Link href="/register?affiliate=1" className="text-gold-ink hover:underline">
+        <Link href="/register?affiliate=1" className="inline-block py-2 text-gold-ink hover:underline">
           Sign up here
         </Link>
       </p>

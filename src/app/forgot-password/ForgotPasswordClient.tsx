@@ -57,7 +57,7 @@ export default function ForgotPasswordClient() {
       )}
 
       <p className="mt-6 text-center text-xs text-muted">
-        <Link href="/login" className="text-gold-ink hover:underline">
+        <Link href="/login" className="inline-block py-2 text-gold-ink hover:underline">
           Back to sign in
         </Link>
       </p>

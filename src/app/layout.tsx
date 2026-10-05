@@ -46,11 +46,9 @@ const readFont = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
+  // Tab and home-screen icons come from app/favicon.ico, app/icon.svg and
+  // app/apple-icon.png (see scripts/build-icons.mjs).
   metadataBase: new URL(getSiteUrl()),
-  icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
-  },
   ...buildMetadata({
     title: `${SITE_NAME} | Research Peptides, Verified`,
     path: "/",

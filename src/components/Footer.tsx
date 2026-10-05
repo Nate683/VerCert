@@ -32,41 +32,41 @@ export function Footer({ contact }: { contact: ContactContent }) {
 
           <div>
             <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Shop</h4>
-            <ul className="mt-4 space-y-3 text-sm text-white/60">
-              <li><Link href="/shop" className="hover:text-white">All Products</Link></li>
-              <li><Link href="/how-we-test" className="hover:text-white">How We Test</Link></li>
-              <li><Link href="/cart" className="hover:text-white">Cart</Link></li>
-              <li><Link href="/order-status" className="hover:text-white">Order Status</Link></li>
+            <ul className="mt-2 space-y-0.5 text-sm text-white/60">
+              <li><Link href="/shop" className="inline-block py-2 hover:text-white">All Products</Link></li>
+              <li><Link href="/how-we-test" className="inline-block py-2 hover:text-white">How We Test</Link></li>
+              <li><Link href="/cart" className="inline-block py-2 hover:text-white">Cart</Link></li>
+              <li><Link href="/order-status" className="inline-block py-2 hover:text-white">Order Status</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Company</h4>
-            <ul className="mt-4 space-y-3 text-sm text-white/60">
-              <li><Link href="/about" className="hover:text-white">About</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
-              <li><Link href="/faq" className="hover:text-white">FAQ</Link></li>
+            <ul className="mt-2 space-y-0.5 text-sm text-white/60">
+              <li><Link href="/about" className="inline-block py-2 hover:text-white">About</Link></li>
+              <li><Link href="/contact" className="inline-block py-2 hover:text-white">Contact</Link></li>
+              <li><Link href="/faq" className="inline-block py-2 hover:text-white">FAQ</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Legal</h4>
-            <ul className="mt-4 space-y-3 text-sm text-white/60">
-              <li><Link href="/terms" className="hover:text-white">Terms of Sale</Link></li>
-              <li><Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link></li>
-              <li><Link href="/refund-policy" className="hover:text-white">Refund Policy</Link></li>
-              <li><Link href="/shipping-policy" className="hover:text-white">Shipping Policy</Link></li>
+            <ul className="mt-2 space-y-0.5 text-sm text-white/60">
+              <li><Link href="/terms" className="inline-block py-2 hover:text-white">Terms of Sale</Link></li>
+              <li><Link href="/privacy-policy" className="inline-block py-2 hover:text-white">Privacy Policy</Link></li>
+              <li><Link href="/refund-policy" className="inline-block py-2 hover:text-white">Refund Policy</Link></li>
+              <li><Link href="/shipping-policy" className="inline-block py-2 hover:text-white">Shipping Policy</Link></li>
             </ul>
           </div>
 
           {contactLines.length > 0 && (
             <div>
               <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Contact</h4>
-              <ul className="mt-4 space-y-3 text-sm text-white/60">
+              <ul className="mt-2 space-y-0.5 text-sm text-white/60">
                 {contactLines.map((line) =>
                   line.href ? (
                     <li key={line.label}>
-                      <a href={line.href} className="hover:text-white">
+                      <a href={line.href} className="inline-block py-2 hover:text-white">
                         {line.label}
                       </a>
                     </li>

@@ -29,7 +29,12 @@ export function buildMetadata({
       url: path,
       siteName: SITE_NAME,
       type: "website",
-      images: [{ url: image }],
+      // Dimensions let a link preview lay out the card before fetching it.
+      images: [
+        image === "/opengraph-image"
+          ? { url: image, width: 1200, height: 630, alt: "VeriCert — Research Peptides, Verified" }
+          : { url: image },
+      ],
     },
     twitter: {
       card: "summary_large_image",

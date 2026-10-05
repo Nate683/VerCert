@@ -129,24 +129,24 @@ export default async function OrderPage({
                 </li>
               ))}
             </ol>
-            <div className="mt-6 flex flex-wrap gap-3 border-t border-hairline pt-5 text-xs uppercase tracking-[0.14em]">
+            <div className="mt-4 flex flex-wrap gap-x-5 border-t border-hairline pt-3 text-xs uppercase tracking-[0.14em]">
               {viewer && (
-                <Link href="/account" className="text-muted transition-colors hover:text-gold-ink">
+                <Link href="/account" className="inline-block py-2.5 text-muted transition-colors hover:text-gold-ink">
                   Order history →
                 </Link>
               )}
-              <Link href="/shop" className="text-muted transition-colors hover:text-gold-ink">
+              <Link href="/shop" className="inline-block py-2.5 text-muted transition-colors hover:text-gold-ink">
                 Continue shopping →
               </Link>
               {supportEmail ? (
                 <a
                   href={`mailto:${supportEmail}?subject=${encodeURIComponent(`Order ${order.reference}`)}`}
-                  className="text-muted transition-colors hover:text-gold-ink"
+                  className="inline-block py-2.5 text-muted transition-colors hover:text-gold-ink"
                 >
                   Email us about this order →
                 </a>
               ) : (
-                <Link href="/contact" className="text-muted transition-colors hover:text-gold-ink">
+                <Link href="/contact" className="inline-block py-2.5 text-muted transition-colors hover:text-gold-ink">
                   Contact support →
                 </Link>
               )}
@@ -163,7 +163,7 @@ export default async function OrderPage({
                   <div className="min-w-0">
                     <Link
                       href={`/shop/${item.slug}`}
-                      className="block truncate text-navy transition-colors hover:text-gold-ink"
+                      className="block truncate py-0.5 text-navy transition-colors hover:text-gold-ink"
                     >
                       {item.name}
                     </Link>
@@ -173,7 +173,7 @@ export default async function OrderPage({
                     {item.lotNumber && (
                       <p className="font-mono text-xs text-navy">
                         Lot{" "}
-                        <Link href={`/coa?batch=${encodeURIComponent(item.lotNumber)}`} className="underline-offset-4 hover:underline">
+                        <Link href={`/coa?batch=${encodeURIComponent(item.lotNumber)}`} className="inline-block py-1 underline-offset-4 hover:underline">
                           {item.lotNumber}
                         </Link>
                       </p>

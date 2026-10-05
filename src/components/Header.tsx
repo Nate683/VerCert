@@ -28,8 +28,8 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gold/15 bg-navy/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4 lg:px-10">
-        <Link href="/" className="shrink-0" aria-label="VeriCert home">
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-10">
+        <Link href="/" className="flex min-h-11 shrink-0 items-center" aria-label="VeriCert home">
           <VeriCertLogo className="h-9 w-auto sm:h-10" priority />
         </Link>
 
@@ -55,7 +55,7 @@ export function Header() {
             way to hold the layout. */}
         <div className="ml-auto hidden w-full max-w-xs md:block">{user && <SearchBox />}</div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-4 md:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
           <CoaEmblem className="-mx-1.5" />
           {user?.role && (
             <Link
@@ -67,14 +67,14 @@ export function Header() {
           )}
           <Link
             href={user ? "/account" : "/login"}
-            className="hidden text-[13px] uppercase tracking-[0.14em] text-white/70 transition-colors hover:text-gold sm:block"
+            className="flex min-h-11 items-center px-1 text-[12px] uppercase tracking-[0.12em] text-white/70 transition-colors hover:text-gold sm:text-[13px] sm:tracking-[0.14em]"
           >
             {user ? "Account" : "Sign In"}
           </Link>
           <Link
             href="/cart"
             aria-label={itemCount > 0 ? `Cart, ${itemCount} item(s)` : "Cart"}
-            className="relative flex items-center justify-center border border-white/15 p-2.5 text-white/80 transition-colors hover:border-gold hover:text-gold"
+            className="relative flex h-11 w-11 items-center justify-center border border-white/15 text-white/80 transition-colors hover:border-gold hover:text-gold"
           >
             <svg
               viewBox="0 0 24 24"
@@ -97,7 +97,7 @@ export function Header() {
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex flex-col gap-1.5 p-1 xl:hidden"
+            className="-mr-2 flex h-11 w-11 flex-col items-center justify-center gap-1.5 xl:hidden"
           >
             <span className="h-px w-6 bg-white" />
             <span className="h-px w-6 bg-white" />

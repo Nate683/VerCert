@@ -95,7 +95,7 @@ export function SubscriptionsSection({
             {s.lastOrderReference && (
               <p className="mt-1 text-xs text-muted">
                 Last order:{" "}
-                <Link href={`/order/${s.lastOrderReference}`} className="font-mono text-navy underline-offset-4 hover:underline">
+                <Link href={`/order/${s.lastOrderReference}`} className="inline-block py-1 font-mono text-navy underline-offset-4 hover:underline">
                   {s.lastOrderReference}
                 </Link>
               </p>

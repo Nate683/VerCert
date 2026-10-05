@@ -160,7 +160,7 @@ export default async function Home() {
             </div>
             <Link
               href="/shop"
-              className="underline-draw hidden text-sm uppercase tracking-[0.15em] text-muted hover:text-gold-ink sm:block"
+              className="underline-draw py-2 text-sm uppercase tracking-[0.15em] text-muted hover:text-gold-ink"
             >
               View All →
             </Link>

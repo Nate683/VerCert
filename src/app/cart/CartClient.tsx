@@ -112,7 +112,7 @@ export default function CartClient() {
                   <button
                     type="button"
                     onClick={() => removeItem(cartLineKey(item))}
-                    className="text-xs uppercase tracking-[0.15em] text-muted transition-colors hover:text-gold-ink"
+                    className="-my-2 py-3 text-xs uppercase tracking-[0.15em] text-muted transition-colors hover:text-gold-ink"
                   >
                     Remove
                     <span className="sr-only"> {item.name}</span>

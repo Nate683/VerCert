@@ -512,7 +512,7 @@ export function CheckoutForm({
 
             <Link
               href="/cart"
-              className="mt-5 block text-center text-xs uppercase tracking-[0.12em] text-muted underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
+              className="mt-3 block py-2.5 text-center text-xs uppercase tracking-[0.12em] text-muted underline-offset-4 transition-colors hover:text-gold-ink hover:underline"
             >
               Edit cart
             </Link>

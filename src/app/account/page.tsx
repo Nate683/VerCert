@@ -95,7 +95,11 @@ export default async function AccountPage() {
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-hairline pb-6">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
-          <h1 className="mt-3 font-serif text-3xl text-navy">{customer.email}</h1>
+          {/* A long address breaks before the @ on a phone, not mid-word. */}
+          <h1 className="mt-3 font-serif text-2xl text-navy [hyphens:none] [overflow-wrap:anywhere] sm:text-3xl">
+            {customer.email.split("@")[0]}
+            <wbr />@{customer.email.split("@").slice(1).join("@")}
+          </h1>
           {!customer.emailVerified && (
             <div className="mt-2 flex items-center gap-3">
               <span className="text-xs text-muted">Email not verified.</span>
@@ -148,7 +152,7 @@ export default async function AccountPage() {
                   <div className="min-w-0">
                     <Link
                       href={`/order/${order.reference}`}
-                      className="font-mono text-sm text-navy transition-colors hover:text-gold-ink"
+                      className="inline-block py-1 font-mono text-sm text-navy transition-colors hover:text-gold-ink"
                     >
                       {order.reference}
                     </Link>
