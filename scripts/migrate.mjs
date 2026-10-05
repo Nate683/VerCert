@@ -548,6 +548,41 @@ async function main() {
   // Other names a product is sold or searched under (JSON array of strings).
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS alternate_names TEXT`;
 
+  // The research-use attestation ticked at checkout, recorded per order: the
+  // exact wording shown, when, and from which IP. Null on orders placed
+  // before it was recorded.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS research_attestation TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS research_attested_at TEXT`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS research_attested_ip TEXT`;
+
+  // Subscribe and save: a recurring order for one size of one compound. Each
+  // run creates an ordinary order awaiting payment (payment is manual, so
+  // nothing is charged automatically). The discount is fixed when the
+  // customer subscribes. `customer` is the shipping snapshot (JSON) the
+  // recurring orders ship to.
+  await sql`
+    CREATE TABLE IF NOT EXISTS subscriptions (
+      id TEXT PRIMARY KEY,
+      customer_id TEXT NOT NULL,
+      product_slug TEXT NOT NULL,
+      size_label TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      interval_days INTEGER NOT NULL,
+      discount_percent DOUBLE PRECISION NOT NULL,
+      payment_method TEXT NOT NULL,
+      customer TEXT NOT NULL,
+      status TEXT NOT NULL,
+      status_reason TEXT,
+      next_order_at TEXT NOT NULL,
+      last_order_reference TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS subscriptions_customer_id_idx ON subscriptions (customer_id)`;
+  await sql`CREATE INDEX IF NOT EXISTS subscriptions_due_idx ON subscriptions (status, next_order_at)`;
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS subscription_id TEXT`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

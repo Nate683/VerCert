@@ -9,23 +9,37 @@ import { pricedSizes, resolveUnitPrice } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import type { BlendComponentInfo } from "@/lib/products/blend-components";
 import { VialGlyph } from "@/components/VialGlyph";
+import { intervalLabel, subscriptionUnitPrice } from "@/lib/subscriptions/rules";
 
 export function AddToCartPanel({
   product,
   components = {},
+  subscription = null,
 }: {
   product: Product;
   components?: Record<string, BlendComponentInfo>;
+  // Set only when subscribe-and-save is on and this product qualifies.
+  subscription?: { discountPercent: number; intervalDays: number[] } | null;
 }) {
   const router = useRouter();
   const [sizeIndex, setSizeIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  // 0 = one-time purchase; otherwise the chosen subscription interval.
+  const [intervalDays, setIntervalDays] = useState(0);
   const { addItem } = useCart();
+
+  // Stock from the inventory table. Out of stock can't be added (checkout
+  // would refuse it), and the quantity can't exceed what's left.
+  const stock = product.stock;
+  const outOfStock = stock?.status === "out";
+  const maxQuantity = stock ? Math.max(1, Math.min(999, stock.remaining)) : 999;
 
   const sizes = pricedSizes(product);
   const size = sizes[Math.min(sizeIndex, sizes.length - 1)];
-  const unitPrice = resolveUnitPrice(size, quantity);
+  const tierPrice = resolveUnitPrice(size, quantity);
+  const subscribing = Boolean(subscription && intervalDays);
+  const unitPrice = subscribing ? subscriptionUnitPrice(tierPrice, subscription!.discountPercent) : tierPrice;
   const listPrice = size.priceUsd;
   const lineTotal = unitPrice * quantity;
   const saving = (listPrice - unitPrice) * quantity;
@@ -44,6 +58,7 @@ export function AddToCartPanel({
       sizeLabel: size.label,
       priceUsd: unitPrice,
       quantity,
+      ...(subscribing ? { subscription: { intervalDays } } : {}),
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 3000);
@@ -134,6 +149,93 @@ export function AddToCartPanel({
         </div>
       )}
 
+      {stock && (
+        <p className={`mt-6 flex items-center gap-2 text-sm ${stock.status === "out" ? "text-muted" : "text-navy"}`}>
+          <span
+            aria-hidden="true"
+            className={`h-2 w-2 rounded-full ${
+              stock.status === "out" ? "bg-muted" : stock.status === "low" ? "bg-gold" : "bg-navy"
+            }`}
+          />
+          {stock.status === "out"
+            ? "Out of stock"
+            : stock.status === "low"
+              ? `Low stock: only ${stock.remaining} left`
+              : "In stock"}
+        </p>
+      )}
+
+      {/* Subscribe and save: single compounds only, when a discount is set. */}
+      {subscription && !outOfStock && (
+        <fieldset className="mt-6">
+          <legend className="text-xs uppercase tracking-[0.25em] text-gold-ink">Purchase</legend>
+          <div className="mt-3 space-y-2">
+            <label
+              className={`flex cursor-pointer items-center justify-between gap-3 border-2 bg-paper px-4 py-3 text-sm ${
+                !subscribing ? "border-navy" : "border-hairline hover:border-navy/50"
+              }`}
+            >
+              <span className="flex items-center gap-3 text-navy">
+                <input
+                  type="radio"
+                  name="purchase-type"
+                  checked={!subscribing}
+                  onChange={() => setIntervalDays(0)}
+                  className="h-4 w-4 accent-navy"
+                />
+                One-time purchase
+              </span>
+              <span className="font-mono text-navy">${tierPrice.toFixed(2)}</span>
+            </label>
+            <div
+              className={`border-2 bg-paper px-4 py-3 text-sm ${
+                subscribing ? "border-navy" : "border-hairline hover:border-navy/50"
+              }`}
+            >
+              <label className="flex cursor-pointer items-center justify-between gap-3">
+                <span className="flex items-center gap-3 text-navy">
+                  <input
+                    type="radio"
+                    name="purchase-type"
+                    checked={subscribing}
+                    onChange={() => setIntervalDays(subscription.intervalDays[0])}
+                    className="h-4 w-4 accent-navy"
+                  />
+                  Subscribe &amp; save {subscription.discountPercent}%
+                </span>
+                <span className="font-mono text-navy">
+                  ${subscriptionUnitPrice(tierPrice, subscription.discountPercent).toFixed(2)}
+                </span>
+              </label>
+              {subscribing && (
+                <div className="mt-3 border-t border-hairline pl-7 pt-3">
+                  <label className="flex flex-wrap items-center gap-2 text-sm text-navy">
+                    Deliver
+                    <select
+                      value={intervalDays}
+                      onChange={(e) => setIntervalDays(Number(e.target.value))}
+                      className="border border-hairline bg-paper px-2 py-1.5 text-sm text-navy"
+                    >
+                      {subscription.intervalDays.map((d) => (
+                        <option key={d} value={d}>
+                          {intervalLabel(d)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">
+                    This order now, then a new order {intervalLabel(intervalDays)} at{" "}
+                    {subscription.discountPercent}% off. Each one is emailed to you with bank transfer
+                    instructions and ships once paid. Nothing is charged automatically, and you can
+                    cancel any time from your account.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </fieldset>
+      )}
+
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">Price</p>
@@ -144,7 +246,9 @@ export function AddToCartPanel({
           {unitPrice !== listPrice && (
             <p className="font-mono text-xs text-muted">
               <span className="line-through">${listPrice.toFixed(2)}</span>
-              <span className="ml-2 text-gold-ink">bulk price applied</span>
+              <span className="ml-2 text-gold-ink">
+                {subscribing ? `subscription price${tierPrice !== listPrice ? " + bulk" : ""}` : "bulk price applied"}
+              </span>
             </p>
           )}
         </div>
@@ -169,17 +273,18 @@ export function AddToCartPanel({
               id="quantity"
               type="number"
               min={1}
-              max={999}
+              max={maxQuantity}
               value={quantity}
               onChange={(e) => {
                 const next = Number(e.target.value);
-                setQuantity(Number.isFinite(next) ? Math.min(999, Math.max(1, Math.floor(next))) : 1);
+                setQuantity(Number.isFinite(next) ? Math.min(maxQuantity, Math.max(1, Math.floor(next))) : 1);
               }}
               className="w-14 border-x border-hairline bg-transparent py-2 text-center text-sm text-navy focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
             />
             <button
               type="button"
-              onClick={() => setQuantity((q) => Math.min(999, q + 1))}
+              onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+              disabled={quantity >= maxQuantity}
               className="px-3 py-2 text-muted transition-colors hover:text-gold-ink"
               aria-label="Increase quantity"
             >
@@ -208,9 +313,10 @@ export function AddToCartPanel({
       <button
         type="button"
         onClick={handleAdd}
-        className="mt-5 w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink"
+        disabled={outOfStock}
+        className="mt-5 w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:cursor-not-allowed disabled:border-hairline disabled:bg-surface disabled:text-muted"
       >
-        {added ? "Added ✓" : "Add to Cart"}
+        {outOfStock ? "Out of Stock" : added ? "Added ✓" : subscribing ? "Subscribe & Add to Cart" : "Add to Cart"}
       </button>
 
       {added && (

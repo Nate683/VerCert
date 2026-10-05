@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { formatPurity } from "@/lib/products/specs";
 import Image from "next/image";
-import { useCart } from "@/lib/cart-context";
+import { useCart, cartLineKey } from "@/lib/cart-context";
+import { intervalLabel } from "@/lib/subscriptions/rules";
 import { useCatalog } from "@/lib/use-catalog";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 
@@ -46,7 +47,7 @@ export default function CartClient() {
             const entry = entries.find((e) => e.slug === item.slug);
             return (
               <li
-                key={`${item.slug}-${item.sizeLabel}`}
+                key={cartLineKey(item)}
                 className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center"
               >
                 <Link
@@ -74,13 +75,18 @@ export default function CartClient() {
                   <p className="mt-1 font-mono text-xs text-muted">
                     ${item.priceUsd.toFixed(2)} each
                   </p>
+                  {item.subscription && (
+                    <p className="mt-1 text-xs text-navy">
+                      Subscribe &amp; save · {intervalLabel(item.subscription.intervalDays)}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-5">
                   <div className="flex items-center border border-hairline">
                     <button
                       type="button"
-                      onClick={() => updateQuantity(item.slug, item.sizeLabel, item.quantity - 1)}
+                      onClick={() => updateQuantity(cartLineKey(item), item.quantity - 1)}
                       className="px-3 py-2 text-muted transition-colors hover:text-gold-ink"
                       aria-label={`Decrease quantity of ${item.name}`}
                     >
@@ -91,7 +97,7 @@ export default function CartClient() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => updateQuantity(item.slug, item.sizeLabel, item.quantity + 1)}
+                      onClick={() => updateQuantity(cartLineKey(item), item.quantity + 1)}
                       className="px-3 py-2 text-muted transition-colors hover:text-gold-ink"
                       aria-label={`Increase quantity of ${item.name}`}
                     >
@@ -105,7 +111,7 @@ export default function CartClient() {
 
                   <button
                     type="button"
-                    onClick={() => removeItem(item.slug, item.sizeLabel)}
+                    onClick={() => removeItem(cartLineKey(item))}
                     className="text-xs uppercase tracking-[0.15em] text-muted transition-colors hover:text-gold-ink"
                   >
                     Remove

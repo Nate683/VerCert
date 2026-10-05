@@ -11,11 +11,17 @@ import {
 import type { CartItem } from "./types";
 import { track } from "./track-client";
 
+// One cart line per product, size and purchase type: the same size bought
+// once and on a subscription are separate lines.
+export function cartLineKey(item: Pick<CartItem, "slug" | "sizeLabel" | "subscription">): string {
+  return `${item.slug}|${item.sizeLabel}|${item.subscription?.intervalDays ?? 0}`;
+}
+
 type CartContextValue = {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  removeItem: (slug: string, sizeLabel: string) => void;
-  updateQuantity: (slug: string, sizeLabel: string, quantity: number) => void;
+  removeItem: (lineKey: string) => void;
+  updateQuantity: (lineKey: string, quantity: number) => void;
   clearCart: () => void;
   subtotal: number;
   itemCount: number;
@@ -46,9 +52,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {
-      const existing = prev.find(
-        (p) => p.slug === item.slug && p.sizeLabel === item.sizeLabel
-      );
+      const existing = prev.find((p) => cartLineKey(p) === cartLineKey(item));
       if (existing) {
         return prev.map((p) =>
           p === existing ? { ...p, quantity: p.quantity + item.quantity } : p
@@ -59,24 +63,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     track("add_to_cart", { slug: item.slug });
   }, []);
 
-  const removeItem = useCallback((slug: string, sizeLabel: string) => {
-    setItems((prev) =>
-      prev.filter((p) => !(p.slug === slug && p.sizeLabel === sizeLabel))
-    );
+  const removeItem = useCallback((lineKey: string) => {
+    setItems((prev) => prev.filter((p) => cartLineKey(p) !== lineKey));
   }, []);
 
-  const updateQuantity = useCallback(
-    (slug: string, sizeLabel: string, quantity: number) => {
-      setItems((prev) =>
-        prev.map((p) =>
-          p.slug === slug && p.sizeLabel === sizeLabel
-            ? { ...p, quantity: Math.max(1, quantity) }
-            : p
-        )
-      );
-    },
-    []
-  );
+  const updateQuantity = useCallback((lineKey: string, quantity: number) => {
+    setItems((prev) =>
+      prev.map((p) => (cartLineKey(p) === lineKey ? { ...p, quantity: Math.max(1, quantity) } : p))
+    );
+  }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
 

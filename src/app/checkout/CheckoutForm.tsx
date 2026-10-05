@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useCart } from "@/lib/cart-context";
+import { useCart, cartLineKey } from "@/lib/cart-context";
 import { track } from "@/lib/track-client";
 import type { PaymentMethod, SavedAddress } from "@/lib/types";
+import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
 
 const PAYMENT_OPTIONS: { value: PaymentMethod; title: string; oneLiner: string; detail: string }[] = [
   {
@@ -212,10 +213,12 @@ export function CheckoutForm({
           },
           paymentMethod: method,
           promoCode: appliedPromo?.code,
+          researchAttestation: agreed,
           items: items.map((item) => ({
             slug: item.slug,
             sizeLabel: item.sizeLabel,
             quantity: item.quantity,
+            ...(item.subscription ? { subscriptionIntervalDays: item.subscription.intervalDays } : {}),
           })),
         }),
       });
@@ -386,9 +389,12 @@ export function CheckoutForm({
                 onChange={(e) => setAgreed(e.target.checked)}
                 className="mt-0.5 h-4 w-4 shrink-0 accent-gold"
               />
-              I certify that I am purchasing these products strictly for
-              laboratory research purposes, and not for human or veterinary
-              consumption.
+              <span>
+                {RESEARCH_ATTESTATION}
+                <span className="mt-1 block text-xs text-muted">
+                  Required. We record your acceptance with this order.
+                </span>
+              </span>
             </label>
 
             {error && (
@@ -415,7 +421,7 @@ export function CheckoutForm({
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Order Summary</h2>
             <ul className="mt-4 space-y-4">
               {items.map((item) => (
-                <li key={`${item.slug}-${item.sizeLabel}`} className="flex justify-between gap-3 text-sm">
+                <li key={cartLineKey(item)} className="flex justify-between gap-3 text-sm">
                   <div className="min-w-0">
                     <p className="truncate text-navy">{item.name}</p>
                     <p className="text-xs text-muted">

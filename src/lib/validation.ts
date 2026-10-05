@@ -81,9 +81,16 @@ const orderItemSchema = z.object({
 
 export const createOrderSchema = z.object({
   customer: customerInfoSchema,
-  items: z.array(orderItemSchema).min(1).max(50),
+  items: z
+    .array(orderItemSchema.extend({ subscriptionIntervalDays: z.number().int().min(1).max(365).optional() }))
+    .min(1)
+    .max(50),
   paymentMethod: z.enum(["crypto", "bank_transfer"]),
   promoCode: z.string().trim().max(40).optional(),
+  // The research-use statement must be ticked; the server records it.
+  researchAttestation: z.literal(true, {
+    error: "Confirm the research-use statement before placing your order.",
+  }),
 });
 
 export const orderStatusUpdateSchema = z.object({

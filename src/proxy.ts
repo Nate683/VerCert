@@ -17,6 +17,7 @@ const PUBLIC_PAGES = new Set([
   "/terms",
   "/refund-policy",
   "/shipping-policy",
+  "/order-status",
 ]);
 
 // Signing in, registering, and the links sent by email must work signed out.
@@ -34,7 +35,7 @@ const AUTH_PAGES = new Set([
 
 // Sections that handle their own sign-in. /command and /office are checked
 // separately below.
-const OWN_AUTH_SECTIONS = ["/account", "/hq", "/partner", "/affiliate"];
+const OWN_AUTH_SECTIONS = ["/account", "/hq", "/partner", "/affiliate", "/order"];
 
 // API routes that are public or check auth themselves. The rest — catalog,
 // COA lookup, promo validation, orders — need a signed-in customer.
@@ -48,6 +49,10 @@ const UNGATED_API = [
   "/api/unsubscribe",
   "/api/hq",
   "/api/executive",
+  // Order creation checks its own sign-in; the guest status lookup and the
+  // payment-status poll on the order page work signed out (see /order-status).
+  "/api/orders",
+  "/api/cron",
 ];
 
 const within = (pathname: string, section: string) =>

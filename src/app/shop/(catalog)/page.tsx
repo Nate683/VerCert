@@ -1,5 +1,6 @@
 import { listProducts } from "@/lib/products";
 import { toStorefrontProduct } from "@/lib/products/storefront";
+import { withStock } from "@/lib/inventory";
 import { ShopClient } from "./ShopClient";
 import { buildMetadata } from "@/lib/seo";
 
@@ -14,7 +15,7 @@ export const metadata = buildMetadata({
 export const dynamic = "force-dynamic";
 
 export default async function ShopPage() {
-  const products = await listProducts();
+  const products = await withStock(await listProducts());
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">

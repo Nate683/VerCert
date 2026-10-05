@@ -5,7 +5,9 @@ import { query } from "@/lib/db";
 // account, name, email and street address go; items, lot numbers, amounts,
 // dates and the state/country shipped to stay, since sales tax is reported by
 // state. An unpaid order can't be fulfilled without an address, so it's
-// cancelled rather than left pending.
+// cancelled rather than left pending. The IP recorded with each order's
+// research-use attestation goes too (the wording and time stay). Subscriptions
+// are cancelled and their shipping snapshot cleared.
 export async function eraseCustomer(user: { id: string; email: string }): Promise<{ ordersAnonymized: number }> {
   const rows = await query<{ orders: number }>(
     `WITH anonymized AS (
@@ -19,9 +21,15 @@ export async function eraseCustomer(user: { id: string; email: string }): Promis
               )::text,
               status = CASE WHEN status = 'awaiting_payment' THEN 'cancelled' ELSE status END,
               cancelled_at = CASE WHEN status = 'awaiting_payment' THEN $3 ELSE cancelled_at END,
-              cancel_reason = CASE WHEN status = 'awaiting_payment' THEN 'Account deleted' ELSE cancel_reason END
+              cancel_reason = CASE WHEN status = 'awaiting_payment' THEN 'Account deleted' ELSE cancel_reason END,
+              research_attested_ip = NULL
         WHERE customer_id = $1 OR lower(customer::jsonb->>'email') = $2
         RETURNING id
+     ), subscriptions_ended AS (
+       UPDATE subscriptions
+          SET customer_id = 'deleted', customer = '{}', status = 'cancelled',
+              status_reason = 'Account deleted', updated_at = $3
+        WHERE customer_id = $1
      ), redemptions AS (
        UPDATE promo_redemptions SET customer_id = NULL WHERE customer_id = $1
      ), browsing AS (

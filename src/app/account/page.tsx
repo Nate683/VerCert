@@ -12,6 +12,10 @@ import { AccountLogoutButton } from "./AccountLogoutButton";
 import { EmailChangeForm } from "./EmailChangeForm";
 import { ReorderButton } from "./ReorderButton";
 import { AccountDataSection } from "./AccountDataSection";
+import { SubscriptionsSection } from "./SubscriptionsSection";
+import { listSubscriptionsForCustomer } from "@/lib/subscriptions/store";
+import { getContent } from "@/lib/site-content";
+import { DEFAULT_SUBSCRIPTION_SETTINGS } from "@/lib/subscriptions/rules";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "My Account | VeriCert", robots: { index: false, follow: false } };
@@ -42,11 +46,26 @@ export default async function AccountPage() {
   const customer = await getCurrentCustomer();
   if (!customer) redirect("/login?next=/account");
 
-  const [orders, affiliate, products] = await Promise.all([
+  const [orders, affiliate, products, subscriptions, subscriptionSettings] = await Promise.all([
     getOrdersByCustomer(customer.id),
     getAffiliateByEmail(customer.email),
-    listProducts(),
+    listProducts({ includeInactive: true }),
+    listSubscriptionsForCustomer(customer.id),
+    getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS),
   ]);
+  const subscriptionViews = subscriptions.map((s) => ({
+    id: s.id,
+    productName: products.find((p) => p.slug === s.productSlug)?.name ?? s.productSlug,
+    productSlug: s.productSlug,
+    sizeLabel: s.sizeLabel,
+    quantity: s.quantity,
+    intervalDays: s.intervalDays,
+    discountPercent: s.discountPercent,
+    status: s.status,
+    statusReason: s.statusReason,
+    nextOrderAt: s.nextOrderAt,
+    lastOrderReference: s.lastOrderReference,
+  }));
 
   // Re-price each past order against the live catalog so "Reorder" never puts
   // a stale price in the cart.
@@ -172,6 +191,8 @@ export default async function AccountPage() {
           </ul>
         )}
       </section>
+
+      <SubscriptionsSection initial={subscriptionViews} intervalOptions={subscriptionSettings.intervalDays} />
 
       <section className="mt-12 border-t border-hairline pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Saved Shipping Address</h2>

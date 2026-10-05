@@ -12,6 +12,14 @@ import type { CartItem } from "@/lib/types";
 import { createOrderSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { withApiErrorHandling } from "@/lib/api-error";
+import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
+import {
+  DEFAULT_SUBSCRIPTION_SETTINGS,
+  isSubscribable,
+  subscriptionsEnabled,
+  subscriptionUnitPrice,
+} from "@/lib/subscriptions/rules";
+import { createSubscription } from "@/lib/subscriptions/store";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +44,10 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const { customer, items, paymentMethod, promoCode } = parsed.data;
 
   // Recompute pricing server-side from the product catalog — never trust client-sent prices.
-  const products = await listProducts();
+  const [products, subscriptionSettings] = await Promise.all([
+    listProducts(),
+    getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS),
+  ]);
   const resolvedItems: CartItem[] = [];
   for (const item of items) {
     const product = products.find((p) => p.slug === item.slug);
@@ -44,14 +55,38 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     if (!product || !size) {
       return NextResponse.json({ error: `Invalid cart item: ${item.slug}` }, { status: 400 });
     }
+    const listPrice = resolveUnitPrice(size, item.quantity);
+    let priceUsd = listPrice;
+    let subscription: CartItem["subscription"];
+    if (item.subscriptionIntervalDays !== undefined) {
+      // Subscribe and save: only on single compounds, only at an offered
+      // interval, and only while a discount is set.
+      if (
+        !subscriptionsEnabled(subscriptionSettings) ||
+        !isSubscribable(product) ||
+        !subscriptionSettings.intervalDays.includes(item.subscriptionIntervalDays)
+      ) {
+        return NextResponse.json(
+          { error: `${product.name} can't be ordered on subscription right now. Remove it from your cart and add it again.` },
+          { status: 400 }
+        );
+      }
+      priceUsd = subscriptionUnitPrice(listPrice, subscriptionSettings.discountPercent);
+      subscription = {
+        intervalDays: item.subscriptionIntervalDays,
+        discountPercent: subscriptionSettings.discountPercent,
+        listPriceUsd: listPrice,
+      };
+    }
     resolvedItems.push({
       slug: product.slug,
       name: product.name,
       sizeLabel: size.label,
-      priceUsd: resolveUnitPrice(size, item.quantity),
+      priceUsd,
       quantity: item.quantity,
       // The batch currently on sale — the first listed, as on the product page.
       lotNumber: product.batchNumbers[0],
+      ...(subscription ? { subscription } : {}),
     });
   }
 
@@ -105,7 +140,25 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     promoCodeId: appliedPromoCodeId,
     discountAmount,
     freeShipping,
+    researchAttestation: { text: RESEARCH_ATTESTATION, at: new Date().toISOString(), ip },
   });
+
+  // Each subscribed line becomes a subscription; this order is its first
+  // delivery, so the next one is due one interval from now.
+  for (const line of resolvedItems) {
+    if (!line.subscription) continue;
+    await createSubscription({
+      customerId: currentCustomer.id,
+      productSlug: line.slug,
+      sizeLabel: line.sizeLabel,
+      quantity: line.quantity,
+      intervalDays: line.subscription.intervalDays,
+      discountPercent: line.subscription.discountPercent!,
+      paymentMethod,
+      customer,
+      firstOrderReference: order.reference,
+    });
+  }
 
   // Remember the shipping address used for next time. And if this is the
   // first time the account has used an affiliate's promo code, credit that

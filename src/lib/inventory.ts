@@ -1,6 +1,7 @@
 import { query } from "@/lib/db";
 import { listProducts } from "@/lib/products";
-import type { CartItem } from "@/lib/types";
+import type { CartItem, Product } from "@/lib/types";
+import { stockState } from "@/lib/products/stock";
 
 export type LowInventoryAlert = {
   slug: string;
@@ -38,18 +39,28 @@ export async function listInventory(): Promise<InventoryRow[]> {
   return query<InventoryRow>("SELECT * FROM inventory ORDER BY slug");
 }
 
+// Attaches each product's stock state for the storefront, in one query.
+export async function withStock<P extends Product>(products: P[]): Promise<P[]> {
+  const rows = await listInventory();
+  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+  return products.map((p) => ({ ...p, stock: stockState(bySlug.get(p.slug)) }));
+}
+
 // Creates (or updates) the stock row for a product — used when a product is
-// added/edited from the executive Products tab.
+// added/edited from the executive Products tab. Updating the quantity keeps
+// the row's low-stock threshold unless a new one is given; it used to reset
+// it to 10 on every stock edit.
 export async function upsertInventory(
   slug: string,
   quantity: number,
-  threshold = 10
+  threshold?: number
 ): Promise<void> {
   await query(
     `INSERT INTO inventory (slug, quantity, threshold)
-     VALUES ($1, $2, $3)
-     ON CONFLICT (slug) DO UPDATE SET quantity = EXCLUDED.quantity, threshold = EXCLUDED.threshold`,
-    [slug, quantity, threshold]
+     VALUES ($1, $2, COALESCE($3::int, 10))
+     ON CONFLICT (slug) DO UPDATE SET quantity = EXCLUDED.quantity,
+       threshold = COALESCE($3::int, inventory.threshold)`,
+    [slug, quantity, threshold ?? null]
   );
 }
 

@@ -35,6 +35,10 @@ type OrderRow = {
   refunded_at: string | null;
   refund_reason: string | null;
   refund_amount: number | null;
+  research_attestation: string | null;
+  research_attested_at: string | null;
+  research_attested_ip: string | null;
+  subscription_id: string | null;
 };
 
 function rowToOrder(row: OrderRow): Order {
@@ -66,6 +70,11 @@ function rowToOrder(row: OrderRow): Order {
     refundedAt: row.refunded_at ?? undefined,
     refundReason: (row.refund_reason as Order["refundReason"]) ?? undefined,
     refundAmount: row.refund_amount ?? undefined,
+    researchAttestation:
+      row.research_attestation && row.research_attested_at
+        ? { text: row.research_attestation, at: row.research_attested_at, ip: row.research_attested_ip ?? undefined }
+        : undefined,
+    subscriptionId: row.subscription_id ?? undefined,
   };
 }
 
@@ -83,6 +92,8 @@ export type CreateOrderInput = {
   promoCodeId?: string;
   discountAmount?: number;
   freeShipping?: boolean;
+  researchAttestation?: Order["researchAttestation"];
+  subscriptionId?: string;
 };
 
 export async function createOrder(input: CreateOrderInput): Promise<Order> {
@@ -95,8 +106,9 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
 
   await query(
     `INSERT INTO orders
-      (id, reference, created_at, status, payment_method, customer_id, customer, items, subtotal, total, promo_code, promo_code_id, discount_amount, free_shipping)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+      (id, reference, created_at, status, payment_method, customer_id, customer, items, subtotal, total, promo_code, promo_code_id, discount_amount, free_shipping,
+       research_attestation, research_attested_at, research_attested_ip, subscription_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
     [
       order.id,
       order.reference,
@@ -112,6 +124,10 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
       order.promoCodeId ?? null,
       order.discountAmount ?? 0,
       order.freeShipping ?? false,
+      order.researchAttestation?.text ?? null,
+      order.researchAttestation?.at ?? null,
+      order.researchAttestation?.ip ?? null,
+      order.subscriptionId ?? null,
     ]
   );
 

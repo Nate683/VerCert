@@ -49,6 +49,9 @@ export type Product = {
   costUsd?: number;
   createdAt?: string;
   updatedAt?: string;
+  // Attached for the storefront by withStock (lib/inventory.ts); absent
+  // elsewhere. Never stored on the product row.
+  stock?: import("./products/stock").StockState;
 };
 
 export type CoaDocument = {
@@ -84,6 +87,10 @@ export type CartItem = {
   // Set on order lines: the lot the item was sold from, so every vial on an
   // order traces to its certificate of analysis. Cart items don't carry one.
   lotNumber?: string;
+  // Subscribe and save. On a cart item only intervalDays is set (the server
+  // decides the price); on an order line all three are, and priceUsd is the
+  // discounted price.
+  subscription?: { intervalDays: number; discountPercent?: number; listPriceUsd?: number };
 };
 
 export type PaymentMethod = "crypto" | "bank_transfer";
@@ -158,6 +165,11 @@ export type Order = {
   refundedAt?: string;
   refundReason?: RefundReasonCode;
   refundAmount?: number;
+  // The research-use statement the buyer ticked at checkout: the exact words
+  // shown, when, and the IP it came from. Absent on older orders.
+  researchAttestation?: { text: string; at: string; ip?: string };
+  // Set on orders created by a subscription run.
+  subscriptionId?: string;
 };
 
 export type RefundReasonCode =

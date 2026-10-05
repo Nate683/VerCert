@@ -8,6 +8,7 @@ import { useExecMode } from "@/lib/exec-mode-context";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
 import { formatPurity, specText } from "@/lib/products/specs";
 import { pricedSizes } from "@/lib/products/pricing";
+import { stockLabel } from "@/lib/products/stock";
 
 // "from $40" hid the spread on products whose sizes differ by an order of
 // magnitude. Show the range, and collapse to a single figure when there is
@@ -90,9 +91,23 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
         <div className="flex flex-1 flex-col border-t border-gold/15 bg-navy p-5">
           <div className="mb-3 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.16em]">
             {product.category ? <span className="truncate text-gold">{product.category}</span> : <span />}
-            <span className={`shrink-0 ${active ? "text-white/70" : "text-white/50"}`}>
-              {active ? "In Stock" : "Unavailable"}
-            </span>
+            {/* Stock from the inventory table (withStock). Without it, say
+                nothing rather than claim "In Stock". */}
+            {!active ? (
+              <span className="shrink-0 text-white/50">Unavailable</span>
+            ) : product.stock ? (
+              <span
+                className={`shrink-0 ${
+                  product.stock.status === "out"
+                    ? "text-white/55"
+                    : product.stock.status === "low"
+                      ? "text-gold"
+                      : "text-white/70"
+                }`}
+              >
+                {stockLabel(product.stock)}
+              </span>
+            ) : null}
           </div>
           <h3 className="font-serif text-lg leading-snug text-white">{product.name}</h3>
           {cas && <p className="mt-1 font-mono text-[11px] text-white/45">CAS {cas}</p>}

@@ -1,5 +1,7 @@
 import { query } from "@/lib/db";
 import { getOrdersByCustomer } from "@/lib/orders/store";
+import { listSubscriptionsForCustomer } from "@/lib/subscriptions/store";
+import { intervalLabel } from "@/lib/subscriptions/rules";
 import { listProducts } from "@/lib/products";
 import { getAffiliateById } from "@/lib/affiliates";
 import type { Attribution, Customer, CustomerInfo, SavedAddress } from "@/lib/types";
@@ -44,7 +46,9 @@ export type CustomerRecord = {
       quantity: number;
       unitPriceUsd: number;
       lotNumber?: string;
+      subscriptionIntervalDays?: number;
     }[];
+    researchUseAttestation?: { statement: string; acceptedAt: string; ipAddress?: string };
     subtotalUsd: number;
     discountUsd: number;
     totalUsd: number;
@@ -57,6 +61,18 @@ export type CustomerRecord = {
     trackingNumber?: string;
     refundedAt?: string;
     refundAmountUsd?: number;
+  }[];
+  subscriptions: {
+    product: string;
+    size: string;
+    quantity: number;
+    every: string;
+    discountPercent: number;
+    status: string;
+    nextOrderAt: string;
+    paymentMethod: string;
+    shipsTo: CustomerInfo;
+    createdAt: string;
   }[];
   browsing: { event: string; product?: string; path?: string; at: string }[];
   emailEngagement: { event: string; subject?: string; link?: string; at: string }[];
@@ -75,7 +91,7 @@ function parseMetadata(raw: string | null): { slug?: string; path?: string } {
 }
 
 export async function buildCustomerRecord(user: Customer): Promise<CustomerRecord> {
-  const [orders, metrics, events, emails, products, affiliate] = await Promise.all([
+  const [orders, metrics, events, emails, products, affiliate, subscriptions] = await Promise.all([
     getOrdersByCustomer(user.id),
     listCustomerMetrics({ userId: user.id }),
     query<EventRow>(
@@ -88,6 +104,7 @@ export async function buildCustomerRecord(user: Customer): Promise<CustomerRecor
     ),
     listProducts(),
     user.affiliateId ? getAffiliateById(user.affiliateId) : Promise.resolve(null),
+    listSubscriptionsForCustomer(user.id),
   ]);
   const productName = (slug?: string) => products.find((p) => p.slug === slug)?.name;
 
@@ -126,7 +143,13 @@ export async function buildCustomerRecord(user: Customer): Promise<CustomerRecor
         quantity: item.quantity,
         unitPriceUsd: item.priceUsd,
         lotNumber: item.lotNumber,
+        subscriptionIntervalDays: item.subscription?.intervalDays,
       })),
+      researchUseAttestation: o.researchAttestation && {
+        statement: o.researchAttestation.text,
+        acceptedAt: o.researchAttestation.at,
+        ipAddress: o.researchAttestation.ip,
+      },
       subtotalUsd: o.subtotal,
       discountUsd: o.discountAmount ?? 0,
       totalUsd: o.total,
@@ -139,6 +162,18 @@ export async function buildCustomerRecord(user: Customer): Promise<CustomerRecor
       trackingNumber: o.trackingNumber,
       refundedAt: o.refundedAt,
       refundAmountUsd: o.refundAmount,
+    })),
+    subscriptions: subscriptions.map((s) => ({
+      product: productName(s.productSlug) ?? s.productSlug,
+      size: s.sizeLabel,
+      quantity: s.quantity,
+      every: intervalLabel(s.intervalDays),
+      discountPercent: s.discountPercent,
+      status: s.status,
+      nextOrderAt: s.nextOrderAt,
+      paymentMethod: s.paymentMethod,
+      shipsTo: s.customer,
+      createdAt: s.createdAt,
     })),
     browsing: events.map((e) => {
       const meta = parseMetadata(e.metadata);

@@ -12,6 +12,10 @@ import { buildMetadata } from "@/lib/seo";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
 import { formatPurity, specText } from "@/lib/products/specs";
 import { blendComponents } from "@/lib/products/blend-components";
+import { withStock } from "@/lib/inventory";
+import { SCHEMA_AVAILABILITY } from "@/lib/products/stock";
+import { getContent } from "@/lib/site-content";
+import { DEFAULT_SUBSCRIPTION_SETTINGS, isSubscribable, subscriptionsEnabled } from "@/lib/subscriptions/rules";
 
 type Params = { slug: string };
 
@@ -48,10 +52,11 @@ export default async function ProductDetailPage({
   const { slug } = await params;
   // Inactive products are fetched too, only so a blend's component card can
   // show a compound's photo even when that compound isn't for sale itself.
-  const [product, catalog] = await Promise.all([getProductBySlug(slug), listProducts({ includeInactive: true })]);
-  if (!product || !isOnSale(product)) notFound();
-  const allProducts = catalog.filter(isOnSale);
+  const [found, catalog] = await Promise.all([getProductBySlug(slug), listProducts({ includeInactive: true })]);
+  if (!found || !isOnSale(found)) notFound();
+  const [product, ...allProducts] = await withStock([found, ...catalog.filter(isOnSale)]);
   const components = blendComponents(product, catalog);
+  const subscriptionSettings = await getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS);
 
   // Related = same category first, then anything else, so the rail is never
   // short on a thin category.
@@ -93,7 +98,7 @@ export default async function ProductDetailPage({
       lowPrice: Math.min(...prices),
       highPrice: Math.max(...prices),
       offerCount: prices.length,
-      availability: "https://schema.org/InStock",
+      availability: SCHEMA_AVAILABILITY[product.stock?.status ?? "out"],
     },
   };
 
@@ -150,9 +155,14 @@ export default async function ProductDetailPage({
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {purity && <span className="purity-badge">{purity} Purity</span>}
               {primaryBatch && (
-                <span className="font-mono text-xs text-muted">
-                  Batch <span className="text-navy">{primaryBatch}</span>
-                </span>
+                // Orders are filled from the first listed batch (api/orders),
+                // so this is the lot the customer receives.
+                <Link
+                  href={`/coa?batch=${encodeURIComponent(primaryBatch)}`}
+                  className="font-mono text-xs text-muted underline-offset-4 hover:underline"
+                >
+                  You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
+                </Link>
               )}
             </div>
           )}
@@ -160,7 +170,15 @@ export default async function ProductDetailPage({
           <p className="mt-5 text-sm leading-relaxed text-muted">{product.summary}</p>
 
           <div className="mt-8">
-            <AddToCartPanel product={toStorefrontProduct(product)} components={components} />
+            <AddToCartPanel
+              product={toStorefrontProduct(product)}
+              components={components}
+              subscription={
+                subscriptionsEnabled(subscriptionSettings) && isSubscribable(product)
+                  ? { discountPercent: subscriptionSettings.discountPercent, intervalDays: subscriptionSettings.intervalDays }
+                  : null
+              }
+            />
           </div>
 
           <section aria-labelledby="coa-heading" className="mt-8 border border-hairline bg-surface p-5">

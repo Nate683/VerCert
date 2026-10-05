@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { getCurrentCustomer } from "@/lib/users/current-user";
+import { ORDER_ACCESS_COOKIE, referencesFromCookie } from "@/lib/orders/guest-access";
 import { getOrderByReference } from "@/lib/orders/store";
 import { getBankTransferDetails } from "@/lib/bank-details";
 import { getContent, DEFAULT_CONTACT } from "@/lib/site-content";
@@ -21,11 +24,26 @@ export default async function OrderPage({
   params: Promise<{ reference: string }>;
 }) {
   const { reference } = await params;
-  const [order, contact] = await Promise.all([
+  const [order, contact, viewer, jar] = await Promise.all([
     getOrderByReference(reference),
     getContent("contact_page", DEFAULT_CONTACT),
+    getCurrentCustomer(),
+    cookies(),
   ]);
-  if (!order) notFound();
+
+  // An order shows its buyer's name, email and address, so only that buyer
+  // (signed in, or after matching reference + email at /order-status) and
+  // staff may see it. Anyone else gets the same answer as for a missing
+  // order, so a reference can't be probed.
+  const guestRefs = await referencesFromCookie(jar.get(ORDER_ACCESS_COOKIE)?.value);
+  const allowed =
+    order &&
+    ((viewer && (viewer.id === order.customerId || viewer.role === "command" || viewer.role === "office")) ||
+      guestRefs.includes(order.reference));
+  if (!allowed) {
+    if (!viewer) redirect(`/order-status?reference=${encodeURIComponent(reference.toUpperCase())}`);
+    notFound();
+  }
 
   // Only awaiting_payment/expired orders need the interactive payment
   // panels — everything past that point (paid through delivered, or
@@ -46,14 +64,24 @@ export default async function OrderPage({
         "Tracking appears on this page and in your account as soon as it ships.",
       ];
 
+  // The heading follows the order's state: a cancelled or refunded order must
+  // not open with "Thank you — your order is in."
+  const heading = isPending
+    ? { eyebrow: "Payment Required", title: "Complete Your Payment" }
+    : order.refundedAt
+      ? { eyebrow: "Order Refunded", title: "This order was refunded." }
+      : order.status === "cancelled"
+        ? { eyebrow: "Order Cancelled", title: "This order was cancelled." }
+        : order.status === "delivered"
+          ? { eyebrow: "Order Delivered", title: "Your order has been delivered." }
+          : order.status === "shipped"
+            ? { eyebrow: "Order Shipped", title: "Your order is on its way." }
+            : { eyebrow: "Order Confirmed", title: "Thank you — your order is in." };
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-16 lg:px-10">
-      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">
-        {isPending ? "Payment Required" : "Order Confirmed"}
-      </p>
-      <h1 className="mt-3 font-serif text-4xl text-navy">
-        {isPending ? "Complete Your Payment" : "Thank you — your order is in."}
-      </h1>
+      <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">{heading.eyebrow}</p>
+      <h1 className="mt-3 font-serif text-4xl text-navy">{heading.title}</h1>
       <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
         <span>Reference</span>
         <CopyReference reference={order.reference} />
@@ -102,9 +130,11 @@ export default async function OrderPage({
               ))}
             </ol>
             <div className="mt-6 flex flex-wrap gap-3 border-t border-hairline pt-5 text-xs uppercase tracking-[0.14em]">
-              <Link href="/account" className="text-muted transition-colors hover:text-gold-ink">
-                Order history →
-              </Link>
+              {viewer && (
+                <Link href="/account" className="text-muted transition-colors hover:text-gold-ink">
+                  Order history →
+                </Link>
+              )}
               <Link href="/shop" className="text-muted transition-colors hover:text-gold-ink">
                 Continue shopping →
               </Link>
@@ -129,7 +159,7 @@ export default async function OrderPage({
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Order Summary</h2>
             <ul className="mt-4 space-y-4">
               {order.items.map((item) => (
-                <li key={`${item.slug}-${item.sizeLabel}`} className="flex justify-between gap-3 text-sm">
+                <li key={`${item.slug}-${item.sizeLabel}-${item.subscription?.intervalDays ?? 0}`} className="flex justify-between gap-3 text-sm">
                   <div className="min-w-0">
                     <Link
                       href={`/shop/${item.slug}`}
@@ -140,6 +170,20 @@ export default async function OrderPage({
                     <p className="text-xs text-muted">
                       {item.sizeLabel} × {item.quantity}
                     </p>
+                    {item.lotNumber && (
+                      <p className="font-mono text-xs text-navy">
+                        Lot{" "}
+                        <Link href={`/coa?batch=${encodeURIComponent(item.lotNumber)}`} className="underline-offset-4 hover:underline">
+                          {item.lotNumber}
+                        </Link>
+                      </p>
+                    )}
+                    {item.subscription && (
+                      <p className="text-xs text-muted">
+                        Subscription · every {item.subscription.intervalDays} days
+                        {item.subscription.discountPercent ? ` · ${item.subscription.discountPercent}% off` : ""}
+                      </p>
+                    )}
                   </div>
                   <span className="shrink-0 font-mono text-navy">
                     ${(item.priceUsd * item.quantity).toFixed(2)}

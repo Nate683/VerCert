@@ -16,6 +16,7 @@ import { OrderTable } from "./OrderTable";
 import { CustomersPanel } from "./CustomersPanel";
 import { AssistantChat } from "./AssistantChat";
 import { ProductsPanel } from "./ProductsPanel";
+import { SubscriptionsPanel } from "./SubscriptionsPanel";
 import { PromotionsPanel } from "./PromotionsPanel";
 import { SiteContentPanel } from "./SiteContentPanel";
 import { FinancialsPanel } from "./FinancialsPanel";
@@ -58,7 +59,8 @@ type Tab =
   | "content"
   | "documents"
   | "calendar"
-  | "chat";
+  | "chat"
+  | "subscriptions";
 
 // Tab names stay plain business English — no codenames, no jargon. The room
 // may be theatrical; the filing labels are not.
@@ -90,6 +92,7 @@ const BASE_TABS: { id: Tab; label: string }[] = [
 const COMMAND_ONLY_TABS: { id: Tab; label: string }[] = [
   { id: "segments", label: "Segments" },
   { id: "promotions", label: "Promotions" },
+  { id: "subscriptions", label: "Subscriptions" },
   { id: "invite-codes", label: "Invite Codes" },
   { id: "content", label: "Site Content" },
 ];
@@ -235,6 +238,7 @@ export function ExecutiveTerminal({
           {tab === "alerts" && <AlertsPanel variant={variant} />}
           {tab === "intelligence" && <IntelligencePanel variant={variant} />}
           {tab === "promotions" && isCommand && <PromotionsPanel />}
+          {tab === "subscriptions" && isCommand && <SubscriptionsPanel />}
           {tab === "affiliates" && <AffiliatesPanel variant={variant} />}
           {tab === "invite-codes" && isCommand && <InviteCodesPanel />}
           {tab === "content" && isCommand && <SiteContentPanel />}

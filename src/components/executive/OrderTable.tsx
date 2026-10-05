@@ -435,11 +435,28 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                       {order.customer.firstName} {order.customer.lastName}
                     </p>
                     <p className="text-xs text-white/40">{order.customer.email}</p>
+                    {order.researchAttestation ? (
+                      <p
+                        className="mt-1 text-[10px] text-white/45"
+                        title={`"${order.researchAttestation.text}"`}
+                      >
+                        RUO attested {new Date(order.researchAttestation.at).toLocaleString()}
+                        {order.subscriptionId
+                          ? " (at subscription signup)"
+                          : order.researchAttestation.ip
+                            ? ` · IP ${order.researchAttestation.ip}`
+                            : ""}
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-[10px] text-white/30">No RUO attestation on record</p>
+                    )}
                   </td>
                   <td className="py-3 pr-4 text-xs">
                     {order.items.map((item) => (
-                      <p key={`${item.slug}-${item.sizeLabel}`}>
-                        {item.name} × {item.quantity}
+                      <p key={`${item.slug}-${item.sizeLabel}-${item.subscription?.intervalDays ?? 0}`}>
+                        {item.name} {item.sizeLabel} × {item.quantity}
+                        {item.lotNumber && <span className="text-white/40"> · Lot {item.lotNumber}</span>}
+                        {item.subscription && <span className="text-gold/70"> · Subscription</span>}
                       </p>
                     ))}
                   </td>

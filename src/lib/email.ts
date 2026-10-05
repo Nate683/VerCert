@@ -338,7 +338,13 @@ async function sendMailWithHtml(to: string, subject: string, text: string, bodyH
 
 function buildItemLines(order: Order): string {
   return order.items
-    .map((item) => `  - ${item.name} (${item.sizeLabel}) x${item.quantity} — $${(item.priceUsd * item.quantity).toFixed(2)}`)
+    .map((item) => {
+      const lot = item.lotNumber ? `, lot ${item.lotNumber}` : "";
+      const sub = item.subscription
+        ? ` [subscription, every ${item.subscription.intervalDays} days, ${item.subscription.discountPercent}% off]`
+        : "";
+      return `  - ${item.name} (${item.sizeLabel}${lot}) x${item.quantity} — $${(item.priceUsd * item.quantity).toFixed(2)}${sub}`;
+    })
     .join("\n");
 }
 

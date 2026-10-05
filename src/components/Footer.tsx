@@ -36,6 +36,7 @@ export function Footer({ contact }: { contact: ContactContent }) {
               <li><Link href="/shop" className="hover:text-white">All Products</Link></li>
               <li><Link href="/how-we-test" className="hover:text-white">How We Test</Link></li>
               <li><Link href="/cart" className="hover:text-white">Cart</Link></li>
+              <li><Link href="/order-status" className="hover:text-white">Order Status</Link></li>
             </ul>
           </div>
 
