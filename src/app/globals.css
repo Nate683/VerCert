@@ -20,10 +20,13 @@
   --surface:  #F8F8F9;   /* navy 3%  — banded sections */
   --hairline: #E3E5E9;   /* navy 12% — dividers, section rules */
   --control:  #7D8798;   /* 3.63:1 — outlined controls (WCAG 1.4.11) */
-  --gold-ink: #B08C50;   /* 3.13:1 — gold for large, letter-spaced type on
-                            white. The brand --gold is only 2.42:1 on paper,
-                            which fails even the 3:1 large-text bar, so it
-                            must never carry text on the light shell. */
+  --gold-ink: #82673B;   /* 5.31:1 — gold for text on the light shell: the
+                            old #B08C50 with its hue kept and lightness taken
+                            down until small labels pass 4.5:1 on every light
+                            ground they sit on (4.62:1 on the gold/10 tinted
+                            panels, the worst case). The brand --gold is only
+                            2.42:1 on paper, so it must never carry text on
+                            the light shell. */
 
   /* Command system — 1970s power broker. Every value is warm: the base is
      near-black with a brown undertone rather than a cold grey, the gold is
