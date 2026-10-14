@@ -583,6 +583,15 @@ async function main() {
   await sql`CREATE INDEX IF NOT EXISTS subscriptions_due_idx ON subscriptions (status, next_order_at)`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS subscription_id TEXT`;
 
+  // Stock per size. size_label '' is the product's shared stock, used by every
+  // size without a row of its own, so existing rows keep working unchanged.
+  // The key becomes (slug, size_label). Code from before this change upserts
+  // ON CONFLICT (slug), which fails once the old key is gone, so deploy the
+  // per-size code promptly after running this.
+  await sql`ALTER TABLE inventory ADD COLUMN IF NOT EXISTS size_label TEXT NOT NULL DEFAULT ''`;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS inventory_slug_size_label_idx ON inventory (slug, size_label)`;
+  await sql`ALTER TABLE inventory DROP CONSTRAINT IF EXISTS inventory_pkey`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

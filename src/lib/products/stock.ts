@@ -14,6 +14,17 @@ export function stockState(level: { quantity: number; threshold: number } | unde
   return { status: "in", remaining };
 }
 
+// A product as a whole, across the stock rows its sizes draw on: in stock if
+// any size is, low only if every row with units left is low.
+export function combinedStockState(levels: { quantity: number; threshold: number }[]): StockState {
+  if (levels.length <= 1) return stockState(levels[0]);
+  const states = levels.map(stockState);
+  const remaining = states.reduce((sum, s) => sum + s.remaining, 0);
+  if (remaining === 0) return { status: "out", remaining };
+  const allLow = states.every((s) => s.status !== "in");
+  return { status: allLow ? "low" : "in", remaining };
+}
+
 export function stockLabel(stock: StockState): string {
   if (stock.status === "out") return "Out of Stock";
   if (stock.status === "low") return `Only ${stock.remaining} left`;

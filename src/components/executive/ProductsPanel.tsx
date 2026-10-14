@@ -7,12 +7,16 @@ import { ProductCardImage } from "./ProductCardImage";
 import { ProductGalleryEditor } from "./ProductGalleryEditor";
 import { formatPurity } from "@/lib/products/specs";
 
-type ProductWithStock = Product & { stock: { quantity: number; threshold: number } | null };
+type StockLevel = { quantity: number; threshold: number };
+// stock is the shared count; sizeLevels holds sizes counted separately.
+type ProductWithStock = Product & { stock: StockLevel | null; sizeLevels?: Record<string, StockLevel> };
 
 type SizeForm = {
   label: string;
   priceUsd: string; // blank = not yet priced
   bulkTiers: string; // "minQty:price, minQty:price"
+  costUsd: string; // blank = use the product's cost
+  stock: string; // blank = draws on the product's shared stock
   composition?: SizeOption["composition"]; // not edited here; carried through a save
 };
 
@@ -35,7 +39,7 @@ type FormState = {
   costUsd: string;
 };
 
-const EMPTY_SIZE: SizeForm = { label: "", priceUsd: "", bulkTiers: "" };
+const EMPTY_SIZE: SizeForm = { label: "", priceUsd: "", bulkTiers: "", costUsd: "", stock: "" };
 
 function emptyForm(): FormState {
   return {
@@ -76,6 +80,8 @@ function productToForm(p: ProductWithStock): FormState {
       label: s.label,
       priceUsd: s.priceUsd !== null ? String(s.priceUsd) : "",
       bulkTiers: (s.bulkTiers ?? []).map((t) => `${t.minQuantity}:${t.priceUsd}`).join(", "),
+      costUsd: s.costUsd !== undefined ? String(s.costUsd) : "",
+      stock: p.sizeLevels?.[s.label] ? String(p.sizeLevels[s.label].quantity) : "",
       composition: s.composition,
     })),
     initialStock: String(p.stock?.quantity ?? 0),
@@ -105,6 +111,7 @@ function formToPayload(form: FormState) {
       label: s.label.trim(),
       priceUsd: s.priceUsd.trim() ? Number(s.priceUsd) : null,
       bulkTiers: parseBulkTiers(s.bulkTiers),
+      ...(s.costUsd.trim() ? { costUsd: Number(s.costUsd) } : {}),
       ...(s.composition?.length ? { composition: s.composition } : {}),
     }));
 
@@ -129,6 +136,11 @@ function formToPayload(form: FormState) {
       .filter(Boolean),
     sizes,
     initialStock: Number(form.initialStock) || 0,
+    sizeStock: Object.fromEntries(
+      form.sizes
+        .filter((s) => s.label.trim())
+        .map((s) => [s.label.trim(), s.stock.trim() ? Number(s.stock) || 0 : null])
+    ),
     active: form.active,
     costUsd: form.costUsd.trim() ? Number(form.costUsd) : undefined,
   };
@@ -398,16 +410,28 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                           className="input-field mt-1 py-1.5 text-xs"
                         />
                       </label>
-                      <label className="block">
-                        <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">Stock</span>
-                        <input
-                          type="number"
-                          min="0"
-                          defaultValue={p.stock?.quantity ?? 0}
-                          onBlur={(e) => handleInlineStockChange(p, e.target.value)}
-                          className="input-field mt-1 py-1.5 text-xs"
-                        />
-                      </label>
+                      {Object.keys(p.sizeLevels ?? {}).length > 0 ? (
+                        // Sizes counted separately are edited in the full form.
+                        <div className="block">
+                          <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">Stock (per size)</span>
+                          <p className="mt-1 py-1.5 text-xs text-white/70">
+                            {Object.entries(p.sizeLevels ?? {})
+                              .map(([label, level]) => `${label}: ${level.quantity}`)
+                              .join(" · ")}
+                          </p>
+                        </div>
+                      ) : (
+                        <label className="block">
+                          <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">Stock</span>
+                          <input
+                            type="number"
+                            min="0"
+                            defaultValue={p.stock?.quantity ?? 0}
+                            onBlur={(e) => handleInlineStockChange(p, e.target.value)}
+                            className="input-field mt-1 py-1.5 text-xs"
+                          />
+                        </label>
+                      )}
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -532,6 +556,8 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               value={form.initialStock}
               onChange={(e) => setForm((f) => ({ ...f, initialStock: e.target.value }))}
               placeholder="Stock quantity"
+              aria-label="Shared stock (sizes without their own count)"
+              title="Shared stock: used by every size without its own count below"
               className="input-field"
             />
             <input
@@ -633,7 +659,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             <p className="text-xs uppercase tracking-[0.2em] text-gold">Sizes & Pricing</p>
             <div className="mt-3 space-y-3">
               {form.sizes.map((size, i) => (
-                <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-4">
+                <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-6">
                   <input
                     value={size.label}
                     onChange={(e) => updateSize(i, { label: e.target.value })}
@@ -654,6 +680,25 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                     onChange={(e) => updateSize(i, { bulkTiers: e.target.value })}
                     placeholder="Bulk tiers: minQty:price, e.g. 3:38, 5:32"
                     className="input-field sm:col-span-2"
+                  />
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={size.costUsd}
+                    onChange={(e) => updateSize(i, { costUsd: e.target.value })}
+                    placeholder="Cost/unit (blank = product cost)"
+                    aria-label="Cost per unit for this size"
+                    className="input-field"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    value={size.stock}
+                    onChange={(e) => updateSize(i, { stock: e.target.value })}
+                    placeholder="Stock (blank = shared)"
+                    aria-label="Stock for this size"
+                    className="input-field"
                   />
                 </div>
               ))}

@@ -29,14 +29,14 @@ export function AddToCartPanel({
   const [intervalDays, setIntervalDays] = useState(0);
   const { addItem } = useCart();
 
-  // Stock from the inventory table. Out of stock can't be added (checkout
-  // would refuse it), and the quantity can't exceed what's left.
-  const stock = product.stock;
-  const outOfStock = stock?.status === "out";
-  const maxQuantity = stock ? Math.max(1, Math.min(999, stock.remaining)) : 999;
-
   const sizes = pricedSizes(product);
   const size = sizes[Math.min(sizeIndex, sizes.length - 1)];
+
+  // Stock from the inventory table, for the chosen size. Out of stock can't be
+  // added (checkout would refuse it), and the quantity can't exceed what's left.
+  const stock = product.sizeStock?.[size.label] ?? product.stock;
+  const outOfStock = stock?.status === "out";
+  const maxQuantity = stock ? Math.max(1, Math.min(999, stock.remaining)) : 999;
   const tierPrice = resolveUnitPrice(size, quantity);
   const subscribing = Boolean(subscription && intervalDays);
   const unitPrice = subscribing ? subscriptionUnitPrice(tierPrice, subscription!.discountPercent) : tierPrice;
@@ -81,7 +81,12 @@ export function AddToCartPanel({
                 type="button"
                 role="radio"
                 aria-checked={selected}
-                onClick={() => setSizeIndex(i)}
+                onClick={() => {
+                  setSizeIndex(i);
+                  // Sizes can have separate stock: keep the quantity within the new size's.
+                  const next = product.sizeStock?.[s.label] ?? product.stock;
+                  if (next) setQuantity((q) => Math.min(q, Math.max(1, next.remaining)));
+                }}
                 className={`flex min-h-[52px] min-w-[96px] flex-col items-start justify-center border-2 px-4 py-2 text-left transition-colors ${
                   selected
                     ? "border-navy bg-navy text-white"

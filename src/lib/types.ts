@@ -15,6 +15,9 @@ export type SizeOption = {
   // left off the storefront, and checkout rejects it.
   priceUsd: number | null;
   bulkTiers?: BulkPriceTier[];
+  // Our cost per unit of this size, for margin reporting. Falls back to the
+  // product's costUsd when unset. Never sent to the storefront.
+  costUsd?: number;
   // What's in the vial, for blends. Per size, since sizes of one blend can
   // split differently.
   composition?: BlendComponent[];
@@ -52,6 +55,8 @@ export type Product = {
   // Attached for the storefront by withStock (lib/inventory.ts); absent
   // elsewhere. Never stored on the product row.
   stock?: import("./products/stock").StockState;
+  // The same, per size label.
+  sizeStock?: Record<string, import("./products/stock").StockState>;
 };
 
 export type CoaDocument = {

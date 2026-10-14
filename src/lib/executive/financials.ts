@@ -149,20 +149,26 @@ export function computeFinancials(
     refunded: orders.filter((o) => o.refundedAt).reduce((sum, o) => sum + (o.refundAmount ?? o.total), 0),
   };
 
-  const productAgg = new Map<string, { revenue: number; unitsSold: number }>();
+  // Each unit is costed at its size's cost, else the product's. Margin % is
+  // shown only when every unit sold had a cost.
+  const productAgg = new Map<string, { revenue: number; unitsSold: number; cost: number; uncostedUnits: number }>();
   for (const o of paid) {
     for (const item of o.items) {
-      const entry = productAgg.get(item.slug) ?? { revenue: 0, unitsSold: 0 };
+      const entry = productAgg.get(item.slug) ?? { revenue: 0, unitsSold: 0, cost: 0, uncostedUnits: 0 };
+      const product = products.find((p) => p.slug === item.slug);
+      const unitCost = product?.sizes.find((s) => s.label === item.sizeLabel)?.costUsd ?? product?.costUsd;
       entry.revenue += item.priceUsd * item.quantity;
       entry.unitsSold += item.quantity;
+      if (unitCost !== undefined) entry.cost += unitCost * item.quantity;
+      else entry.uncostedUnits += item.quantity;
       productAgg.set(item.slug, entry);
     }
   }
   const marginByProduct: ProductMargin[] = [...productAgg.entries()]
     .map(([slug, agg]) => {
       const product = products.find((p) => p.slug === slug);
-      const hasCost = product?.costUsd !== undefined;
-      const cost = hasCost ? product!.costUsd! * agg.unitsSold : 0;
+      const hasCost = agg.uncostedUnits === 0;
+      const cost = hasCost ? agg.cost : 0;
       const margin = agg.revenue - cost;
       return {
         slug,

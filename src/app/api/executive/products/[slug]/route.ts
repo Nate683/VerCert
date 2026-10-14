@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { getProductBySlug, updateProduct, deleteProduct, pricedSizes } from "@/lib/products";
-import { upsertInventory, deleteInventory } from "@/lib/inventory";
+import { upsertInventory, deleteInventory, syncSizeInventory } from "@/lib/inventory";
 import { productUpdateSchema, parseBody } from "@/lib/validation";
 import { findBlockedTerm, blockedTermMessage, PRODUCT_NON_COPY_KEYS } from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -26,7 +26,7 @@ export const PATCH = withApiErrorHandling(async (
 
   const parsed = await parseBody(request, productUpdateSchema);
   if ("error" in parsed) return parsed.error;
-  const { initialStock, sizePrice, ...patch } = parsed.data;
+  const { initialStock, sizeStock, sizePrice, ...patch } = parsed.data;
 
   const blocked = findBlockedTerm(patch, PRODUCT_NON_COPY_KEYS);
   if (blocked) return NextResponse.json({ error: blockedTermMessage(blocked) }, { status: 400 });
@@ -48,6 +48,9 @@ export const PATCH = withApiErrorHandling(async (
 
   const product = await updateProduct(slug, patch);
   if (initialStock !== undefined) await upsertInventory(slug, initialStock);
+  // Renamed or removed sizes drop their separate counts even when this
+  // request doesn't send any.
+  if (product && (sizeStock || patch.sizes)) await syncSizeInventory(slug, product.sizes.map((s) => s.label), sizeStock ?? {});
 
   const actor = await getCurrentCustomer();
   if (actor) await logActivity(actor.email, "product.updated", slug);

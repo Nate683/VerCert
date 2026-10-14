@@ -120,6 +120,7 @@ const sizeOptionSchema = z.object({
   label: z.string().trim().min(1).max(50),
   priceUsd: z.number().min(0).max(1000000).nullable(),
   bulkTiers: z.array(bulkTierSchema).max(10).optional(),
+  costUsd: z.number().min(0).max(1000000).optional(),
   composition: z.array(blendComponentSchema).max(20).optional(),
 });
 
@@ -158,6 +159,9 @@ export const productSchema = z.object({
   summary: z.string().trim().max(500),
   description: z.array(z.string().trim().min(1).max(2000)).max(20),
   initialStock: z.number().int().min(0).max(1000000).optional(),
+  // Per-size counts, by size label. Null puts that size back on the shared
+  // stock (initialStock).
+  sizeStock: z.record(z.string().trim().min(1).max(50), z.number().int().min(0).max(1000000).nullable()).optional(),
   active: z.boolean().optional(),
   costUsd: z.number().min(0).max(1000000).optional(),
 });
