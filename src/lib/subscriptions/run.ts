@@ -54,7 +54,7 @@ async function runOne(sub: Subscription, now: Date): Promise<RunResult> {
         `${reason} We've paused your subscription (${intervalLabel(sub.intervalDays)}) and no order has been placed.`,
         `You can see or cancel it from your account: ${getSiteUrl()}/account`,
         "",
-        "— VeriCert Research",
+        "— VeriCert Peptides",
       ].join("\n")
     ).catch((err) => console.error("[subscriptions] pause email failed:", err));
     await logActivity(ACTOR, "subscription.paused", `${sub.id}: ${reason}`);

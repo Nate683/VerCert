@@ -19,7 +19,7 @@ export function VeriCertLogo({
   return (
     <Image
       src={ground === "light" ? "/Logo.jpg" : "/logo.png"}
-      alt="VeriCert Research Peptides"
+      alt="VeriCert Peptides"
       width={441}
       height={194}
       className={className}

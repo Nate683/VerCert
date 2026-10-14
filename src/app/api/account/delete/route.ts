@@ -75,7 +75,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
         "",
         "If you didn't ask for this, contact us through the Contact page on our website.",
         "",
-        "— VeriCert Research",
+        "— VeriCert Peptides",
       ].join("\n")
     );
   } catch (err) {

@@ -42,7 +42,7 @@ export function renderEmailShell(subject: string, bodyHtml: string): string {
           <table role="presentation" width="100%" style="max-width:560px;background-color:${NAVY};" cellpadding="0" cellspacing="0">
             <tr>
               <td style="padding:28px 24px;text-align:center;border-bottom:1px solid rgba(201,162,39,0.3);">
-                <img src="${logoUrl}" alt="VeriCert Research Peptides" width="180" style="display:inline-block;max-width:180px;height:auto;" />
+                <img src="${logoUrl}" alt="VeriCert Peptides" width="180" style="display:inline-block;max-width:180px;height:auto;" />
               </td>
             </tr>
             <tr>
@@ -53,7 +53,7 @@ export function renderEmailShell(subject: string, bodyHtml: string): string {
             <tr>
               <td style="padding:20px 28px 28px;border-top:1px solid rgba(243,236,221,0.12);font-family:Arial,sans-serif;font-size:11px;line-height:1.6;color:rgba(243,236,221,0.45);">
                 For research use only. Not for human or veterinary use.<br />
-                &copy; ${new Date().getFullYear()} VeriCert Research. All rights reserved.
+                &copy; ${new Date().getFullYear()} RKNEA Operations LLC d/b/a VeriCert Peptides. All rights reserved.
               </td>
             </tr>
           </table>

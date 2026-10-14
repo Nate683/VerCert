@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { VeriCertLogo } from "./VeriCertLogo";
 import { useAuth } from "@/lib/auth-context";
@@ -37,6 +38,10 @@ function acknowledge() {
   listeners.forEach((l) => l());
 }
 
+// The gate links to the Terms, so a visitor has to be able to read them before
+// agreeing: the legal pages are never covered.
+const UNGATED = new Set(["/terms", "/privacy-policy", "/refund-policy", "/shipping-policy"]);
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -44,12 +49,13 @@ export function AgeGate() {
   const { user, loading } = useAuth();
   const acknowledged = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const panelRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   // Derived during render rather than pushed into state from an effect, so
   // there is no frame where the gate is up for someone who should not see it.
   // `loading` holds it back until the session is known — otherwise a signed-in
   // visitor gets a flash of the modal on every cold load.
-  const open = !loading && !user && !acknowledged;
+  const open = !loading && !user && !acknowledged && !UNGATED.has(pathname);
 
   // Nothing behind the gate should scroll while it is up.
   useEffect(() => {
@@ -90,65 +96,74 @@ export function AgeGate() {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-navy/95 px-5 py-10 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] overflow-y-auto bg-navy/95 px-5 py-10 backdrop-blur-sm"
       onKeyDown={handleKeyDown}
     >
-      <div
-        ref={panelRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="age-gate-heading"
-        aria-describedby="age-gate-body"
-        className="max-h-full w-full max-w-lg overflow-y-auto border border-hairline bg-paper px-7 py-10 text-center shadow-2xl sm:px-10"
-      >
-        <VeriCertLogo className="mx-auto h-11 w-auto" ground="light" />
-
-        <p className="mt-7 text-xs uppercase tracking-[0.35em] text-gold-ink">
-          Research Use Only
-        </p>
-
-        <h2
-          id="age-gate-heading"
-          className="mt-4 font-serif text-2xl leading-snug text-navy sm:text-3xl"
+      <div className="flex min-h-full flex-col items-center justify-center">
+        <div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="age-gate-heading"
+          aria-describedby="age-gate-body"
+          className="w-full max-w-lg border border-hairline bg-paper px-7 py-10 text-center shadow-2xl sm:px-10"
         >
-          You must be 21 or older to enter
-        </h2>
+          <VeriCertLogo className="mx-auto h-11 w-auto" ground="light" />
 
-        <div className="mx-auto mt-5 h-px w-16 bg-gold-ink/50" />
+          <p className="mt-7 text-xs uppercase tracking-[0.35em] text-gold-ink">
+            Research Use Only
+          </p>
 
-        <p id="age-gate-body" className="mt-6 text-sm leading-relaxed text-muted">
-          VeriCert supplies research compounds strictly for in-vitro laboratory
-          use by qualified professionals. Nothing sold here is intended for human
-          or veterinary consumption. By entering you confirm you are at least 21
-          and accept our{" "}
-          <Link href="/terms" className="text-gold-ink underline underline-offset-2">
-            Terms
-          </Link>{" "}
-          and{" "}
-          <Link href="/terms#research-use-only" className="text-gold-ink underline underline-offset-2">
-            RUO Agreement
-          </Link>
-          .
-        </p>
-
-        <div className="mt-9 flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={acknowledge}
-            className="w-full border border-gold bg-gold px-6 py-3 text-sm uppercase tracking-[0.18em] text-black transition-colors hover:border-gold-ink hover:bg-transparent hover:text-gold-ink"
+          <h2
+            id="age-gate-heading"
+            className="mt-4 font-serif text-2xl leading-snug text-navy sm:text-3xl"
           >
-            I am 21 or older — Enter
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              window.location.href = "https://www.google.com";
-            }}
-            className="w-full border border-navy/25 px-6 py-3 text-sm uppercase tracking-[0.18em] text-navy transition-colors hover:border-gold-ink hover:text-gold-ink"
-          >
-            Exit
-          </button>
+            You must be 21 or older to enter
+          </h2>
+
+          <div className="mx-auto mt-5 h-px w-16 bg-gold-ink/50" />
+
+          <p id="age-gate-body" className="mt-6 text-sm leading-relaxed text-muted">
+            VeriCert supplies research compounds strictly for in-vitro laboratory
+            use by qualified professionals. Nothing sold here is intended for human
+            or veterinary consumption. By entering you confirm you are at least 21
+            and accept our{" "}
+            <Link href="/terms" className="text-gold-ink underline underline-offset-2">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/terms#research-use-only" className="text-gold-ink underline underline-offset-2">
+              RUO Agreement
+            </Link>
+            .
+          </p>
+
+          <div className="mt-9 flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={acknowledge}
+              className="w-full border border-gold bg-gold px-6 py-3 text-sm uppercase tracking-[0.18em] text-black transition-colors hover:border-gold-ink hover:bg-transparent hover:text-gold-ink"
+            >
+              I am 21 or older — Enter
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = "https://www.google.com";
+              }}
+              className="w-full border border-navy/25 px-6 py-3 text-sm uppercase tracking-[0.18em] text-navy transition-colors hover:border-gold-ink hover:text-gold-ink"
+            >
+              Exit
+            </button>
+          </div>
         </div>
+
+        {/* Corporate disclosure, on the navy ground below the panel. */}
+        <p className="mt-6 max-w-lg text-center text-xs leading-relaxed text-white/80">
+          VeriCert Peptides is a wholly owned brand and storefront of RKNEA Operations LLC. All products sold
+          are strictly for in-vitro laboratory research and analytical use by qualified professionals. Not
+          for human or veterinary consumption.
+        </p>
       </div>
     </div>
   );

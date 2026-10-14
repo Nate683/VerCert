@@ -24,7 +24,7 @@ export async function sendTransactionalEmail(
   opts?: { replyTo?: string }
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.EMAIL_FROM?.trim() || "VeriCert Research <onboarding@resend.dev>";
+  const from = process.env.EMAIL_FROM?.trim() || "VeriCert Peptides <onboarding@resend.dev>";
 
   if (!apiKey) {
     console.log(
@@ -74,7 +74,7 @@ export async function sendPaymentConfirmedEmail(order: Order): Promise<void> {
       `${siteUrl()}/order/${order.reference}`,
       "",
       "For research use only. Not for human or veterinary use.",
-      "— VeriCert Research",
+      "— VeriCert Peptides",
     ].join("\n")
   );
 }
@@ -110,7 +110,7 @@ export async function sendAffiliateInviteEmail(affiliate: Affiliate, setPassword
     "",
     `Once inside, you'll see your personal referral code, orders driven, and commission earned — updated live.`,
     "",
-    "— VeriCert Research",
+    "— VeriCert Peptides",
   ].join("\n");
 
   await sendMailWithHtml(
@@ -147,7 +147,7 @@ export async function sendInviteCodeEmail(input: {
     "",
     `This code is single-use and tied to this email address.`,
     "",
-    "— VeriCert Research",
+    "— VeriCert Peptides",
   ].join("\n");
 
   await sendMailWithHtml(
@@ -179,7 +179,7 @@ export async function sendAffiliateApplicationVerificationEmail(input: {
     "",
     `This link expires in 24 hours. Verifying doesn't approve your application — our team still reviews every applicant and will email you once a decision is made.`,
     "",
-    "— VeriCert Research",
+    "— VeriCert Peptides",
   ].join("\n");
   await sendTransactionalEmail(input.email, subject, text);
 }
@@ -198,7 +198,7 @@ export async function sendAffiliateApprovedEmail(affiliate: Affiliate, code: str
     "",
     `Sign in any time at ${partnerUrl} with the email and password you applied with to see your referral code, orders driven, and commission earned — updated live.`,
     "",
-    "— VeriCert Research",
+    "— VeriCert Peptides",
   ].join("\n");
 
   await sendMailWithHtml(
@@ -242,7 +242,7 @@ export async function sendContactAutoAckEmail(input: { toName: string; toEmail: 
     "",
     "Thanks for reaching out to VeriCert. We've received your message and will respond as soon as possible.",
     "",
-    "— VeriCert Research",
+    "— VeriCert Peptides",
   ].join("\n");
   await sendTransactionalEmail(input.toEmail, subject, text);
 }
@@ -265,7 +265,7 @@ export async function sendAffiliateTierPromotionEmail(
     "",
     `Sign in any time at ${partnerUrl} to see your updated rate reflected on your dashboard.`,
     "",
-    "— VeriCert Research",
+    "— VeriCert Peptides",
   ].join("\n");
 
   await sendMailWithHtml(
@@ -290,7 +290,7 @@ export async function sendAffiliateCommissionPaidEmail(affiliate: Affiliate, amo
     "",
     `View your full payout history any time at ${partnerUrl}`,
     "",
-    "— VeriCert Research",
+    "— VeriCert Peptides",
   ].join("\n");
 
   await sendMailWithHtml(
@@ -312,7 +312,7 @@ function renderInlineLink(href: string): string {
 // instead of the auto-generated (plain-text-derived) version.
 async function sendMailWithHtml(to: string, subject: string, text: string, bodyHtml: string): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY?.trim();
-  const from = process.env.EMAIL_FROM?.trim() || "VeriCert Research <onboarding@resend.dev>";
+  const from = process.env.EMAIL_FROM?.trim() || "VeriCert Peptides <onboarding@resend.dev>";
 
   if (!apiKey) {
     console.log(
@@ -387,7 +387,7 @@ function buildConfirmationBody(order: Order): string {
     );
   }
 
-  lines.push("For research use only. Not for human or veterinary use.", "— VeriCert Research");
+  lines.push("For research use only. Not for human or veterinary use.", "— VeriCert Peptides");
   return lines.join("\n");
 }
 
@@ -404,7 +404,7 @@ function buildShippingBody(order: Order): string {
     `${siteUrl()}/order/${order.reference}`,
     "",
     "For research use only. Not for human or veterinary use.",
-    "— VeriCert Research",
+    "— VeriCert Peptides",
   ]
     .filter((line): line is string => line !== undefined)
     .join("\n");

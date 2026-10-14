@@ -51,7 +51,7 @@ async function postToResend({ to, subject, text, headers }: ResendPayload): Prom
   const from =
     process.env.MARKETING_EMAIL_FROM?.trim() ||
     process.env.EMAIL_FROM?.trim() ||
-    "VeriCert Research <onboarding@resend.dev>";
+    "VeriCert Peptides <onboarding@resend.dev>";
 
   if (!apiKey) {
     console.log(`[marketing-email:dev-fallback] RESEND_API_KEY not set. Would have sent to ${to}:\nSubject: ${subject}\n\n${text}`);

@@ -7,7 +7,7 @@ import { getContent, DEFAULT_POLICIES } from "@/lib/site-content";
 // /command) has not been reviewed by counsel.
 export const metadata = buildMetadata({
   title: "Terms of Sale | VeriCert",
-  description: "The terms that apply to every order placed with VeriCert Research: eligibility, research-use restrictions, payment, shipping, returns and liability.",
+  description: "The terms that apply to every order placed with VeriCert Peptides, a brand of RKNEA Operations LLC: eligibility, research-use restrictions, payment, shipping, returns and liability.",
   path: "/terms",
 });
 

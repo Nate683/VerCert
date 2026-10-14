@@ -92,14 +92,18 @@ export function Footer({ contact }: { contact: ContactContent }) {
         </div>
 
         <div className="mt-10 border-t border-white/10 pt-8">
-          <p className="text-xs leading-relaxed text-white/40">
+          {/* white/60 (the cream token) on black is 6.4:1; the old white/40 and white/30 (3.3:1,
+              2.3:1) were below 4.5:1 for text this small. */}
+          <p className="text-xs leading-relaxed text-white/60">
             All products sold by VeriCert are intended strictly for in-vitro laboratory
             research and analytical use by qualified professionals. They are not drugs,
             foods, dietary supplements, or cosmetics, and are not intended for human or
             veterinary use, diagnosis, treatment, cure, or prevention of any disease.
           </p>
-          <p className="mt-4 text-xs text-white/30">
-            © {new Date().getFullYear()} VeriCert Research. All rights reserved.
+          <p className="mt-4 text-xs leading-relaxed text-white/60">
+            © {new Date().getFullYear()} RKNEA Operations LLC d/b/a VeriCert Peptides. All rights reserved.
+            VeriCert Peptides supplies research compounds strictly for in-vitro laboratory research and
+            analytical use. Not for human or veterinary consumption.
           </p>
         </div>
       </div>
