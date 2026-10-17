@@ -4,8 +4,9 @@
 //   node scripts/catalog-followups.mjs --apply   # writes, in one transaction
 //
 // A1: Cagrilintide gets the Lyophilized Peptides category (it was created
-// uncategorized by scripts/launch-catalog.mjs). Nothing else changes: no
-// active flag, price or stock is touched.
+// uncategorized by scripts/launch-catalog.mjs). A3: Retatrutide is retired.
+// Nothing else changes: no other active flag, and no price or stock, is
+// touched.
 //
 // Not done here, on purpose: attaching the orphaned "semaglutide" (65) and
 // "tirzepatide" (12) stock rows to GLP-1S and VC-TRZ. Both numbers are the
@@ -42,6 +43,22 @@ async function main() {
     statements.push(sql`UPDATE products SET category = ${CATEGORY}, updated_at = ${now} WHERE slug = 'cagrilintide'`);
     statements.push(
       sql`INSERT INTO activity_log (id, actor_email, action, details, created_at) VALUES (${randomUUID()}, ${ACTOR}, 'product.updated', ${`cagrilintide: category → ${CATEGORY}`}, ${now})`
+    );
+  }
+
+  // A3: Retatrutide is retired (set inactive), as the owner decided on
+  // 2026-10-17. GLP3-RT (vc3r) is the launch product; it is not touched, and
+  // Retatrutide's CAS and category are not copied onto it.
+  const [reta] = await sql`SELECT slug, active FROM products WHERE slug = 'retatrutide'`;
+  if (!reta) {
+    console.log("SKIP: no retatrutide product.");
+  } else if (!reta.active) {
+    console.log("SKIP: retatrutide is already inactive.");
+  } else {
+    console.log("retatrutide: retired → inactive");
+    statements.push(sql`UPDATE products SET active = FALSE, updated_at = ${now} WHERE slug = 'retatrutide'`);
+    statements.push(
+      sql`INSERT INTO activity_log (id, actor_email, action, details, created_at) VALUES (${randomUUID()}, ${ACTOR}, 'product.updated', 'retatrutide: retired (set inactive) — GLP3-RT is the launch product', ${now})`
     );
   }
 
