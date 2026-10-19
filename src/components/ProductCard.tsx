@@ -6,27 +6,21 @@ import type { Product } from "@/lib/types";
 import { ProductImage } from "./ProductImage";
 import { useExecMode } from "@/lib/exec-mode-context";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
-import { formatPurity, specText } from "@/lib/products/specs";
 import { pricedSizes } from "@/lib/products/pricing";
 import { stockLabel } from "@/lib/products/stock";
 
-// "from $40" hid the spread on products whose sizes differ by an order of
-// magnitude. Show the range, and collapse to a single figure when there is
-// only one size or every size costs the same. Null when nothing is priced:
-// the tile then shows no price line at all.
-function priceRange(product: Product): string | null {
-  const prices = pricedSizes(product).map((s) => s.priceUsd);
-  if (prices.length === 0) return null;
+// The tile's unit price. One size (or the one a signed-out homepage tile
+// carries, see withPublicPrice): "$64.99 / 10mg vial". Several: the range,
+// since "from $40" hid the spread on products whose sizes differ by an order
+// of magnitude. Null when nothing is priced: the tile then shows no price.
+function unitPrice(product: Product): string | null {
+  const sizes = pricedSizes(product);
+  if (sizes.length === 0) return null;
+  const prices = sizes.map((s) => s.priceUsd);
   const min = Math.min(...prices);
   const max = Math.max(...prices);
-  return min === max ? `$${min}` : `$${min} – $${max}`;
-}
-
-// "$64.99 / 10mg vial": the one size a signed-out homepage tile carries (see
-// withPublicPrice).
-function unitPrice(product: Product): string | null {
-  const size = pricedSizes(product)[0];
-  return size ? `$${size.priceUsd.toFixed(2)} / ${size.label} vial` : null;
+  if (sizes.length === 1 || min === max) return `$${sizes[0].priceUsd.toFixed(2)} / ${sizes[0].label} vial`;
+  return `$${min.toFixed(2)} – $${max.toFixed(2)}`;
 }
 
 // pricingLocked is for signed-out visitors: the tile shows at most one unit
@@ -77,9 +71,9 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
     await patchProduct({ initialStock: value });
   }
 
-  const cas = specText(product.casNumber);
-  const purity = formatPurity(product.purityPercent);
-  const price = pricingLocked ? unitPrice(product) : priceRange(product);
+  // The tile carries image, category, name, stock, unit price and one action;
+  // CAS and purity are on the product page (and CAS is still searchable).
+  const price = unitPrice(product);
 
   return (
     <div className={`card-elevate flex flex-col overflow-hidden border bg-navy transition-colors duration-300 ${active ? "border-gold/20 hover:border-gold/60" : "border-hairline opacity-50"}`}>
@@ -117,18 +111,7 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
             ) : null}
           </div>
           <h3 className="font-serif text-lg leading-snug text-white">{product.name}</h3>
-          {/* Non-breaking hyphens: a blend lists several numbers, and a line
-              may wrap between them but never inside one. */}
-          {cas && <p className="mt-1 font-mono text-[11px] text-white/45">CAS {cas.replace(/-/g, "‑")}</p>}
-
-          {(price || purity) && (
-            <div className="mt-4 flex items-baseline justify-between gap-3">
-              {price && <span className="text-sm text-white">{price}</span>}
-              {purity && (
-                <span className="ml-auto text-[10px] uppercase tracking-[0.14em] text-gold">{purity} Purity</span>
-              )}
-            </div>
-          )}
+          {price && <p className="mt-4 text-sm text-white">{price}</p>}
 
           {/* A span, not a button: the whole tile is already one link, and a
               nested interactive element would be invalid and unreachable. */}

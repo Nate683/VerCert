@@ -18,10 +18,11 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "purity", label: "Purity: High to Low" },
 ];
 
+// Two thresholds only. A pressed option clears when clicked again (or from
+// the active-filter chips). Products without a published purity never match.
 const PURITY_OPTIONS = [
-  { value: 0, label: "Any" },
-  { value: 98, label: "98%+" },
-  { value: 99, label: "99%+" },
+  { value: 99, label: "99.0%+" },
+  { value: 99.5, label: "99.5%+" },
 ];
 
 function minPrice(product: Product): number {
@@ -94,7 +95,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
   const activeFilters = [
     category !== "All" && { label: category, clear: () => setCategory("All") },
     query.trim() && { label: `“${query.trim()}”`, clear: () => setQuery("") },
-    minPurity > 0 && { label: `${minPurity}%+ purity`, clear: () => setMinPurity(0) },
+    minPurity > 0 && { label: `${minPurity.toFixed(1)}%+ purity`, clear: () => setMinPurity(0) },
     maxPrice < priceCeiling && { label: `Under $${maxPrice}`, clear: () => setMaxPrice(priceCeiling) },
   ].filter((f): f is { label: string; clear: () => void } => Boolean(f));
 
@@ -136,7 +137,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
               key={option.value}
               type="button"
               aria-pressed={minPurity === option.value}
-              onClick={() => setMinPurity(option.value)}
+              onClick={() => setMinPurity(minPurity === option.value ? 0 : option.value)}
               className={`border px-3 py-1.5 text-xs tracking-[0.08em] transition-colors ${
                 minPurity === option.value
                   ? "border-gold bg-gold text-black"

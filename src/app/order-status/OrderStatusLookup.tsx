@@ -38,10 +38,9 @@ export function OrderStatusLookup({ initialReference }: { initialReference: stri
       <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Orders</p>
       <h1 className="mt-3 font-serif text-3xl text-navy">Check Order Status</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
-        Enter the reference code from your confirmation email (it starts with
-        VC-) and the email address you ordered with. You&apos;ll see the
-        order&apos;s status, tracking and payment instructions. No account
-        needed.
+        Order record access. Enter the reference code from your order
+        confirmation (it begins with VC-) alongside the email address the
+        order was placed with.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -72,6 +71,10 @@ export function OrderStatusLookup({ initialReference }: { initialReference: stri
             className="input-field-light mt-1"
           />
         </label>
+        <p className="text-xs leading-relaxed text-muted">
+          Both must match the order to render its logistics history. Access is
+          then held in this browser for 7 days.
+        </p>
         {error && (
           <p role="alert" className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">
             {error}
@@ -87,11 +90,11 @@ export function OrderStatusLookup({ initialReference }: { initialReference: stri
       </form>
 
       <p className="mt-6 text-center text-xs text-muted">
-        Have an account?{" "}
+        Registered accounts may{" "}
         <Link href="/login?next=/account" className="text-gold-ink hover:underline">
-          Sign in
+          access the dashboard
         </Link>{" "}
-        to see all your orders.
+        to view complete transaction histories and tracking.
       </p>
     </div>
   );

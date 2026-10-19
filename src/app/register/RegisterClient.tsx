@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { safeNextPath } from "@/lib/safe-next";
-import { HEARD_ABOUT_OPTIONS } from "@/lib/marketing/heard-about";
 import { PasswordField } from "@/components/PasswordField";
 
 // What an account opens up. Every line is something the site does today;
@@ -41,10 +40,12 @@ function RegisterForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [company, setCompany] = useState("");
-  const [heardAbout, setHeardAbout] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(true);
-  const [isAffiliate, setIsAffiliate] = useState(searchParams.get("affiliate") === "1");
+  // No affiliate option on the form itself: an invite link
+  // (/register?affiliate=1&code=…, also via /signup) is the way in, and only
+  // then is the invite code shown.
+  const fromInvite = searchParams.get("affiliate") === "1" || Boolean(searchParams.get("code"));
+  const [isAffiliate, setIsAffiliate] = useState(fromInvite);
   const [inviteCode, setInviteCode] = useState(searchParams.get("code")?.toUpperCase() ?? "");
   const [error, setError] = useState<string | null>(null);
   const [invalidCode, setInvalidCode] = useState(false);
@@ -66,8 +67,6 @@ function RegisterForm() {
           lastName,
           email,
           password,
-          company: company.trim() || undefined,
-          heardAbout: heardAbout || undefined,
           marketingConsent,
           isAffiliate: asAffiliate,
           inviteCode: asAffiliate ? inviteCode : undefined,
@@ -105,8 +104,8 @@ function RegisterForm() {
           Open the full catalog
         </h1>
         <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
-          A free account is how you buy from VeriCert. It takes a minute: your name, email and a
-          password. No ID, no date of birth. We ask for a shipping address only when you check out.
+          A free account is how you buy from VeriCert. It takes a minute: your name, email, and a
+          password. We ask for a shipping address only when you check out.
         </p>
 
         <ul className="mt-8 space-y-6">
@@ -170,30 +169,6 @@ function RegisterForm() {
             onChange={setPassword}
             context={{ email, firstName, lastName }}
           />
-          <input
-            id="register-company"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            placeholder="Company or lab (optional)"
-            aria-label="Company or lab (optional)"
-            autoComplete="organization"
-            maxLength={200}
-            className="input-field-light"
-          />
-          <select
-            id="register-heard-about"
-            value={heardAbout}
-            onChange={(e) => setHeardAbout(e.target.value)}
-            aria-label="How did you hear about us? (optional)"
-            className={`input-field-light ${heardAbout ? "" : "text-muted"}`}
-          >
-            <option value="">How did you hear about us? (optional)</option>
-            {HEARD_ABOUT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
           <label className="flex items-start gap-3 text-xs leading-relaxed text-muted">
             <input
               id="register-marketing"
@@ -203,16 +178,6 @@ function RegisterForm() {
               className="mt-0.5 h-4 w-4 accent-gold"
             />
             Send me product updates, restock notices, and offers. You can unsubscribe anytime.
-          </label>
-          <label className="flex items-center gap-3 py-1.5 text-xs text-muted">
-            <input
-              id="register-affiliate"
-              type="checkbox"
-              checked={isAffiliate}
-              onChange={(e) => setIsAffiliate(e.target.checked)}
-              className="h-4 w-4 accent-gold"
-            />
-            I have an affiliate invite code
           </label>
           {isAffiliate && (
             <input
@@ -248,12 +213,12 @@ function RegisterForm() {
             {submitting ? "Creating Account..." : "Create Account"}
           </button>
           <p className="text-center text-xs leading-relaxed text-muted">
-            By creating an account you confirm you&apos;re 21 or older and agree to our{" "}
-            <Link href="/terms" className="underline underline-offset-2 hover:text-gold-ink">
-              Terms
+            By creating an account you confirm you are 21 or older and agree to our{" "}
+            <Link href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-gold-ink">
+              Terms of Sale
             </Link>{" "}
             and{" "}
-            <Link href="/privacy-policy" className="underline underline-offset-2 hover:text-gold-ink">
+            <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-gold-ink">
               Privacy Policy
             </Link>
             .
