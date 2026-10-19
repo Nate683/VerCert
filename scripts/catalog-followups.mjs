@@ -3,8 +3,8 @@
 //   node scripts/catalog-followups.mjs           # dry run: prints the plan
 //   node scripts/catalog-followups.mjs --apply   # writes, in one transaction
 //
-// A1: Cagrilintide gets the Lyophilized Peptides category (it was created
-// uncategorized by scripts/launch-catalog.mjs). A3: Retatrutide is retired.
+// A1: Cagrilintide, GLP3-RT, VC-TRZ and GLP-1S get the Lyophilized Peptides
+// category (they were created uncategorized). A3: Retatrutide is retired.
 // Nothing else changes: no other active flag, and no price or stock, is
 // touched.
 //
@@ -22,6 +22,9 @@ import { neon } from "@neondatabase/serverless";
 const APPLY = process.argv.includes("--apply");
 const ACTOR = "script:catalog-followups";
 const CATEGORY = "Lyophilized Peptides";
+// Cagrilintide (A1, October 14) and the three launch codes GLP3-RT, VC-TRZ
+// and GLP-1S (owner, October 19), all created uncategorized.
+const CATEGORIZE = ["cagrilintide", "vc3r", "vc2t", "vc1s"];
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -33,17 +36,19 @@ const sql = neon(connectionString);
 async function main() {
   const now = new Date().toISOString();
   const statements = [];
-  const [row] = await sql`SELECT slug, category, active FROM products WHERE slug = 'cagrilintide'`;
-  if (!row) {
-    console.log("SKIP: no cagrilintide product (run scripts/launch-catalog.mjs first).");
-  } else if (row.category === CATEGORY) {
-    console.log(`SKIP: cagrilintide is already "${CATEGORY}".`);
-  } else {
-    console.log(`cagrilintide: category ${row.category ?? "none"} → "${CATEGORY}" (stays ${row.active ? "active" : "inactive"})`);
-    statements.push(sql`UPDATE products SET category = ${CATEGORY}, updated_at = ${now} WHERE slug = 'cagrilintide'`);
-    statements.push(
-      sql`INSERT INTO activity_log (id, actor_email, action, details, created_at) VALUES (${randomUUID()}, ${ACTOR}, 'product.updated', ${`cagrilintide: category → ${CATEGORY}`}, ${now})`
-    );
+  for (const slug of CATEGORIZE) {
+    const [row] = await sql`SELECT slug, category, active FROM products WHERE slug = ${slug}`;
+    if (!row) {
+      console.log(`SKIP: no ${slug} product (run scripts/launch-catalog.mjs first).`);
+    } else if (row.category === CATEGORY) {
+      console.log(`SKIP: ${slug} is already "${CATEGORY}".`);
+    } else {
+      console.log(`${slug}: category ${row.category ?? "none"} → "${CATEGORY}" (stays ${row.active ? "active" : "inactive"})`);
+      statements.push(sql`UPDATE products SET category = ${CATEGORY}, updated_at = ${now} WHERE slug = ${slug}`);
+      statements.push(
+        sql`INSERT INTO activity_log (id, actor_email, action, details, created_at) VALUES (${randomUUID()}, ${ACTOR}, 'product.updated', ${`${slug}: category → ${CATEGORY}`}, ${now})`
+      );
+    }
   }
 
   // A3: Retatrutide is retired (set inactive), as the owner decided on
