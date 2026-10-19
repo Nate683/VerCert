@@ -7,6 +7,7 @@
   --foreground: #f3ecdd;
   --navy: #132544;
   --navy-deep: #0d1626;
+  --charcoal: #20262D; /* footer and ticker ground */
   --gold: #c9a227;
 
   /* Light storefront theme. Body copy uses the existing --navy, which is
@@ -73,6 +74,7 @@
   --color-gold-ink: var(--gold-ink);
   --color-navy: var(--navy);
   --color-navy-deep: var(--navy-deep);
+  --color-charcoal: var(--charcoal);
   --color-paper: var(--paper);
   --color-muted: var(--muted);
   --color-surface: var(--surface);

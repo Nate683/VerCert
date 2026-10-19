@@ -10,15 +10,14 @@ function isUnset(value: string): boolean {
 }
 
 export function Footer({ contact }: { contact: ContactContent }) {
+  // Email and hours only; the operations address is on the Contact page.
   const contactLines = [
     !isUnset(contact.email) && { label: contact.email, href: `mailto:${contact.email}` },
-    !isUnset(contact.phone) && { label: contact.phone, href: `tel:${contact.phone.replace(/[^\d+]/g, "")}` },
-    !isUnset(contact.address) && { label: contact.address },
     contact.hours && { label: contact.hours },
   ].filter((v): v is { label: string; href?: string } => Boolean(v));
 
   return (
-    <footer className="relative overflow-hidden border-t border-gold/15 bg-black">
+    <footer className="relative overflow-hidden border-t border-gold/15 bg-charcoal">
       {/* Beside the newsletter row, clear of the disclaimer text. A phone's
           single column has no empty corner for it. */}
       <Watermark className="bottom-40 right-8 hidden w-[26rem] lg:block" />
@@ -26,7 +25,7 @@ export function Footer({ contact }: { contact: ContactContent }) {
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
             <VeriCertLogo className="h-9 w-auto" />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/50">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
               Third-party verified research compounds for laboratory use.
               Every batch, certified.
             </p>
@@ -83,7 +82,7 @@ export function Footer({ contact }: { contact: ContactContent }) {
 
         <div className="mt-16 border-t border-white/10 pt-10">
           <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Stay Informed</h4>
-          <p className="mt-3 max-w-sm text-sm text-white/50">
+          <p className="mt-3 max-w-sm text-sm text-white/70">
             Occasional updates on new compounds and testing results. No spam.
           </p>
           <div className="mt-4">
@@ -91,19 +90,20 @@ export function Footer({ contact }: { contact: ContactContent }) {
           </div>
         </div>
 
+        {/* One disclaimer row and one copyright row, nothing else. On the
+            #20262D ground: cream at 70% is 7.1:1, links at 60% 5.6:1, gold
+            headings 6.3:1 (cream at 50% would be 4.4:1, under 4.5:1). */}
         <div className="mt-10 border-t border-white/10 pt-8">
-          {/* white/60 (the cream token) on black is 6.4:1; the old white/40 and white/30 (3.3:1,
-              2.3:1) were below 4.5:1 for text this small. */}
-          <p className="text-xs leading-relaxed text-white/60">
-            All products sold by VeriCert are intended strictly for in-vitro laboratory
-            research and analytical use by qualified professionals. They are not drugs,
-            foods, dietary supplements, or cosmetics, and are not intended for human or
-            veterinary use, diagnosis, treatment, cure, or prevention of any disease.
+          <p className="text-xs leading-relaxed text-white/70">
+            All products distributed under the VeriCert Peptides storefront are intended exclusively for
+            in-vitro laboratory research, analytical testing, and comparative reagent chemistry applications
+            by qualified professional entities. Throughout these operations, the brand moniker &quot;VeriCert
+            Peptides&quot; refers to the parent operating entity RKNEA Operations LLC. These chemical matrices
+            are not classified as therapeutics, clinical products, active pharmaceutical ingredients,
+            diagnostic materials, or dietary additions.
           </p>
-          <p className="mt-4 text-xs leading-relaxed text-white/60">
+          <p className="mt-4 text-xs text-white/70">
             © {new Date().getFullYear()} RKNEA Operations LLC d/b/a VeriCert Peptides. All rights reserved.
-            VeriCert Peptides supplies research compounds strictly for in-vitro laboratory research and
-            analytical use. Not for human or veterinary consumption.
           </p>
         </div>
       </div>

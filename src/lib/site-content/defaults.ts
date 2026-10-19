@@ -114,10 +114,10 @@ export type ContactContent = {
 export const DEFAULT_CONTACT: ContactContent = {
   intro:
     "Questions about a certificate of analysis, an order, or wholesale research accounts? Send a message below.",
-  email: "Add your business email — edit in EXEC MODE",
+  email: "info@vericertpeptides.com",
   phone: "Add your business phone — edit in EXEC MODE",
   address: "Add your business address — edit in EXEC MODE",
-  hours: "Monday – Friday, 9am – 5pm ET",
+  hours: "Monday – Friday, 9am – 5pm CT",
   wholesaleNote: "Research institutions and laboratories may request volume pricing via the form.",
 };
 
