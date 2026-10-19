@@ -8,18 +8,18 @@ import { track } from "@/lib/track-client";
 import type { PaymentMethod, SavedAddress } from "@/lib/types";
 import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
 
-const PAYMENT_OPTIONS: { value: PaymentMethod; title: string; oneLiner: string; detail: string }[] = [
+// The only two ways to pay. No card, Apple Pay or Google Pay inputs, not even
+// as placeholders.
+const PAYMENT_OPTIONS: { value: PaymentMethod; title: string; detail: string }[] = [
+  {
+    value: "bank_transfer",
+    title: "Direct Bank Transfer (ACH / Wire)",
+    detail: "Bank-to-bank electronic transfer. Instructions and reference code are shown after you place your order.",
+  },
   {
     value: "crypto",
     title: "Cryptocurrency",
-    oneLiner: "Fastest — confirmed in minutes.",
-    detail: "BTC, ETH or USDC. You get a deposit address and QR code on the next screen.",
-  },
-  {
-    value: "bank_transfer",
-    title: "Bank Transfer",
-    oneLiner: "ACH or wire — ships once funds clear.",
-    detail: "We email our bank details and a reference number for you to quote.",
+    detail: "BTC, ETH, or USDC. A payment address and amount are issued after you place your order.",
   },
 ];
 
@@ -85,7 +85,8 @@ export function CheckoutForm({
   // A returning customer sees their saved address as a summary line rather
   // than five pre-filled boxes to scroll past.
   const [editingAddress, setEditingAddress] = useState(!initialAddress);
-  const [method, setMethod] = useState<PaymentMethod>("crypto");
+  // The first option shown: bank transfer, or crypto when bank details aren't configured.
+  const [method, setMethod] = useState<PaymentMethod>(paymentOptions[0]?.value ?? "crypto");
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -372,7 +373,6 @@ export function CheckoutForm({
                       }`}
                     />
                   </span>
-                  <span className="mt-1.5 block text-sm text-gold-ink">{option.oneLiner}</span>
                   <span className="mt-1.5 block text-xs leading-relaxed text-muted">
                     {option.detail}
                   </span>

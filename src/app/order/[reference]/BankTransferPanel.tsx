@@ -76,14 +76,15 @@ export function BankTransferPanel({
           <p className="mt-1 text-sm text-muted">Order {reference}</p>
         </div>
         <span className="border border-hairline px-3 py-1 text-xs uppercase tracking-[0.15em] text-muted">
-          Awaiting Payment
+          Awaiting Settlement
         </span>
       </div>
 
       <p className="mt-6 text-sm leading-relaxed text-muted">
-        Send <span className="text-navy">${total.toFixed(2)} USD</span> to the
-        account below and include your order reference in the transfer memo.
-        We&apos;ve also emailed these details to you.
+        Send your order total to the account below and include your reference
+        code in the memo field. These instructions have also been sent to your
+        registered email address. Your order ships once payment is received and
+        cleared.
       </p>
 
       <div className="mt-6 border border-gold/40 bg-gold/5 p-4 text-center">
@@ -91,9 +92,18 @@ export function BankTransferPanel({
           Include This Reference
         </p>
         <p className="mt-1 font-mono text-xl text-gold-ink">{reference}</p>
+        <p className="mt-3 text-xs leading-relaxed text-muted">
+          Include your reference code exactly as shown in the memo, reference or
+          note field of your transfer. Payments received without a matching
+          reference code may be delayed.
+        </p>
       </div>
 
       <dl className="mt-6 divide-y divide-hairline border-y border-hairline">
+        <div className="flex justify-between py-3 text-sm">
+          <dt className="text-muted">Order Total</dt>
+          <dd className="font-mono text-navy">${total.toFixed(2)} USD</dd>
+        </div>
         {detailRows(bankDetails).map(([label, value]) => (
           <div key={label} className="flex justify-between py-3 text-sm">
             <dt className="text-muted">{label}</dt>
@@ -103,9 +113,7 @@ export function BankTransferPanel({
       </dl>
 
       <div className="mt-6 flex items-center justify-between">
-        <p className="text-xs text-muted">
-          Your order ships once we confirm receipt of funds.
-        </p>
+        <span />
         <button
           type="button"
           onClick={refreshStatus}

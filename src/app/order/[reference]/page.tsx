@@ -68,7 +68,10 @@ export default async function OrderPage({
   // The heading follows the order's state: a cancelled or refunded order must
   // not open with "Thank you — your order is in."
   const heading = isPending
-    ? { eyebrow: "Payment Required", title: "Complete Your Payment" }
+    ? {
+        eyebrow: order.paymentMethod === "crypto" ? "Payment Required" : "Bank Transfer — Awaiting Settlement",
+        title: "Complete Your Payment",
+      }
     : order.refundedAt
       ? { eyebrow: "Order Refunded", title: "This order was refunded." }
       : order.status === "cancelled"
