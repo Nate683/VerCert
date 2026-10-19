@@ -8,6 +8,8 @@ import type { CartItem, OrderStatus } from "@/lib/types";
 import { AddressForm } from "./AddressForm";
 import { MarketingToggle } from "./MarketingToggle";
 import { NotificationPreferences } from "./NotificationPreferences";
+import { CoaQuickLookup } from "@/components/CoaQuickLookup";
+import { COA_LOOKUP_ENABLED } from "@/lib/coa-lookup";
 import { ResendVerification } from "./ResendVerification";
 import { AccountLogoutButton } from "./AccountLogoutButton";
 import { EmailChangeForm } from "./EmailChangeForm";
@@ -215,6 +217,19 @@ export default async function AccountPage() {
           <EmailChangeForm pendingEmail={customer.pendingEmail} />
         </div>
       </section>
+
+      {/* The certificate lookup registration promises, through the one
+          lookup handler (lib/coa-lookup.ts). Shown only while that handler is
+          enabled; the registration bullet follows the same flag. */}
+      {COA_LOOKUP_ENABLED && (
+        <section className="mt-12 border-t border-hairline pt-8">
+          <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Certificate Lookup</h2>
+          <p className="mt-2 text-sm text-muted">Enter the batch number from a vial label to open its certificate of analysis.</p>
+          <div className="mt-4">
+            <CoaQuickLookup id="account-coa-batch" />
+          </div>
+        </section>
+      )}
 
       <section className="mt-12 border-t border-hairline pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Notifications</h2>
