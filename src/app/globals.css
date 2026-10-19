@@ -228,12 +228,19 @@ body {
   animation-play-state: paused;
 }
 
-/* Reduced motion: hold the strip still rather than scrolling it. The content
-   stays readable because the first run is fully visible from the start. */
+/* Reduced motion: hold the strip still rather than scrolling it. Six phrases
+   don't fit one screen, so the strip scrolls by hand instead, and the
+   duplicate run (only there for the loop) is dropped. */
 @media (prefers-reduced-motion: reduce) {
   .ticker-track {
     animation: none;
     transform: none;
+  }
+  .ticker {
+    overflow-x: auto;
+  }
+  .ticker-run[aria-hidden="true"] {
+    display: none;
   }
   /* The elapsed-seconds counter still shows the upload is alive. */
   .upload-progress-fill::after {
