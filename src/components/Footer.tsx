@@ -57,6 +57,7 @@ export function Footer({ contact }: { contact: ContactContent }) {
               <li><Link href="/privacy-policy" className="inline-block py-2 hover:text-white">Privacy Policy</Link></li>
               <li><Link href="/refund-policy" className="inline-block py-2 hover:text-white">Refund Policy</Link></li>
               <li><Link href="/shipping-policy" className="inline-block py-2 hover:text-white">Shipping Policy</Link></li>
+              <li><Link href="/dashboard-policy" className="inline-block py-2 hover:text-white">Dashboard Policy</Link></li>
             </ul>
           </div>
 

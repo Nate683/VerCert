@@ -12,5 +12,5 @@ export const dynamic = "force-dynamic";
 
 export default async function ShippingPolicyPage() {
   const policies = await getContent("policies", DEFAULT_POLICIES);
-  return <PolicyPage heading="Shipping Policy" paragraphs={policies.shipping} />;
+  return <PolicyPage heading="VeriCert Peptides — Shipping Policy" paragraphs={policies.shipping} />;
 }

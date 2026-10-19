@@ -129,28 +129,28 @@ export type PoliciesContent = {
   termsUpdated?: string;
   refund: string[];
   shipping: string[];
+  // Optional so content saved before it existed still parses (the page falls
+  // back to the default).
+  dashboard?: string[];
 };
 
 // Generic starter text only — review with counsel before relying on this.
 export const DEFAULT_POLICIES: PoliciesContent = {
+  // Owner-supplied text, October 18, 2026.
   privacy: [
-    "Effective September 14, 2026. This policy explains what VeriCert Peptides, a brand of RKNEA Operations LLC, collects when you use this website, why we collect it, and the choices you have.",
-    "When you create an account: your name, email address and a password (stored only as a salted hash), plus — only if you choose to give them — your company or lab and how you heard about us. We record that you confirmed you are 21 or older, and when; we never ask for a date of birth. We also record whether you've agreed to receive marketing email.",
-    "When you order: your shipping address, and a record of the order — products, sizes, quantities and lot numbers, prices, discounts, dates and payment status. Lot numbers connect every vial to its certificate of analysis. Payments are handled by third-party processors (a cryptocurrency payment provider, or your bank for transfers); we never receive or store card numbers or bank credentials.",
-    "While you use the site: when you're signed in, we record the products you view and what you add to your cart or take to checkout, so we understand what researchers are interested in and can follow up on an unfinished order. We note how you first reached us — an affiliate's referral link, a campaign tag in a link, or the website that linked to us. For the emails we send, our email provider tells us whether each one was delivered, opened or clicked.",
-    "What we work out from that: from your order history we calculate figures such as how many orders you've placed, your total and average spend, how often you reorder, and the kind of product you buy most. We use them to group customers for our own emails — for example, a note to researchers who haven't reordered in a while. Only VeriCert and the service that sends our email use them, and they are never sold.",
-    "What we don't collect: government ID, payment card numbers, health information, or descriptions of how you intend to use a product.",
-    "Who we share it with: only the services that run the store for us — website hosting (Vercel), database hosting (Neon), email delivery (Resend) and payment processing — and only as needed to provide those services, or where the law requires it. Affiliates see the orders placed with their code and their value, never your name or contact details. We don't sell personal information, use it for targeted advertising, or run third-party advertising trackers.",
-    "Your choices: from your account page you can download a copy of your data at any time, and delete your account. Deleting removes your name, email, addresses, browsing history and email preferences; we keep records of past orders for accounting and tax, with your details removed and only the state and country shipped to retained. You can change your email address from your account, unsubscribe from marketing email with the link in any message or the setting in your account, and ask us to correct anything else.",
-    "Your rights: depending on where you live — including Texas and California — you have the right to know what we hold about you and get a copy, to have it corrected or deleted, and to opt out of the sale of personal data or its use for targeted advertising (we do neither). We respond to requests within 45 days. If we can't complete one, we'll explain why, and you can appeal by contacting us; we'll answer an appeal within 60 days. We won't treat you differently for using these rights.",
-    "How long we keep it: account data for as long as your account is open, and order records for as long as tax and accounting rules require. Passwords are hashed, connections are encrypted, and staff accounts are protected with two-factor authentication.",
-    "Contact: send any privacy question or request through our Contact page. If we change this policy in a meaningful way, we'll update the date above and tell account holders by email.",
+    "Effective Date: October 14, 2026",
+    "Parent Operating Entity: RKNEA Operations LLC",
+    "Throughout this policy, \"VeriCert Peptides\" refers to the parent legal entity RKNEA Operations LLC. This policy outlines how customer account data, order records, and transaction metadata are processed and secured.",
+    "Access to the VeriCert Peptides catalog, product information, and ordering requires registration. When an account is created we record name, email address, and shipping details. Passwords are stored using salted hashing. Access to the catalog is restricted to registered accounts.",
+    "Order data, batch assignments, and shipment tracking information are processed for order fulfillment and record keeping. Payment is handled through direct bank transfer and cryptocurrency. VeriCert Peptides does not collect, view, transmit, or store credit card numbers or customer bank account numbers on its servers.",
+    "Data is processed on standard cloud infrastructure supporting this storefront, including hosting, database, and email delivery services. We do not display third-party advertisements, use advertising cookies, or sell customer data. Administrative access to customer data requires two-factor authentication.",
+    "Customers may review, correct, update, or request deletion of their registration data by contacting us. Privacy inquiries go to info@vericertpeptides.com.",
   ],
   // DRAFT PENDING LEGAL REVIEW. The Terms of Sale below were written as a
   // complete plain-English draft on October 4, 2026 and have not been reviewed
   // by counsel. "## " starts a section heading and lines starting "- " form a
   // list (see components/PolicyPage.tsx).
-  termsUpdated: "October 14, 2026",
+  termsUpdated: "October 18, 2026",
   terms: [
     "These Terms of Sale apply to every order placed with VeriCert Peptides. They are a binding agreement between you and us. Please read them before you order: by creating an account or placing an order, you accept them.",
     "## Definitions",
@@ -185,8 +185,7 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "We may refuse or cancel any Order, in whole or in part, at any time before it ships. Reasons include, among others: we cannot confirm you meet the eligibility requirements; we believe a Product is meant for a prohibited use; there is an error in price, description or availability; payment is not received in full; the Product is out of stock; or shipping to your address would break the law. If we cancel an Order you have paid for, we refund what you paid for the cancelled items, as described under Payment terms.",
     "## Payment terms",
     "Orders are processed upon verification of received payment. Available payment methods are displayed at checkout and currently include bank transfer (ACH and wire) and cryptocurrency. RKNEA Operations LLC does not currently accept credit or debit cards. Payment methods available to a given order may vary based on jurisdiction and compliance requirements.",
-    "Because these payment methods settle directly and are not routed through card networks, they do not carry chargeback or card-network dispute rights. Buyers should review their order carefully before sending payment. Refund and return eligibility is governed solely by Section 13 of these Terms.",
-    "Orders are matched to payments using the reference code issued at checkout. Payments received without a valid reference code may be delayed or returned.",
+    "Because these payment methods settle directly and are not routed through card networks, they do not carry chargeback or card-network dispute rights. Buyers should review their order carefully before sending payment. Refund and return eligibility is governed solely by the Refund and Returns section of these Terms.",
     "Every Order has a reference code. You must include the exact reference code with your payment, in the memo, reference or note field, so we can match the payment to your Order. Payment instructions are shown on your order page and sent by email.",
     "We ship only once payment has been received in full and has cleared. For bank transfers that can take several business days.",
     "If a payment arrives without a reference code, with the wrong one, or from a name that does not match the Order, we may not be able to match it. Contact us with proof of payment and we will try to match it, but we are not responsible for delays caused by an unmatched payment. A payment we cannot match within 30 days may be returned to the account it came from, less any transfer fees.",
@@ -212,12 +211,12 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "- Products are provided \"as is\", except as stated under Product descriptions and specifications and under Returns and refunds. We disclaim all other warranties, express or implied, including any warranty of merchantability, fitness for a particular purpose and non-infringement.\n- We are not liable for any indirect, incidental, special, consequential or punitive damages, or for lost profits, lost data, lost research or business interruption, even if we were told they were possible.\n- We are not liable for any injury, illness, loss or damage arising from use of a Product in people or animals, from any other prohibited use, or from failure to follow these Terms.\n- Our total liability for any claim relating to an Order is limited to the amount you paid us for that Order.",
     "Some places do not allow certain limits on liability. In those places these limits apply as far as the law allows.",
     "## Indemnification",
-    "You agree to defend, indemnify and hold harmless VeriCert and its owners, employees and agents against any claim, loss, liability, penalty, cost or expense (including reasonable attorneys' fees) arising from: your breach of these Terms; your use, handling, storage, resale or disposal of any Product; any prohibited use of a Product by you or by anyone you supplied it to; or your breach of any law.",
+    "You agree to defend, indemnify and hold harmless VeriCert Peptides, its owners, employees, and agents against any claim, loss, liability, penalty, cost or expense (including reasonable attorneys' fees) arising from: your breach of these Terms; your use, handling, storage, resale or disposal of any Product; any prohibited use of a Product by you or by anyone you supplied it to; or your breach of any law.",
     "## Governing law and venue",
     "These Terms, and any dispute about them or about any Order, are governed by the laws of the State of Texas, without regard to its conflict-of-law rules. Subject to the dispute resolution section below, the state and federal courts located in Texas have exclusive jurisdiction, and you agree to their jurisdiction and venue.",
     "## Dispute resolution",
-    "If you have a dispute with us, contact us first and give us a chance to put it right. Tell us what the problem is, your order reference and what you would like us to do. We will both try in good faith to resolve it within 30 days.",
-    "If it is not resolved, either of us may bring a claim in the courts named above, or in a small-claims court where the claim qualifies. Claims may be brought only in your or our individual capacity, not as a plaintiff or class member in a class or representative action. Any claim must be brought within one year after it arises, or it is permanently barred, unless the law requires a longer period.",
+    "In the event of a dispute, the Buyer agrees to contact the Company directly to allow an opportunity for administrative resolution. All correspondence must explicitly state the nature of the issue, the matching order reference code, and the requested remedy. Both parties agree to act in good faith to resolve the matter within 30 calendar days.",
+    "If the matter is not resolved within this window, either party may bring a claim in the courts named within these Terms, or within a qualifying small-claims court. All claims must be brought exclusively in an individual capacity, and the Buyer explicitly waives all rights to participate as a plaintiff or class member in any class or representative action. Any legal claim must be filed within one year after the cause of action arises, or it shall be permanently barred.",
     "## Changes to these Terms",
     "We may change these Terms from time to time. When we do, we will update the date at the top of this page. Changes apply to Orders placed after they are posted; the Terms in force when you placed an Order apply to that Order. If we make a significant change, we will also tell account holders by email.",
     "## Severability and general terms",
@@ -225,13 +224,21 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "## Contact",
     "Questions about these Terms can be sent through our Contact page.",
   ],
+  // Owner-supplied text, October 18, 2026. Note: the Terms say they prevail
+  // over these policies where they conflict (Severability and general terms).
   refund: [
-    "Contact us within 14 days of delivery if your order arrived damaged, incorrect, or fails to match its certificate of analysis, and we will arrange a replacement or refund.",
-    "Because these are laboratory research materials, opened or used products cannot be returned for reasons other than a quality issue.",
+    "Because every batch is independently validated and quality controlled, and because these are temperature-sensitive research compounds, all sales are final. RKNEA Operations LLC d/b/a VeriCert Peptides operates a no-return, no-restock policy for all lyophilized reagents once a shipment has left our Texas facility. This prevents cross-contamination and ensures every compound remains suitable for research use.",
+    "If an order arrives with verifiable physical damage, an incorrect SKU, or shows an objective deviation under independent third-party analytical validation by an accredited testing facility, notify us at info@vericertpeptides.com within 14 calendar days of recorded delivery. Claims must include clear photographs and supporting documentation. Approved claims are resolved by replacement at no cost or by account credit.",
   ],
   shipping: [
-    "Orders are shipped once payment has cleared. Processing typically begins within 1–2 business days of confirmed payment.",
-    "Shipping availability varies by destination and is subject to local regulations governing research chemicals. Contact us before ordering if you are unsure about your region.",
+    "Shipments are dispatched after payment has been received in full and cleared. Processing, packaging in temperature-stable configurations, and courier handoff typically occur within 1 to 2 business days following payment verification. Because VeriCert Peptides maintains cold storage for its inventory prior to dispatch, shipping is coordinated with active inventory control.",
+    "Availability, routing restrictions, and delivery timelines are subject to local regulations governing the transport of research chemical compounds. Buyers are solely responsible for verifying that their receiving location and local regulations permit the lawful acquisition and storage of the ordered compounds. RKNEA Operations LLC holds no liability for transit delays, routing exceptions, or delivery holds resulting from carrier disruptions, regulatory enforcement, or force majeure once a shipment has been transferred to the carrier.",
+  ],
+  dashboard: [
+    "Operating Entity: RKNEA Operations LLC",
+    "The authenticated account dashboard gives registered customers access to their profile, saved shipping addresses, and order records. Interface labels use research and laboratory terminology consistent with the nature of the products.",
+    "Communication preferences cover order notifications, availability updates, and certificate of analysis postings. Customers may export their data as a JSON file containing their profile, order records, and session logs.",
+    "Account deactivation removes profile information, email, and saved addresses from the storefront. Order and transaction records are retained separately for tax reporting and accounting requirements as required by Texas state law and standard business practice.",
   ],
 };
 

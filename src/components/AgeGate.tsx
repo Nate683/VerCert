@@ -40,7 +40,7 @@ function acknowledge() {
 
 // The gate links to the Terms, so a visitor has to be able to read them before
 // agreeing: the legal pages are never covered.
-const UNGATED = new Set(["/terms", "/privacy-policy", "/refund-policy", "/shipping-policy"]);
+const UNGATED = new Set(["/terms", "/privacy-policy", "/refund-policy", "/shipping-policy", "/dashboard-policy"]);
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';

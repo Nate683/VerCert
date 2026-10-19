@@ -12,5 +12,5 @@ export const dynamic = "force-dynamic";
 
 export default async function PrivacyPolicyPage() {
   const policies = await getContent("policies", DEFAULT_POLICIES);
-  return <PolicyPage heading="Privacy Policy" paragraphs={policies.privacy} />;
+  return <PolicyPage heading="VeriCert Peptides — Privacy and Data Protection Policy" paragraphs={policies.privacy} />;
 }

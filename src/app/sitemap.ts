@@ -15,5 +15,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/privacy-policy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/refund-policy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/shipping-policy`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${SITE_URL}/dashboard-policy`, changeFrequency: "yearly", priority: 0.2 },
   ];
 }

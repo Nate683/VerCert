@@ -17,6 +17,7 @@ const PUBLIC_PAGES = new Set([
   "/terms",
   "/refund-policy",
   "/shipping-policy",
+  "/dashboard-policy",
   "/order-status",
 ]);
 
