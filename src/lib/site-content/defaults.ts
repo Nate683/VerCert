@@ -137,11 +137,19 @@ export type PoliciesContent = {
 export const DEFAULT_POLICIES: PoliciesContent = {
   // Owner-supplied text, October 18, 2026.
   privacy: [
-    "Effective Date: October 14, 2026",
+    "Effective Date: October 19, 2026",
     "Parent Operating Entity: RKNEA Operations LLC",
     "Throughout this policy, \"VeriCert Peptides\" refers to the parent legal entity RKNEA Operations LLC. This policy outlines how customer account data, order records, and transaction metadata are processed and secured.",
     "Access to the VeriCert Peptides catalog, product information, and ordering requires registration. When an account is created we record name, email address, and shipping details. Passwords are stored using salted hashing. Access to the catalog is restricted to registered accounts.",
     "Order data, batch assignments, and shipment tracking information are processed for order fulfillment and record keeping. Payment is handled through direct bank transfer and cryptocurrency. VeriCert Peptides does not collect, view, transmit, or store credit card numbers or customer bank account numbers on its servers.",
+    "## Analytics and Account Activity",
+    "For signed-in accounts, we record product pages viewed, items added to and removed from the cart, and order history. This information is used to maintain inventory planning, improve catalog organization, and understand which compounds our customers require. It is not sold, shared with advertisers, or used to build profiles for third parties.",
+    "## Email Engagement",
+    "Where we send transactional or informational email, we record whether a message was opened and whether links within it were followed. This is used to confirm delivery and to measure whether our communications are reaching registered accounts. Customers may opt out of non-essential email at any time from their account settings.",
+    "## Referral and Partner Attribution",
+    "Where an account is created through a partner or referral code, we record the referring code against that account for the purpose of attribution and partner compensation.",
+    "## Your Privacy Rights",
+    "Residents of Texas, California, and other states with applicable privacy legislation have the right to request access to the personal data we hold about them, to request correction of inaccurate data, to request deletion of their data, and to receive a portable copy of their data. Requests may be submitted to info@vericertpeptides.com and will be responded to within the timeframe required by applicable law. We do not sell personal data and do not process it for targeted advertising.",
     "Data is processed on standard cloud infrastructure supporting this storefront, including hosting, database, and email delivery services. We do not display third-party advertisements, use advertising cookies, or sell customer data. Administrative access to customer data requires two-factor authentication.",
     "Customers may review, correct, update, or request deletion of their registration data by contacting us. Privacy inquiries go to info@vericertpeptides.com.",
   ],
