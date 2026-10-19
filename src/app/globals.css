@@ -903,3 +903,16 @@ input[type="search"]::-webkit-search-cancel-button {
   background-color: var(--office-panel);
   color: var(--office-fg);
 }
+
+/* Age gate copyright line (components/AgeGate.tsx): pinned to the bottom of
+   the viewport only on a desktop tall enough to keep it clear of the panel.
+   Everywhere else it stays in flow, stacked below the panel. */
+@media (min-width: 1024px) and (min-height: 760px) {
+  .age-gate-legal {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 1.5rem;
+    margin-inline: auto;
+    margin-top: 0;
+  }
+}

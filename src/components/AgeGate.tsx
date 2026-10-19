@@ -108,7 +108,8 @@ export function AgeGate() {
           aria-describedby="age-gate-body"
           className="w-full max-w-lg border border-hairline bg-paper px-7 py-10 text-center shadow-2xl sm:px-10"
         >
-          <VeriCertLogo className="mx-auto h-11 w-auto" ground="light" />
+          {/* 20% larger than the old h-11 (44px). */}
+          <VeriCertLogo className="mx-auto h-[52.8px] w-auto" ground="light" />
 
           <p className="mt-7 text-xs uppercase tracking-[0.35em] text-gold-ink">
             Research Use Only
@@ -128,12 +129,17 @@ export function AgeGate() {
             use by qualified professionals. Nothing sold here is intended for human
             or veterinary consumption. By entering you confirm you are at least 21
             and accept our{" "}
-            <Link href="/terms" className="text-gold-ink underline underline-offset-2">
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link href="/terms#research-use-only" className="text-gold-ink underline underline-offset-2">
+            {/* New tabs, so the gate stays open behind them. */}
+            <Link href="/terms" target="_blank" rel="noopener noreferrer" className="text-gold-ink underline underline-offset-2">
+              Terms of Sale
+            </Link>
+            ,{" "}
+            <Link href="/terms#research-use-only" target="_blank" rel="noopener noreferrer" className="text-gold-ink underline underline-offset-2">
               RUO Agreement
+            </Link>
+            , and{" "}
+            <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-gold-ink underline underline-offset-2">
+              Privacy Policy
             </Link>
             .
           </p>
@@ -158,11 +164,11 @@ export function AgeGate() {
           </div>
         </div>
 
-        {/* Corporate disclosure, on the navy ground below the panel. */}
-        <p className="mt-6 max-w-lg text-center text-xs leading-relaxed text-white/80">
-          VeriCert Peptides is a wholly owned brand and storefront of RKNEA Operations LLC. All products sold
-          are strictly for in-vitro laboratory research and analytical use by qualified professionals. Not
-          for human or veterinary consumption.
+        {/* Pinned to the bottom of the viewport on a desktop tall enough to
+            keep it clear of the panel; otherwise it stacks below the panel,
+            so it is never cut off or hidden behind it. */}
+        <p className="age-gate-legal mt-6 max-w-lg text-center text-xs leading-relaxed text-white/80">
+          © {new Date().getFullYear()} RKNEA Operations LLC dba VeriCert Peptides. All Rights Reserved.
         </p>
       </div>
     </div>
