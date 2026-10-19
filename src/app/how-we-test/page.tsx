@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VialGlyph } from "@/components/VialGlyph";
 import { CoaQuickLookup } from "@/components/CoaQuickLookup";
+import { COA_LOOKUP_ENABLED } from "@/lib/coa-lookup";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
@@ -128,17 +129,21 @@ export default function HowWeTestPage() {
 
       {/* Check yours */}
       <section className="mx-auto max-w-4xl px-6 py-20 lg:px-10">
-        <h2 className="font-serif text-3xl text-navy">Check Your Batch</h2>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
-          Enter the batch number from your vial label. You&apos;ll get the same
-          report we hold on file — no account required, and it works whether you
-          bought yesterday or two years ago.
-        </p>
-        <div className="mt-8">
-          <CoaQuickLookup />
-        </div>
+        {/* Shown only while batch lookups are enabled (lib/coa-lookup.ts). */}
+        {COA_LOOKUP_ENABLED && (
+          <>
+            <h2 className="font-serif text-3xl text-navy">Check Your Batch</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
+              Enter the batch number from your vial label to open the testing
+              laboratory&apos;s record for that lot.
+            </p>
+            <div className="mt-8">
+              <CoaQuickLookup id="how-we-test-coa-batch" />
+            </div>
+          </>
+        )}
 
-        <div className="mt-16 border-t border-hairline pt-10">
+        <div className={COA_LOOKUP_ENABLED ? "mt-16 border-t border-hairline pt-10" : ""}>
           <h3 className="font-serif text-xl text-navy">Still have a question?</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             If a figure on your certificate doesn&apos;t look right, or the batch

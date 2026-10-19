@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductBySlug, isOnSale, listProducts, pricedSizes } from "@/lib/products";
 import { toStorefrontProduct } from "@/lib/products/storefront";
+import { CoaQuickLookup } from "@/components/CoaQuickLookup";
+import { COA_LOOKUP_ENABLED, coaLookupUrl } from "@/lib/coa-lookup";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductCard } from "@/components/ProductCard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -158,16 +160,24 @@ export default async function ProductDetailPage({
           {(purity || primaryBatch) && (
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {purity && <span className="purity-badge">{purity} Purity</span>}
-              {primaryBatch && (
+              {primaryBatch &&
                 // Orders are filled from the first listed batch (api/orders),
-                // so this is the lot the customer receives.
-                <Link
-                  href={`/coa?batch=${encodeURIComponent(primaryBatch)}`}
-                  className="inline-block py-1.5 font-mono text-xs text-muted underline-offset-4 hover:underline"
-                >
-                  You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
-                </Link>
-              )}
+                // so this is the lot the customer receives. It links to the
+                // lab's record only while batch lookups are enabled.
+                (COA_LOOKUP_ENABLED ? (
+                  <a
+                    href={coaLookupUrl(primaryBatch)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block py-1.5 font-mono text-xs text-muted underline-offset-4 hover:underline"
+                  >
+                    You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
+                  </a>
+                ) : (
+                  <span className="inline-block py-1.5 font-mono text-xs text-muted">
+                    You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
+                  </span>
+                ))}
             </div>
           )}
 
@@ -205,18 +215,31 @@ export default async function ProductDetailPage({
               <ul className="mt-4 space-y-2">
                 {product.batchNumbers.map((batch) => (
                   <li key={batch}>
-                    <Link
-                      href={`/coa?batch=${batch}`}
-                      className="flex items-center justify-between border border-hairline bg-paper px-4 py-3 text-sm text-muted transition-colors hover:border-gold hover:text-gold-ink"
-                    >
-                      <span className="font-mono">{batch}</span>
-                      <span className="text-xs uppercase tracking-[0.15em]">View COA →</span>
-                    </Link>
+                    {COA_LOOKUP_ENABLED ? (
+                      <a
+                        href={coaLookupUrl(batch)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between border border-hairline bg-paper px-4 py-3 text-sm text-muted transition-colors hover:border-gold hover:text-gold-ink"
+                      >
+                        <span className="font-mono">{batch}</span>
+                        <span className="text-xs uppercase tracking-[0.15em]">View COA →</span>
+                      </a>
+                    ) : (
+                      <span className="block border border-hairline bg-paper px-4 py-3 font-mono text-sm text-muted">{batch}</span>
+                    )}
                   </li>
                 ))}
               </ul>
             ) : (
               <p className="mt-4 text-xs text-muted">Certificates are published as each batch clears testing.</p>
+            )}
+            {/* Quick check for a vial already in hand; renders only while
+                batch lookups are enabled. */}
+            {COA_LOOKUP_ENABLED && (
+              <div className="mt-4">
+                <CoaQuickLookup id="product-coa-batch" />
+              </div>
             )}
           </section>
 

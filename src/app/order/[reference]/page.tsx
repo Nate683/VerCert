@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { COA_LOOKUP_ENABLED, coaLookupUrl } from "@/lib/coa-lookup";
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getCurrentCustomer } from "@/lib/users/current-user";
@@ -173,9 +174,14 @@ export default async function OrderPage({
                     {item.lotNumber && (
                       <p className="font-mono text-xs text-navy">
                         Lot{" "}
-                        <Link href={`/coa?batch=${encodeURIComponent(item.lotNumber)}`} className="inline-block py-1 underline-offset-4 hover:underline">
-                          {item.lotNumber}
-                        </Link>
+                        {/* The lab's record, while batch lookups are enabled. */}
+                        {COA_LOOKUP_ENABLED ? (
+                          <a href={coaLookupUrl(item.lotNumber)} target="_blank" rel="noopener noreferrer" className="inline-block py-1 underline-offset-4 hover:underline">
+                            {item.lotNumber}
+                          </a>
+                        ) : (
+                          item.lotNumber
+                        )}
                       </p>
                     )}
                     {item.subscription && (

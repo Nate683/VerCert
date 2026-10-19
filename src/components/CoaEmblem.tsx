@@ -1,12 +1,17 @@
-import Link from "next/link";
+import { COA_LOOKUP_ENABLED, coaLookupUrl } from "@/lib/coa-lookup";
 
 // The VeriCert mark (the check-in-circle from the logo) as the way into
 // certificate lookup. It replaces the "Verify COA" nav link, so it carries its
-// own label for screen readers and a hover title for everyone else.
+// own label for screen readers and a hover title for everyone else. Like
+// every lookup it follows lib/coa-lookup.ts: hidden while lookups are off,
+// otherwise it opens VeriCert's certificates at the testing laboratory.
 export function CoaEmblem({ className = "" }: { className?: string }) {
+  if (!COA_LOOKUP_ENABLED) return null;
   return (
-    <Link
-      href="/coa"
+    <a
+      href={coaLookupUrl("")}
+      target="_blank"
+      rel="noopener noreferrer"
       aria-label="Certificates of analysis"
       title="Certificates of analysis"
       className={`flex h-11 w-11 items-center justify-center text-gold transition-colors hover:text-white ${className}`}
@@ -21,6 +26,6 @@ export function CoaEmblem({ className = "" }: { className?: string }) {
           strokeLinejoin="round"
         />
       </svg>
-    </Link>
+    </a>
   );
 }
