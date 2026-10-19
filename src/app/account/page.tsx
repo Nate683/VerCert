@@ -7,6 +7,7 @@ import { listProducts, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import type { CartItem, OrderStatus } from "@/lib/types";
 import { AddressForm } from "./AddressForm";
 import { MarketingToggle } from "./MarketingToggle";
+import { NotificationPreferences } from "./NotificationPreferences";
 import { ResendVerification } from "./ResendVerification";
 import { AccountLogoutButton } from "./AccountLogoutButton";
 import { EmailChangeForm } from "./EmailChangeForm";
@@ -212,6 +213,13 @@ export default async function AccountPage() {
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Email Address</h2>
         <div className="mt-4">
           <EmailChangeForm pendingEmail={customer.pendingEmail} />
+        </div>
+      </section>
+
+      <section className="mt-12 border-t border-hairline pt-8">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Notifications</h2>
+        <div className="mt-4">
+          <NotificationPreferences initial={{ notifyStock: customer.notifyStock, notifyCoa: customer.notifyCoa }} />
         </div>
       </section>
 

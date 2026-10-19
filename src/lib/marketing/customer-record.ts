@@ -26,6 +26,7 @@ export type CustomerRecord = {
     createdAt: string;
     emailVerified: boolean;
     marketingEmail: { consent: boolean; lastChangedAt?: string; source?: string };
+    notificationEmails: { orderAndShipping: true; stockAndAvailability: boolean; certificatePostings: boolean };
     smsOptIn: boolean;
     phone?: string;
     savedShippingAddress?: SavedAddress;
@@ -122,6 +123,11 @@ export async function buildCustomerRecord(user: Customer): Promise<CustomerRecor
         consent: user.marketingConsent,
         lastChangedAt: user.marketingConsentAt,
         source: user.marketingConsentSource,
+      },
+      notificationEmails: {
+        orderAndShipping: true,
+        stockAndAvailability: user.notifyStock,
+        certificatePostings: user.notifyCoa,
       },
       smsOptIn: user.smsOptIn,
       phone: user.phone,

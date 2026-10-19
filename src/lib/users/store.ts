@@ -17,6 +17,8 @@ type UserRow = {
   marketing_consent: boolean;
   marketing_consent_at: string | null;
   marketing_consent_source: string | null;
+  notify_stock: boolean;
+  notify_coa: boolean;
   email_verified: boolean;
   created_at: string;
   saved_address: string | null;
@@ -59,6 +61,8 @@ function rowToUser(row: UserRow): Customer {
     marketingConsent: Boolean(row.marketing_consent),
     marketingConsentAt: row.marketing_consent_at ?? undefined,
     marketingConsentSource: (row.marketing_consent_source as MarketingConsentSource) ?? undefined,
+    notifyStock: Boolean(row.notify_stock),
+    notifyCoa: Boolean(row.notify_coa),
     emailVerified: Boolean(row.email_verified),
     createdAt: row.created_at,
     savedAddress: row.saved_address ? (JSON.parse(row.saved_address) as SavedAddress) : undefined,
@@ -123,6 +127,9 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
     // A decline is recorded too: it's the evidence they were asked.
     marketingConsentAt: input.marketingConsentSource ? createdAt : undefined,
     marketingConsentSource: input.marketingConsentSource,
+    // Off until chosen in account settings (the column defaults match).
+    notifyStock: false,
+    notifyCoa: false,
     smsOptIn: input.smsOptIn ?? false,
     phone: input.phone,
     emailVerified: false,
@@ -218,6 +225,21 @@ export async function setMarketingConsent(
         SET marketing_consent = $2, marketing_consent_at = $3, marketing_consent_source = $4
       WHERE id = $1 AND marketing_consent IS DISTINCT FROM $2`,
     [id, consent, new Date().toISOString(), source]
+  );
+  return getUserById(id);
+}
+
+// Saves the optional notification choices from account settings. Only the
+// fields given change.
+export async function setNotificationPreferences(
+  id: string,
+  prefs: { notifyStock?: boolean; notifyCoa?: boolean }
+): Promise<Customer | null> {
+  await query(
+    `UPDATE users
+        SET notify_stock = COALESCE($2, notify_stock), notify_coa = COALESCE($3, notify_coa)
+      WHERE id = $1`,
+    [id, prefs.notifyStock ?? null, prefs.notifyCoa ?? null]
   );
   return getUserById(id);
 }

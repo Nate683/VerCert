@@ -229,6 +229,11 @@ export type Customer = {
   marketingConsent: boolean;
   marketingConsentAt?: string;
   marketingConsentSource?: MarketingConsentSource;
+  // Optional notification emails, from account settings: stock and
+  // availability updates, and certificate of analysis postings. Separate from
+  // marketing consent. Check them with wantsEmail (lib/users/notifications.ts).
+  notifyStock: boolean;
+  notifyCoa: boolean;
   emailVerified: boolean;
   createdAt: string;
   savedAddress?: SavedAddress;

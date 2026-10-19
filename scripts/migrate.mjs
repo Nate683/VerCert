@@ -583,6 +583,12 @@ async function main() {
   await sql`CREATE INDEX IF NOT EXISTS subscriptions_due_idx ON subscriptions (status, next_order_at)`;
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS subscription_id TEXT`;
 
+  // Optional email notifications, chosen in account settings (off until the
+  // customer turns them on). Order and shipping email is transactional and
+  // always sent, so it has no column.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_stock BOOLEAN NOT NULL DEFAULT FALSE`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_coa BOOLEAN NOT NULL DEFAULT FALSE`;
+
   // Stock per size. size_label '' is the product's shared stock, used by every
   // size without a row of its own, so existing rows keep working unchanged.
   // The key becomes (slug, size_label). Code from before this change upserts
