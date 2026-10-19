@@ -62,6 +62,12 @@ function ShopCatalog({ products }: { products: Product[] }) {
   const [minPurity, setMinPurity] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  // A filter where every option would return nothing reads as broken, so it
+  // isn't shown: the purity filter (and purity sort) appear only once some
+  // product carries a purity value. Category and price always have results.
+  const hasPurity = products.some((p) => (p.purityPercent ?? 0) > 0);
+  const sortOptions = hasPurity ? SORT_OPTIONS : SORT_OPTIONS.filter((o) => o.value !== "purity");
+
   const priceCeiling = useMemo(
     () => Math.ceil(Math.max(10, ...products.map(minPrice)) / 10) * 10,
     [products]
@@ -129,26 +135,28 @@ function ShopCatalog({ products }: { products: Product[] }) {
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">Purity</legend>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {PURITY_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={minPurity === option.value}
-              onClick={() => setMinPurity(minPurity === option.value ? 0 : option.value)}
-              className={`border px-3 py-1.5 text-xs tracking-[0.08em] transition-colors ${
-                minPurity === option.value
-                  ? "border-gold bg-gold text-black"
-                  : "border-hairline text-muted hover:border-gold hover:text-gold-ink"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      {hasPurity && (
+        <fieldset>
+          <legend className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">Purity</legend>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {PURITY_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={minPurity === option.value}
+                onClick={() => setMinPurity(minPurity === option.value ? 0 : option.value)}
+                className={`border px-3 py-1.5 text-xs tracking-[0.08em] transition-colors ${
+                  minPurity === option.value
+                    ? "border-gold bg-gold text-black"
+                    : "border-hairline text-muted hover:border-gold hover:text-gold-ink"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
 
       <div>
         <label htmlFor="max-price" className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">
@@ -202,7 +210,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
           onChange={(e) => setSort(e.target.value as SortOption)}
           className="border border-hairline bg-paper px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-muted focus:border-gold focus:outline-none"
         >
-          {SORT_OPTIONS.map((opt) => (
+          {sortOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>
               Sort: {opt.label}
             </option>
