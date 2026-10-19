@@ -14,8 +14,7 @@ export function productImageSources(product: Pick<Product, "imageUrl" | "primary
   );
 }
 
-// "Retatrutide, 5 mg / 10 mg". Signed-out tiles arrive without sizes (see
-// withoutPricing), so those fall back to the name alone.
+// "BPC-157, 10 mg / 20 mg". A product with no sizes falls back to the name alone.
 export function productImageAlt(product: Pick<Product, "name" | "sizes">): string {
   const sizes = product.sizes.map((s) => s.label.trim()).filter(Boolean);
   return sizes.length ? `${product.name}, ${sizes.join(" / ")}` : product.name;

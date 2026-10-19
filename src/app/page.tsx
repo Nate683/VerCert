@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { listProducts } from "@/lib/products";
-import { toStorefrontProduct, withoutPricing } from "@/lib/products/storefront";
+import { toStorefrontProduct, withPublicPrice } from "@/lib/products/storefront";
 import { withStock } from "@/lib/inventory";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { HomeFeaturedGrid } from "@/components/HomeFeaturedGrid";
@@ -55,10 +55,11 @@ export default async function Home() {
           .map((slug) => products.find((p) => p.slug === slug))
           .filter((p): p is (typeof products)[number] => Boolean(p))
       : products.slice(0, 4);
-  // Pricing is for signed-in customers. Visitors see the tiles, and the
-  // prices never leave the server.
+  // Signed-out visitors see each tile's lowest unit price (owner's decision,
+  // October 18 2026); ordering, quantity breaks and certificates still need
+  // an account.
   const signedIn = Boolean(customer);
-  const featuredForView = featured.map(signedIn ? toStorefrontProduct : withoutPricing);
+  const featuredForView = featured.map(signedIn ? toStorefrontProduct : withPublicPrice);
 
   return (
     <div>
@@ -89,7 +90,7 @@ export default async function Home() {
         )}
 
         <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 py-28 text-center lg:px-10">
-          <VeriCertLogo className="h-14 w-auto" ground="light" priority />
+          <VeriCertLogo className="mx-auto block h-auto w-[200px]" ground="light" priority />
           <EditableText
             value={hero.badge}
             as="p"
@@ -128,24 +129,6 @@ export default async function Home() {
       {/* The rest of the light storefront shell. The hero above is light too
           now, so this wrapper only grounds the sections below it. */}
       <div className="bg-paper text-navy">
-      {/* COA lookup — the first thing under the hero. Verification is the
-          product's whole promise, so it isn't buried behind a nav link. */}
-      <section className="border-b border-hairline bg-surface">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-6 py-12 lg:grid-cols-[1fr_1.1fr] lg:px-10">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Verify a Batch</p>
-            <h2 className="mt-3 font-serif text-2xl text-navy">
-              Already have a vial? Check its certificate.
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Enter the batch number printed on the label to pull the
-              independent lab report for that exact lot.
-            </p>
-          </div>
-          <CoaQuickLookup />
-        </div>
-      </section>
-
       {/* Featured products */}
       <ScrollReveal>
         <section className="mx-auto max-w-7xl px-6 py-24 lg:px-10">
@@ -168,11 +151,11 @@ export default async function Home() {
           <HomeFeaturedGrid products={featuredForView} pricingLocked={!signedIn} />
           {!signedIn && (
             <p className="mt-8 text-center text-sm text-muted">
-              Pricing and batch certificates are for registered researchers.{" "}
+              Ordering and batch certificates are for registered researchers.{" "}
               <Link href="/register" className="text-gold-ink underline underline-offset-4 hover:text-navy">
                 Create a free account
               </Link>{" "}
-              to see them.
+              to order.
             </p>
           )}
         </section>
@@ -216,26 +199,32 @@ export default async function Home() {
         </section>
       )}
 
-      {/* CTA */}
+      {/* Every Batch. Certified. — full-bleed photo (uploaded in EXEC MODE;
+          there is no laboratory photo in the repo yet) under a 75% navy-deep
+          overlay, so the text and form stay crisp on any image. The lookup
+          form renders only while the lookup flag is on (lib/coa-lookup.ts). */}
       {sections.cta && (
-        <ScrollReveal>
-          <section className="relative mx-auto max-w-7xl px-6 py-24 text-center lg:px-10">
-            <SectionToggle sectionKey="cta" visible={sections.cta} />
-            <h2 className="font-serif text-3xl text-navy lg:text-4xl">
-              Every Batch. Certified.
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted">
-              Already have a product in hand? Enter its batch number to view the
-              independent lab report.
+        <section className="relative isolate overflow-hidden bg-navy-deep">
+          <SectionToggle sectionKey="cta" visible={sections.cta} />
+          <EditableImage contentKey="home_hero" field="certifiedImageUrl">
+            {hero.certifiedImageUrl ? (
+              <Image src={hero.certifiedImageUrl} alt="" fill sizes="100vw" className="absolute inset-0 -z-20 object-cover" />
+            ) : (
+              <div className="absolute inset-0 -z-20" />
+            )}
+          </EditableImage>
+          <div className="absolute inset-0 -z-10 bg-navy-deep/75" />
+          <ScrollReveal className="relative mx-auto flex max-w-3xl flex-col items-center px-6 py-24 text-center lg:px-10">
+            <VeriCertLogo className="h-14 w-auto" />
+            <h2 className="mt-8 font-serif text-3xl text-white lg:text-4xl">Every Batch. Certified.</h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/80">
+              Already have a product in hand? Enter its batch number to pull the independent laboratory report.
             </p>
-            <Link
-              href="/coa"
-              className="card-elevate mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
-            >
-              Verify a Certificate
-            </Link>
-          </section>
-        </ScrollReveal>
+            <div className="mt-8 w-full max-w-xl">
+              <CoaQuickLookup tone="dark" id="home-coa-batch" />
+            </div>
+          </ScrollReveal>
+        </section>
       )}
       </div>
     </div>

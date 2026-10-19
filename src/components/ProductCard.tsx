@@ -22,8 +22,15 @@ function priceRange(product: Product): string | null {
   return min === max ? `$${min}` : `$${min} – $${max}`;
 }
 
-// pricingLocked is for signed-out visitors: their product arrives without its
-// sizes (see withoutPricing), so the tile offers sign-in instead of a price.
+// "$64.99 / 10mg vial": the one size a signed-out homepage tile carries (see
+// withPublicPrice).
+function unitPrice(product: Product): string | null {
+  const size = pricedSizes(product)[0];
+  return size ? `$${size.priceUsd.toFixed(2)} / ${size.label} vial` : null;
+}
+
+// pricingLocked is for signed-out visitors: the tile shows at most one unit
+// price, and the whole tile leads to registration rather than the product page.
 export function ProductCard({ product, pricingLocked = false }: { product: Product; pricingLocked?: boolean }) {
   const { execMode, beginSave, endSave } = useExecMode();
   const [active, setActive] = useState(product.active ?? true);
@@ -72,11 +79,11 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
 
   const cas = specText(product.casNumber);
   const purity = formatPurity(product.purityPercent);
-  const price = pricingLocked ? null : priceRange(product);
+  const price = pricingLocked ? unitPrice(product) : priceRange(product);
 
   return (
     <div className={`card-elevate flex flex-col overflow-hidden border bg-navy transition-colors duration-300 ${active ? "border-gold/20 hover:border-gold/60" : "border-hairline opacity-50"}`}>
-      <Link href={`/shop/${product.slug}`} className="group flex flex-1 flex-col">
+      <Link href={pricingLocked ? "/register" : `/shop/${product.slug}`} className="group flex flex-1 flex-col">
         {/* Nothing is drawn over the image: badges there covered the vial cap. */}
         <ProductImage
           sources={productImageSources(product)}
@@ -114,13 +121,9 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
               may wrap between them but never inside one. */}
           {cas && <p className="mt-1 font-mono text-[11px] text-white/45">CAS {cas.replace(/-/g, "‑")}</p>}
 
-          {(pricingLocked || price || purity) && (
+          {(price || purity) && (
             <div className="mt-4 flex items-baseline justify-between gap-3">
-              {pricingLocked ? (
-                <span className="text-[11px] uppercase tracking-[0.14em] text-white/60">Members&apos; pricing</span>
-              ) : (
-                price && <span className="text-sm text-white">{price}</span>
-              )}
+              {price && <span className="text-sm text-white">{price}</span>}
               {purity && (
                 <span className="ml-auto text-[10px] uppercase tracking-[0.14em] text-gold">{purity} Purity</span>
               )}
@@ -130,7 +133,7 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
           {/* A span, not a button: the whole tile is already one link, and a
               nested interactive element would be invalid and unreachable. */}
           <span className="mt-4 block border border-gold/50 px-4 py-2.5 text-center text-[11px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:bg-gold group-hover:text-black">
-            {pricingLocked ? "Sign in to view" : "Select options"}
+            {pricingLocked ? "Verify Account to Order" : "Select options"}
           </span>
         </div>
       </Link>

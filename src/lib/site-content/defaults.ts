@@ -11,6 +11,8 @@ export type HomeHeroContent = {
   // No longer shown: certificate lookup is reached from the header emblem.
   ctaSecondaryLabel?: string;
   heroImageUrl?: string;
+  // Background photo of the homepage "Every Batch. Certified." section.
+  certifiedImageUrl?: string;
 };
 
 export const DEFAULT_HOME_HERO: HomeHeroContent = {

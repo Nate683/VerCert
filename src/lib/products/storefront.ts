@@ -13,7 +13,15 @@ export function toStorefrontProduct(product: Product): Product {
   return storefront;
 }
 
-// For signed-out visitors: enough to draw the tile, none of the pricing.
-export function withoutPricing(product: Product): Product {
-  return { ...toStorefrontProduct(product), sizes: [], sizeStock: undefined };
+// For signed-out visitors on the homepage: the tile plus one unit price, the
+// lowest-priced size's label and list price. No quantity breaks, no cost.
+export function withPublicPrice(product: Product): Product {
+  const storefront = toStorefrontProduct(product);
+  const cheapest = [...storefront.sizes].sort((a, b) => a.priceUsd! - b.priceUsd!)[0];
+  return {
+    ...storefront,
+    sizes: cheapest ? [{ label: cheapest.label, priceUsd: cheapest.priceUsd }] : [],
+    sizeStock: undefined,
+  };
 }
+
