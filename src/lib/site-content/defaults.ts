@@ -157,7 +157,7 @@ export const DEFAULT_POLICIES: PoliciesContent = {
   // complete plain-English draft on October 4, 2026 and have not been reviewed
   // by counsel. "## " starts a section heading and lines starting "- " form a
   // list (see components/PolicyPage.tsx).
-  termsUpdated: "October 18, 2026",
+  termsUpdated: "October 19, 2026",
   terms: [
     "These Terms of Sale apply to every order placed with VeriCert Peptides. They are a binding agreement between you and us. Please read them before you order: by creating an account or placing an order, you accept them.",
     "## Definitions",
@@ -208,7 +208,7 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "## Returns and refunds",
     "Our Products are temperature-sensitive research materials, and we cannot verify their condition once they leave our control. We do not accept returns of opened vials, or of any vial that has been exposed to temperatures outside its stated storage conditions, and we give no refunds for them.",
     "We do not accept returns because you changed your mind or ordered the wrong item.",
-    "If you receive the wrong Product, a damaged vial, or a vial whose Lot does not match its published COA, tell us within 14 days of delivery and before opening it, with your order reference, the lot number and photos. If we confirm the problem, we will replace the Product or refund its price, at our choice. That is your only remedy for a non-conforming Product.",
+    "If you receive the wrong Product, a damaged vial, or a vial whose Lot does not match its published COA, tell us within 14 days of delivery and before opening it, with your order reference, the lot number and photos. If we confirm the problem, we will resolve it by replacement at no cost, or refund, at our choice. That is your only remedy for a non-conforming Product.",
     "Approved refunds are paid within 10 business days, back to the account the payment came from where possible, otherwise by bank transfer to an account in your name.",
     "## Storage and handling after delivery",
     "Once a package has been delivered, storing and handling the Products correctly is your responsibility. Follow the storage conditions on the product page and label: refrigerate or freeze promptly where stated, protect from light and moisture, and keep containers sealed until needed. We are not responsible for any loss of quality caused by storage, handling or use after delivery, or by a delay in collecting a delivered package.",
@@ -235,7 +235,7 @@ export const DEFAULT_POLICIES: PoliciesContent = {
   // over these policies where they conflict (Severability and general terms).
   refund: [
     "Because every batch is independently validated and quality controlled, and because these are temperature-sensitive research compounds, all sales are final. RKNEA Operations LLC d/b/a VeriCert Peptides operates a no-return, no-restock policy for all lyophilized reagents once a shipment has left our Texas facility. This prevents cross-contamination and ensures every compound remains suitable for research use.",
-    "If an order arrives with verifiable physical damage, an incorrect SKU, or shows an objective deviation under independent third-party analytical validation by an accredited testing facility, notify us at info@vericertpeptides.com within 14 calendar days of recorded delivery. Claims must include clear photographs and supporting documentation. Approved claims are resolved by replacement at no cost or by account credit.",
+    "If an order arrives with verifiable physical damage, an incorrect SKU, or shows an objective deviation under independent third-party analytical validation by an accredited testing facility, notify us at info@vericertpeptides.com within 14 calendar days of recorded delivery. Claims must include clear photographs and supporting documentation. Approved claims are resolved by replacement at no cost, or refund, at our choice.",
   ],
   shipping: [
     "Shipments are dispatched after payment has been received in full and cleared. Processing, packaging in temperature-stable configurations, and courier handoff typically occur within 1 to 2 business days following payment verification. Because VeriCert Peptides maintains cold storage for its inventory prior to dispatch, shipping is coordinated with active inventory control.",
