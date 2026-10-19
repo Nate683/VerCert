@@ -212,15 +212,9 @@ export function SiteContentPanel() {
         <p className="text-xs uppercase tracking-[0.2em] text-white/40">About Page</p>
         <div className="mt-4 grid grid-cols-1 gap-3">
           <input
-            value={about.badge}
-            onChange={(e) => setAbout({ ...about, badge: e.target.value })}
-            placeholder="Badge"
-            className="input-field"
-          />
-          <input
             value={about.headline}
             onChange={(e) => setAbout({ ...about, headline: e.target.value })}
-            placeholder="Headline"
+            placeholder="Tagline"
             className="input-field"
           />
           <textarea
@@ -228,6 +222,19 @@ export function SiteContentPanel() {
             onChange={(e) => setAbout({ ...about, intro: e.target.value })}
             placeholder="Intro paragraph"
             rows={3}
+            className="input-field"
+          />
+          <input
+            value={about.valuesHeading}
+            onChange={(e) => setAbout({ ...about, valuesHeading: e.target.value })}
+            placeholder="Values heading"
+            className="input-field"
+          />
+          <textarea
+            value={about.valuesIntro}
+            onChange={(e) => setAbout({ ...about, valuesIntro: e.target.value })}
+            placeholder="Values intro"
+            rows={4}
             className="input-field"
           />
           {about.pillars.map((pillar, i) => (
@@ -252,21 +259,6 @@ export function SiteContentPanel() {
               />
             </div>
           ))}
-          <input
-            value={about.standardHeading}
-            onChange={(e) => setAbout({ ...about, standardHeading: e.target.value })}
-            placeholder="Standard section heading"
-            className="input-field"
-          />
-          <textarea
-            value={about.standardParagraphs.join("\n\n")}
-            onChange={(e) =>
-              setAbout({ ...about, standardParagraphs: e.target.value.split("\n\n").filter((p) => p.trim()) })
-            }
-            placeholder="Standard section paragraphs — separate paragraphs with a blank line"
-            rows={6}
-            className="input-field"
-          />
         </div>
         <SaveButton saving={savingKey === "about_page"} onClick={() => save("about_page", about)} />
         {savedKey === "about_page" && <span className="ml-3 text-xs text-gold">Saved.</span>}

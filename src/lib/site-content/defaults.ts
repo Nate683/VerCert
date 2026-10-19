@@ -34,38 +34,35 @@ export const DEFAULT_HOME_SECTIONS: HomeSectionsContent = { trust: true, cta: tr
 export type AboutPillar = { title: string; body: string };
 
 export type AboutContent = {
-  badge: string;
   headline: string;
   intro: string;
+  valuesHeading: string;
+  valuesIntro: string;
   pillars: AboutPillar[];
-  standardHeading: string;
-  standardParagraphs: string[];
 };
 
+// Owner-supplied text, October 18, 2026: three value cards only; more will
+// be added once the owner has confirmed what is accurate.
 export const DEFAULT_ABOUT: AboutContent = {
-  badge: "About VeriCert",
   headline: "Built for the Bench, Not the Bottle",
   intro:
-    "VeriCert exists to give researchers a dependable source of synthetic peptides and reference compounds — supplied with the documentation and analytical rigor that laboratory work demands.",
+    "Access to the VeriCert Peptides chemical catalog, batch analytical records, and inventory metrics is restricted to verified independent, corporate, and institutional research entities. Accounts are established for professional credentialing and procurement authentication purposes.",
+  valuesHeading: "Our Core Values",
+  valuesIntro:
+    "At VeriCert Peptides, we stand for analytical precision and supply chain transparency. Our operations are built on independent scientific verification, designed to meet the requirements of independent, corporate, and academic research institutions. We do not participate in consumer retail marketing. We hold a clinical operational standard across our catalog to protect the continuity of your laboratory work.",
   pillars: [
     {
-      title: "Sourced with Rigor",
-      body: "We work with synthesis partners who follow documented quality processes for every production lot.",
+      title: "Independent Validation",
+      body: "Every compound distributed under the VeriCert framework undergoes independent third-party laboratory validation. Reverse-phase HPLC purity profiles and mass spectrometry identity confirmation are completed before a lot is released.",
     },
     {
-      title: "Tested Independently",
-      body: "No batch ships without third-party laboratory analysis confirming identity and purity.",
+      title: "Traceability from Lot to Certificate",
+      body: "Every vial carries a batch number that maps to its certificate of analysis. Certificates come from the testing laboratory directly, so the chain from lot to document stays unbroken.",
     },
     {
-      title: "Transparent by Default",
-      body: "Certificates of analysis are available for every batch number, not just on request.",
+      title: "Professional Reagent Standards",
+      body: "Our infrastructure serves qualified research professionals. Compounds ship as stable lyophilized formulations with precise mass specifications and packaging designed to protect against light exposure, physical damage, and moisture during transit.",
     },
-  ],
-  standardHeading: "Our Standard",
-  standardParagraphs: [
-    "Every compound in the VeriCert catalog is manufactured under controlled conditions and analyzed by an accredited third-party laboratory before release. Analytical methods include reverse-phase HPLC for purity quantification and mass spectrometry for identity confirmation.",
-    "We publish a full certificate of analysis for each batch, searchable by batch number, so any researcher can verify what they have received against an independent lab report.",
-    "VeriCert products are supplied strictly for laboratory research use. They are not drugs, foods, dietary supplements, or cosmetics, and are not intended for human or veterinary use.",
   ],
 };
 
