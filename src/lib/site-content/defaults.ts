@@ -141,7 +141,8 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "Parent Operating Entity: RKNEA Operations LLC",
     "Throughout this policy, \"VeriCert Peptides\" refers to the parent legal entity RKNEA Operations LLC. This policy outlines how customer account data, order records, and transaction metadata are processed and secured.",
     "Access to the VeriCert Peptides catalog, product information, and ordering requires registration. When an account is created we record name, email address, and shipping details. Passwords are stored using salted hashing. Access to the catalog is restricted to registered accounts.",
-    "Order data, batch assignments, and shipment tracking information are processed for order fulfillment and record keeping. Payment is handled through direct bank transfer and cryptocurrency. VeriCert Peptides does not collect, view, transmit, or store credit card numbers or customer bank account numbers on its servers.",
+    "Order data, batch assignments, and shipment tracking information are processed for order fulfillment and record keeping.",
+    "Payment methods available to customers are displayed at checkout. Payment transactions may be processed through authorized third-party payment service providers. VeriCert Peptides does not store complete payment card numbers on its own servers.",
     "## Analytics and Account Activity",
     "For signed-in accounts, we record product pages viewed, items added to the cart, and order history. This information is used to maintain inventory planning, improve catalog organization, and understand which compounds our customers require. It is not sold, shared with advertisers, or used to build profiles for third parties.",
     "Visits made while signed out are recorded the same way against a random session identifier kept in the visitor's browser: the pages viewed, products viewed, items added to the cart, and checkouts started. If the visitor later signs in, activity from that point is linked to their account.",
@@ -168,7 +169,7 @@ export const DEFAULT_POLICIES: PoliciesContent = {
   // complete plain-English draft on October 4, 2026 and have not been reviewed
   // by counsel. "## " starts a section heading and lines starting "- " form a
   // list (see components/PolicyPage.tsx).
-  termsUpdated: "October 19, 2026",
+  termsUpdated: "October 20, 2026",
   terms: [
     "These Terms of Sale apply to every order placed with VeriCert Peptides. They are a binding agreement between you and us. Please read them before you order: by creating an account or placing an order, you accept them.",
     "## Definitions",
@@ -202,10 +203,10 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "Placing an Order is an offer to buy. A confirmation page or email saying we have received your Order is not acceptance. We accept an Order only when we ship it.",
     "We may refuse or cancel any Order, in whole or in part, at any time before it ships. Reasons include, among others: we cannot confirm you meet the eligibility requirements; we believe a Product is meant for a prohibited use; there is an error in price, description or availability; payment is not received in full; the Product is out of stock; or shipping to your address would break the law. If we cancel an Order you have paid for, we refund what you paid for the cancelled items, as described under Payment terms.",
     "## Payment terms",
-    "Orders are processed upon verification of received payment. Available payment methods are displayed at checkout and currently include bank transfer (ACH and wire) and cryptocurrency. RKNEA Operations LLC does not currently accept credit or debit cards. Payment methods available to a given order may vary based on jurisdiction and compliance requirements.",
-    "Because these payment methods settle directly and are not routed through card networks, they do not carry chargeback or card-network dispute rights. Buyers should review their order carefully before sending payment. Refund and return eligibility is governed solely by the Refund and Returns section of these Terms.",
-    "Every Order has a reference code. You must include the exact reference code with your payment, in the memo, reference or note field, so we can match the payment to your Order. Payment instructions are shown on your order page and sent by email.",
-    "We ship only once payment has been received in full and has cleared. For bank transfers that can take several business days.",
+    "Orders are processed upon verification of received payment. Available payment methods are clearly displayed during the checkout sequence and may vary based on jurisdiction and corporate compliance requirements.",
+    "Buyers should review their order details carefully before submitting final authorization. Refund and return eligibility is governed by Section 13 of these Terms, subject to applicable law and payment-network requirements.",
+    "Orders are matched to payments using the unique order reference code issued at checkout. Buyers must include the exact order reference code in the designated payment reference field when instructed at checkout. The Company is not responsible for shipment delays resulting from missing or inaccurate reference codes.",
+    "We ship only once payment has been received in full and has cleared our commercial banking channels, which may take several business days depending on the selected settlement method.",
     "If a payment arrives without a reference code, with the wrong one, or from a name that does not match the Order, we may not be able to match it. Contact us with proof of payment and we will try to match it, but we are not responsible for delays caused by an unmatched payment. A payment we cannot match within 30 days may be returned to the account it came from, less any transfer fees.",
     "If you pay less than the Order total, we will hold the Order and ask you for the balance. If the balance is not paid within 7 days, we may cancel the Order and return what you paid, less any transfer fees. Overpayments are refunded the same way.",
     "Cryptocurrency payments must be for the amount, to the address and within the time shown on your order page. Payments sent to the wrong address, on the wrong network, in the wrong currency or after the payment window may not be recoverable.",
@@ -245,18 +246,26 @@ export const DEFAULT_POLICIES: PoliciesContent = {
   // Owner-supplied text, October 18, 2026. Note: the Terms say they prevail
   // over these policies where they conflict (Severability and general terms).
   refund: [
-    "Because every batch is independently validated and quality controlled, and because these are temperature-sensitive research compounds, all sales are final. RKNEA Operations LLC d/b/a VeriCert Peptides operates a no-return, no-restock policy for all lyophilized reagents once a shipment has left our Texas facility. This prevents cross-contamination and ensures every compound remains suitable for research use.",
-    "If an order arrives with verifiable physical damage, an incorrect SKU, or shows an objective deviation under independent third-party analytical validation by an accredited testing facility, notify us at info@vericertpeptides.com within 14 calendar days of recorded delivery. Claims must include clear photographs and supporting documentation. Approved claims are resolved by replacement at no cost, or refund, at our choice.",
+    "Because every batch is independently tested and quality controlled, and because these are temperature-sensitive research compounds, VeriCert Peptides generally does not accept returns of lyophilized reagents once a shipment has left our Texas facility. This policy helps reduce the risk of cross-contamination and protects the integrity of materials supplied for research use. Nothing in this policy limits any refund, replacement, or other remedy required by applicable law.",
+    "If an order arrives with verifiable physical damage, contains an incorrect SKU, or shows an objective deviation supported by independent third-party analytical testing, please notify us at info@vericertpeptides.com. For lost, damaged, or incorrectly delivered shipments, customers should report the issue within 5 calendar days of the expected delivery date or actual receipt, as applicable, consistent with our Shipping Policy. For other product nonconformity claims, please contact us within 14 calendar days of recorded delivery. Include clear photographs and supporting documentation where available. VeriCert Peptides will review the claim and provide an appropriate resolution, which may include replacement or refund, subject to applicable law and payment-network requirements. These reporting periods do not limit rights or remedies that cannot legally be restricted.",
   ],
   shipping: [
-    "Shipments are dispatched after payment has been received in full and cleared. Processing, packaging in temperature-stable configurations, and courier handoff typically occur within 1 to 2 business days following payment verification. Because VeriCert Peptides maintains cold storage for its inventory prior to dispatch, shipping is coordinated with active inventory control.",
-    "Availability, routing restrictions, and delivery timelines are subject to local regulations governing the transport of research chemical compounds. Buyers are solely responsible for verifying that their receiving location and local regulations permit the lawful acquisition and storage of the ordered compounds. RKNEA Operations LLC holds no liability for transit delays, routing exceptions, or delivery holds resulting from carrier disruptions, regulatory enforcement, or force majeure once a shipment has been transferred to the carrier.",
+    "Shipments are prepared and dispatched after payment has been received in full and cleared. Under normal operational cycles, packaging and carrier handoff typically occur within 1 to 2 business days. Estimated delivery timelines may vary based on stock availability, localized holidays, and unforeseen carrier delays.",
+    "Delivery conditions and routing restrictions are subject to local regulations governing the transport of research compounds. Requisitioning entities bear sole responsibility for verifying that their designated receiving location permits the lawful acquisition and secure storage of the ordered items.",
+    "The Company coordinates shipment through third-party carriers. Delivery timelines are estimates and may be affected by carrier disruptions, regulatory restrictions, or circumstances beyond the Company's reasonable control. Responsibility for lost or damaged shipments will be determined under the applicable Terms of Sale and governing law.",
+    "## Lost or Damaged Shipments",
+    "If a shipment is lost, damaged in transit, or delivered to an incorrect address, buyers should notify our administrative support team at info@vericertpeptides.com within 5 calendar days of the expected delivery date or actual receipt, as applicable.",
+    "Please provide the order reference number, a description of the issue, and photographs of damaged packaging or products where available.",
+    "Our team will review the report, assist with carrier investigations, and determine whether a replacement, refund, or other resolution is appropriate under our applicable policies and governing law.",
   ],
   dashboard: [
     "Operating Entity: RKNEA Operations LLC",
-    "The authenticated account dashboard gives registered customers access to their profile, saved shipping addresses, and order records. Interface labels use research and laboratory terminology consistent with the nature of the products.",
-    "Communication preferences cover order notifications, availability updates, and certificate of analysis postings. Customers may export their data as a JSON file containing their profile, order records, and session logs.",
-    "Account deactivation removes profile information, email, and saved addresses from the storefront. Order and transaction records are retained separately for tax reporting and accounting requirements as required by Texas state law and standard business practice.",
+    "The authenticated account dashboard provides registered customers with access to their account profiles, saved shipping addresses, and historical order records.",
+    "## Dashboard Features and Account Management",
+    "Communication Preferences: Customers can manage available account communication preferences, including eligible order notifications and research documentation updates.",
+    "Customer Data Export: Where available, customers may download a file containing their account information and order history.",
+    "Account Deactivation: Account deactivation disables access to the customer dashboard. Certain personal information and transaction records may remain securely stored for legitimate business purposes or as required by applicable law.",
+    "Customers seeking deletion of personal information may submit a request through the contact information provided in our Privacy Policy. Such requests are handled in accordance with applicable privacy laws and retention requirements.",
   ],
 };
 
