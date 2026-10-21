@@ -14,6 +14,7 @@
     "test:email": "node --env-file=.env.local scripts/test-email.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.137.0",
     "@neondatabase/serverless": "^1.1.0",
     "@vercel/blob": "^2.8.0",
     "next": "16.3.1",
