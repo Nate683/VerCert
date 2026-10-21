@@ -20,7 +20,7 @@ export default async function TermsPage() {
       heading="Terms of Sale"
       paragraphs={policies.terms}
       lastUpdated={policies.termsUpdated ?? DEFAULT_POLICIES.termsUpdated}
-      headingScroll="scroll-mt-20"
+      headingScroll="scroll-mt-24"
     />
   );
 }
