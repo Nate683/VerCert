@@ -264,8 +264,8 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "## Dashboard Features and Account Management",
     "Communication Preferences: Customers can manage available account communication preferences, including eligible order notifications and research documentation updates.",
     "Customer Data Export: Where available, customers may download a file containing their account information and order history.",
-    "Account Deactivation: Account deactivation disables access to the customer dashboard. Certain personal information and transaction records may remain securely stored for legitimate business purposes or as required by applicable law.",
-    "Customers seeking deletion of personal information may submit a request through the contact information provided in our Privacy Policy. Such requests are handled in accordance with applicable privacy laws and retention requirements.",
+    "Account Deletion: Customers can permanently delete their account from the account page by re-entering their password. Deletion cannot be undone and ends access to the dashboard. It removes the account profile, name, email address, saved shipping address, communication preferences, browsing history, and email engagement records. Order records are kept for tax reporting and accounting, but they are no longer linked to the customer: the name, email address, and street address are removed from them, as is the IP address recorded with each order's research-use certification. The products, lot numbers, amounts, dates, and the state and country shipped to remain. Unpaid orders and any subscriptions are cancelled, and a confirmation is sent to the account's email address.",
+    "An account cannot be deleted while an order is being prepared; it can be deleted once that order has shipped. Accounts linked to the partner program are closed on request, because commission and payout records must be kept. Copies of emails already exchanged with us, and our email provider's delivery records, are kept separately from the account. For any of these requests, or any other question about personal information, contact us at info@vericertpeptides.com.",
   ],
 };
 
