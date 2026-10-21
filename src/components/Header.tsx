@@ -30,7 +30,8 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-gold/15 bg-navy/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-10">
         <Link href="/" className="flex min-h-11 shrink-0 items-center" aria-label="VeriCert home">
-          <VeriCertLogo className="h-9 w-auto sm:h-10" priority />
+          {/* 35% larger than the old h-9 / sm:h-10; width follows (w-auto). */}
+          <VeriCertLogo className="h-[48.6px] w-auto sm:h-[54px]" priority />
         </Link>
 
         <nav className="hidden items-center gap-6 xl:flex">

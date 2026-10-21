@@ -258,6 +258,12 @@ body {
   user-select: none;
 }
 
+/* The footer's watermark sits in open space beside the newsletter, so it can
+   be a little more visible while staying background. */
+.v-watermark-footer {
+  opacity: 0.16;
+}
+
 /* Loading skeleton — a slow shimmer over a dim block. Every async surface on
    the storefront shows one of these instead of a blank screen. */
 .skeleton {

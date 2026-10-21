@@ -30,20 +30,24 @@ function toBlocks(paragraphs: string[]): Block[] {
   });
 }
 
+// headingScroll is the scroll margin on section headings, so a contents link
+// lands below the sticky header (pages pass their own where specified).
 export function PolicyPage({
   heading,
   paragraphs,
   lastUpdated,
+  headingScroll = "scroll-mt-28",
 }: {
   heading: string;
   paragraphs: string[];
   lastUpdated?: string;
+  headingScroll?: "scroll-mt-20" | "scroll-mt-24" | "scroll-mt-28";
 }) {
   const blocks = toBlocks(paragraphs);
   const sections = blocks.filter((b): b is Extract<Block, { kind: "heading" }> => b.kind === "heading");
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-20 lg:px-10">
+    <div className="mx-auto max-w-4xl px-4 pt-24 pb-12">
       <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Legal</p>
       <h1 className="mt-3 font-serif text-4xl text-navy">{heading}</h1>
       {lastUpdated && <p className="mt-3 text-sm text-muted">Last updated {lastUpdated}</p>}
@@ -72,7 +76,7 @@ export function PolicyPage({
           if (block.kind === "heading") {
             const number = sections.indexOf(block) + 1;
             return (
-              <h2 key={i} id={block.id} className="scroll-mt-28 pt-6 font-serif text-xl text-navy">
+              <h2 key={i} id={block.id} className={`${headingScroll} pt-6 font-serif text-xl text-navy`}>
                 {sections.length > 2 && <span className="mr-2 font-mono text-sm text-muted">{number}.</span>}
                 {block.text}
               </h2>

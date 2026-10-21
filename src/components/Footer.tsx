@@ -18,13 +18,11 @@ export function Footer({ contact }: { contact: ContactContent }) {
 
   return (
     <footer className="relative overflow-hidden border-t border-gold/15 bg-charcoal">
-      {/* Beside the newsletter row, clear of the disclaimer text. A phone's
-          single column has no empty corner for it. */}
-      <Watermark className="bottom-40 right-8 hidden w-[26rem] lg:block" />
       <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
-            <VeriCertLogo className="h-9 w-auto" />
+            {/* 25% larger than the old h-9. */}
+            <VeriCertLogo className="h-[45px] w-auto" />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
               Third-party verified research compounds for laboratory use.
               Every batch, certified.
@@ -81,7 +79,12 @@ export function Footer({ contact }: { contact: ContactContent }) {
           )}
         </div>
 
-        <div className="mt-16 border-t border-white/10 pt-10">
+        {/* The newsletter band runs divider to divider (pb-10 here, no top
+            margin on the band below), so the watermark can be centred in it.
+            Watermark: 175% of the old 26rem, capped so it stays clear of the
+            form column on narrower desktops; hidden on phones and tablets. */}
+        <div className="relative mt-16 border-t border-white/10 py-10">
+          <Watermark className="v-watermark-footer right-0 top-1/2 hidden w-[45.5rem] max-w-[calc(100%-28rem)] -translate-y-1/2 lg:block" />
           <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Stay Informed</h4>
           <p className="mt-3 max-w-sm text-sm text-white/70">
             Occasional updates on new compounds and testing results. No spam.
@@ -94,7 +97,7 @@ export function Footer({ contact }: { contact: ContactContent }) {
         {/* One disclaimer row and one copyright row, nothing else. On the
             #20262D ground: cream at 70% is 7.1:1, links at 60% 5.6:1, gold
             headings 6.3:1 (cream at 50% would be 4.4:1, under 4.5:1). */}
-        <div className="mt-10 border-t border-white/10 pt-8">
+        <div className="border-t border-white/10 pt-8">
           <p className="text-xs leading-relaxed text-white/70">
             All products distributed under the VeriCert Peptides storefront are intended exclusively for
             in-vitro laboratory research, analytical testing, and comparative reagent chemistry applications
