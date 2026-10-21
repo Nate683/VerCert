@@ -52,8 +52,18 @@ export default async function OrderPage({
   // read every time, so it survives a refresh or a closed browser.
   const isPending = order.status === "awaiting_payment" || order.status === "expired";
   const supportEmail = !isUnset(contact.email) ? contact.email : null;
+  // A crypto order whose charge was never created (the provider failed at
+  // checkout): no address or payment window exists, so it must not be shown
+  // the bank-transfer instructions it used to fall through to.
+  const cryptoNotSetUp = isPending && order.paymentMethod === "crypto" && !order.crypto;
 
-  const nextSteps = isPending
+  const nextSteps = cryptoNotSetUp
+    ? [
+        "No crypto payment address was issued, so please don't send cryptocurrency for this order.",
+        "Email us with your reference and we'll help you complete payment another way.",
+        "Once payment is received, your order ships with tracking within 1–2 business days.",
+      ]
+    : isPending
     ? [
         "Complete payment using the panel on this page.",
         "We confirm receipt and email you — usually within the hour.",
@@ -67,7 +77,9 @@ export default async function OrderPage({
 
   // The heading follows the order's state: a cancelled or refunded order must
   // not open with "Thank you — your order is in."
-  const heading = isPending
+  const heading = cryptoNotSetUp
+    ? { eyebrow: "Payment Not Set Up", title: "We couldn't set up crypto payment" }
+    : isPending
     ? {
         eyebrow: order.paymentMethod === "crypto" ? "Payment Required" : "Bank Transfer — Awaiting Settlement",
         title: "Complete Your Payment",
@@ -102,7 +114,23 @@ export default async function OrderPage({
 
       <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-5">
         <div className="space-y-8 lg:col-span-3">
-          {isPending ? (
+          {cryptoNotSetUp ? (
+            <section className="border border-hairline p-6 sm:p-8">
+              <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">Cryptocurrency</p>
+              <p className="mt-4 text-sm leading-relaxed text-muted">
+                Crypto payment couldn&apos;t be set up for this order, so no payment address or window was
+                issued. Please don&apos;t send cryptocurrency for it.
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                Email{" "}
+                <a href={`mailto:${supportEmail ?? "info@vericertpeptides.com"}`} className="text-gold-ink underline underline-offset-2">
+                  {supportEmail ?? "info@vericertpeptides.com"}
+                </a>{" "}
+                with your reference <span className="font-mono text-navy">{order.reference}</span> and
+                we&apos;ll help you complete payment another way.
+              </p>
+            </section>
+          ) : isPending ? (
             order.paymentMethod === "crypto" && order.crypto ? (
               <CryptoPaymentPanel
                 reference={order.reference}
