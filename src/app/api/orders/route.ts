@@ -3,6 +3,7 @@ import { listProducts, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import { createOrder, updateOrder } from "@/lib/orders/store";
 import { validatePromoCode } from "@/lib/promotions";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
+import { isPaymentMethodAvailable } from "@/lib/payments/availability";
 import { sendOrderConfirmationEmail, sendAdminNotification } from "@/lib/email";
 import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getCurrentCustomer } from "@/lib/users/current-user";
@@ -42,6 +43,15 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const parsed = await parseBody(request, createOrderSchema);
   if ("error" in parsed) return parsed.error;
   const { customer, items, paymentMethod, promoCode } = parsed.data;
+
+  // Refused before anything is saved, so a hidden method can't leave an order
+  // behind that has no way to be paid.
+  if (!isPaymentMethodAvailable(paymentMethod)) {
+    return NextResponse.json(
+      { error: "That payment method isn't available right now. Please choose another." },
+      { status: 400 }
+    );
+  }
 
   // Recompute pricing server-side from the product catalog — never trust client-sent prices.
   const [products, subscriptionSettings] = await Promise.all([

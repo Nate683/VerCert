@@ -7,6 +7,7 @@ import { useCart, cartLineKey } from "@/lib/cart-context";
 import { track } from "@/lib/track-client";
 import type { PaymentMethod, SavedAddress } from "@/lib/types";
 import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
+import { isPaymentMethodAvailable } from "@/lib/payments/availability";
 
 // The only two ways to pay. No card, Apple Pay or Google Pay inputs, not even
 // as placeholders.
@@ -68,9 +69,13 @@ export function CheckoutForm({
 }) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
+  // Only methods that can actually take payment: bank transfer once its
+  // details are configured, crypto only while a working provider is enabled
+  // (it isn't — see lib/payments/availability.ts).
   const paymentOptions = PAYMENT_OPTIONS.filter(
-    (o) => o.value !== "bank_transfer" || bankTransferAvailable
+    (o) => isPaymentMethodAvailable(o.value) && (o.value !== "bank_transfer" || bankTransferAvailable)
   );
+  const noPaymentMethod = paymentOptions.length === 0;
 
   const [values, setValues] = useState<FormValues>({
     email: initialEmail,
@@ -85,8 +90,8 @@ export function CheckoutForm({
   // A returning customer sees their saved address as a summary line rather
   // than five pre-filled boxes to scroll past.
   const [editingAddress, setEditingAddress] = useState(!initialAddress);
-  // The first option shown: bank transfer, or crypto when bank details aren't configured.
-  const [method, setMethod] = useState<PaymentMethod>(paymentOptions[0]?.value ?? "crypto");
+  // The first option shown (bank transfer, when configured).
+  const [method, setMethod] = useState<PaymentMethod>(paymentOptions[0]?.value ?? "bank_transfer");
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -348,6 +353,15 @@ export function CheckoutForm({
               3 · Payment Method
             </h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {noPaymentMethod && (
+                <p className="border border-hairline p-5 text-sm leading-relaxed text-muted sm:col-span-2">
+                  Online payment isn&apos;t available right now. Email{" "}
+                  <a href="mailto:info@vericertpeptides.com" className="text-gold-ink underline underline-offset-2">
+                    info@vericertpeptides.com
+                  </a>{" "}
+                  and we&apos;ll help you place your order.
+                </p>
+              )}
               {paymentOptions.map((option) => (
                 <label
                   key={option.value}
@@ -405,7 +419,7 @@ export function CheckoutForm({
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || noPaymentMethod}
               className="w-full border border-gold bg-gold py-3.5 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-gold disabled:hover:text-black"
             >
               {submitting ? "Placing order…" : `Place Order · $${total.toFixed(2)}`}
