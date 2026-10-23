@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { safeNextPath } from "@/lib/safe-next";
+import { VeriCertLogo } from "@/components/VeriCertLogo";
 
 function LoginForm() {
   const router = useRouter();
@@ -12,8 +13,7 @@ function LoginForm() {
   const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [portalCode, setPortalCode] = useState("");
-  const [useAffiliateCode, setUseAffiliateCode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,9 +27,7 @@ function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(
-          useAffiliateCode ? { email, portalCode } : { email, password }
-        ),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Incorrect email or password.");
@@ -48,11 +46,15 @@ function LoginForm() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-20 lg:px-10">
+    // Lifted 64px (top-aligned, top padding 80px to 16px). The spec asked for 90px, but only
+    // 80px sat above the content, so 90px put the logo under the sticky header.
+    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-start px-6 pt-4 pb-20 lg:px-10">
+      {/* The navy-and-gold lockup; its JPG background is pure white, like the page. */}
+      <VeriCertLogo className="w-[200px] h-auto object-contain mx-auto mb-6 block" ground="light" priority />
       <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
       <h1 className="mt-3 font-serif text-3xl text-navy">Sign In</h1>
       <p className="mt-3 text-sm text-muted">
-        Sign in to check out and view your order history.
+        Sign in to access your research account, manage orders, and view your order history.
       </p>
       {searchParams.get("reason") === "idle" && (
         <p role="status" className="mt-4 border border-gold/50 bg-gold/10 p-3 text-sm text-navy">
@@ -70,25 +72,33 @@ function LoginForm() {
           autoFocus
           className="input-field-light"
         />
-        {useAffiliateCode ? (
+        <div className="relative">
           <input
             required
-            type="text"
-            value={portalCode}
-            onChange={(e) => setPortalCode(e.target.value.toUpperCase())}
-            placeholder="Affiliate code"
-            className="input-field-light font-mono uppercase tracking-widest"
-          />
-        ) : (
-          <input
-            required
-            type="password"
+            id="login-password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="input-field-light"
+            aria-label="Password"
+            autoComplete="current-password"
+            className="input-field-light pr-12"
           />
-        )}
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            aria-controls="login-password"
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-muted transition-colors hover:text-navy"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-5 w-5" aria-hidden="true">
+              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" strokeLinejoin="round" />
+              <circle cx="12" cy="12" r="3" />
+              {showPassword && <path d="M4 4l16 16" strokeLinecap="round" />}
+            </svg>
+          </button>
+        </div>
         {error && (
           <p role="alert" className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">
             {error}
@@ -103,34 +113,14 @@ function LoginForm() {
         </button>
       </form>
 
-      <button
-        type="button"
-        onClick={() => {
-          setUseAffiliateCode((v) => !v);
-          setError(null);
-        }}
-        className="mt-2 py-2.5 text-center text-xs text-muted hover:text-gold-ink"
-      >
-        {useAffiliateCode
-          ? "Sign in with your password instead"
-          : "Affiliate? Sign in with your affiliate code instead"}
-      </button>
-
-      <div className="mt-2 flex justify-between text-xs text-muted">
-        <Link href="/forgot-password" className="py-2.5 hover:text-gold-ink">
+      <div className="mt-4 flex justify-between">
+        <Link href="/forgot-password" className="py-2.5 text-slate-900 hover:text-amber-600 text-sm font-medium">
           Forgot password?
         </Link>
-        <Link href={`/register${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="py-2.5 hover:text-gold-ink">
+        <Link href={`/register${next !== "/account" ? `?next=${encodeURIComponent(next)}` : ""}`} className="py-2.5 text-slate-900 hover:text-amber-600 text-sm font-medium">
           Create an account
         </Link>
       </div>
-
-      <p className="mt-8 text-center text-xs text-muted/70">
-        Want to become an affiliate?{" "}
-        <Link href="/register?affiliate=1" className="inline-block py-2 text-gold-ink hover:underline">
-          Sign up here
-        </Link>
-      </p>
     </div>
   );
 }
