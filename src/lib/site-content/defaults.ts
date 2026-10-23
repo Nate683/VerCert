@@ -48,7 +48,7 @@ export type AboutContent = {
 export const DEFAULT_ABOUT: AboutContent = {
   headline: "Built for the Bench, Not the Bottle",
   intro:
-    "Access to the VeriCert Peptides chemical catalog, batch analytical records, and inventory information is restricted to registered research customers, including independent researchers, laboratories, academic institutions, and commercial research organizations. During account creation, customers identify their research or business category and acknowledge that all products are intended exclusively for laboratory research use, not human or veterinary consumption.",
+    "Access to the VeriCert Peptides chemical catalog, batch analytical records, and inventory information is restricted to registered research customers, including independent researchers, laboratories, academic institutions, and commercial research organizations. Customers confirm they are 21 or older when creating an account, and certify with every order that the products are intended exclusively for laboratory research use, not human or veterinary consumption.",
   valuesHeading: "Our Core Values",
   valuesIntro:
     "At VeriCert Peptides, we stand for analytical precision and supply chain transparency. Our operations are built on independent scientific verification, designed to meet the requirements of independent, corporate, and academic research institutions. We do not participate in consumer retail marketing. We maintain rigorous laboratory-focused quality and handling standards across our catalog to support research applications.",
@@ -101,7 +101,7 @@ export const DEFAULT_FAQ: FaqItem[] = [
   },
   {
     q: "How can I verify the analytical documentation for a specific lot?",
-    a: "Registered research customers can locate analytical documentation using the batch number printed on each vial. Each batch is linked to independent third-party testing results, including HPLC purity analysis and mass spectrometry identity confirmation. Verification links direct customers to the testing laboratory's own servers, where they can review the original batch-specific documentation.",
+    a: "Registered research customers can locate analytical documentation using the batch number printed on each vial. Each batch is linked to independent third-party testing results, including HPLC purity analysis and mass spectrometry identity confirmation. Certificates are published as each batch clears testing; if one isn't available yet for your batch, contact us with your order reference and batch number.",
   },
   {
     q: "Do you offer tailored distribution logistics for high-volume research institutions?",
