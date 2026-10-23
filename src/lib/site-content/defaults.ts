@@ -81,15 +81,15 @@ export const DEFAULT_FAQ: FaqItem[] = [
   },
   {
     q: "Where do I find the batch number for my order?",
-    a: "The batch number is printed on the vial label and included on your packing slip. Enter it on the COA Verification page to view the independent lab report for that specific lot.",
+    a: "The batch number is printed on the vial label. It's also shown next to each item on your order page and in your order confirmation email. The certificate of analysis for that batch is matched to it by that number.",
   },
   {
     q: "Who performs your testing?",
     a: "Testing is conducted by accredited third-party analytical laboratories that have no ownership or affiliation with VeriCert, ensuring the results are independent.",
   },
   {
-    q: "What if my batch number doesn't return a result?",
-    a: "Double-check the batch number for typos. If the issue persists, contact us with your order number and we will locate the correct certificate.",
+    q: "What if I can't find the certificate for my batch?",
+    a: "Contact us with your order reference and the batch number from your vial label, and we'll help you find it. Certificates are published as each batch clears testing.",
   },
   {
     q: "Do you ship internationally?",
