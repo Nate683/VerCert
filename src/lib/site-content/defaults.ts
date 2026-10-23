@@ -101,7 +101,7 @@ export const DEFAULT_FAQ: FaqItem[] = [
   },
   {
     q: "How can I verify the analytical documentation for a specific lot?",
-    a: "Registered research customers can locate analytical documentation using the batch number printed on each vial. Each certificate reports the independent third-party testing performed on that batch, such as HPLC purity analysis and mass spectrometry identity confirmation. Certificates are published as each batch clears testing; if one isn't available yet for your batch, contact us with your order reference and batch number.",
+    a: "The batch number printed on each vial is how a certificate of analysis is matched to that batch. Each certificate reports the independent third-party testing performed on that batch, such as HPLC purity analysis and mass spectrometry identity confirmation. Certificates are published as each batch clears testing; if one isn't available yet for your batch, contact us with your order reference and batch number.",
   },
   {
     q: "Do you offer tailored distribution logistics for high-volume research institutions?",
