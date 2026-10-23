@@ -48,10 +48,10 @@ export type AboutContent = {
 export const DEFAULT_ABOUT: AboutContent = {
   headline: "Built for the Bench, Not the Bottle",
   intro:
-    "Access to the VeriCert Peptides chemical catalog, batch analytical records, and inventory metrics is restricted to verified independent, corporate, and institutional research entities. Accounts are established for professional credentialing and procurement authentication purposes.",
+    "Access to the VeriCert Peptides chemical catalog, batch analytical records, and inventory information is restricted to registered research customers, including independent researchers, laboratories, academic institutions, and commercial research organizations. During account creation, customers identify their research or business category and acknowledge that all products are intended exclusively for laboratory research use, not human or veterinary consumption.",
   valuesHeading: "Our Core Values",
   valuesIntro:
-    "At VeriCert Peptides, we stand for analytical precision and supply chain transparency. Our operations are built on independent scientific verification, designed to meet the requirements of independent, corporate, and academic research institutions. We do not participate in consumer retail marketing. We hold a clinical operational standard across our catalog to protect the continuity of your laboratory work.",
+    "At VeriCert Peptides, we stand for analytical precision and supply chain transparency. Our operations are built on independent scientific verification, designed to meet the requirements of independent, corporate, and academic research institutions. We do not participate in consumer retail marketing. We maintain rigorous laboratory-focused quality and handling standards across our catalog to support research applications.",
   pillars: [
     {
       title: "Independent Validation",
@@ -73,7 +73,7 @@ export type FaqItem = { q: string; a: string };
 export const DEFAULT_FAQ: FaqItem[] = [
   {
     q: "What is VeriCert's intended use for these products?",
-    a: "All VeriCert products are intended strictly for in-vitro laboratory research and analytical use by qualified professionals. They are not drugs, foods, dietary supplements, or cosmetics, and are not intended for human or veterinary consumption.",
+    a: "All VeriCert products are intended strictly for in-vitro laboratory research and analytical testing use by registered research customers. These chemical matrices are not drugs, foods, dietary supplements, or cosmetics, and are not intended for human or veterinary consumption, diagnosis, treatment, cure, or prevention of any disease.",
   },
   {
     q: "How is purity determined and reported?",
@@ -98,6 +98,14 @@ export const DEFAULT_FAQ: FaqItem[] = [
   {
     q: "Can I request additional documentation, such as a safety data sheet?",
     a: "Yes. Reach out via the Contact page with the product name and batch number, and we will provide any available supporting documentation.",
+  },
+  {
+    q: "How can I verify the analytical documentation for a specific lot?",
+    a: "Registered research customers can locate analytical documentation using the batch number printed on each vial. Each batch is linked to independent third-party testing results, including HPLC purity analysis and mass spectrometry identity confirmation. Verification links direct customers to the testing laboratory's own servers, where they can review the original batch-specific documentation.",
+  },
+  {
+    q: "Do you offer tailored distribution logistics for high-volume research institutions?",
+    a: "Yes. VeriCert Peptides offers volume-pricing inquiries for laboratories, academic institutions, and commercial research organizations. Customers interested in larger or recurring research orders can submit their requirements through our Contact page.",
   },
 ];
 

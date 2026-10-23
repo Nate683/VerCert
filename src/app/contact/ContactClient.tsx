@@ -112,13 +112,13 @@ export default function ContactClient({ content }: { content: ContactContent }) 
             <EditableText value={content.hours} as="p" className="mt-2 text-sm text-muted" contentKey="contact_page" field="hours" />
           </div>
           <div>
-            <h3 className="text-xs uppercase tracking-[0.2em] text-gold-ink">Operations HQ</h3>
-            <address className="mt-2 text-sm not-italic leading-relaxed text-muted">
-              RKNEA Operations LLC
-              <br />
-              4325 E University Dr, Suite 30-210
-              <br />
-              Prosper, TX 75078
+            <h3 className="text-xs uppercase tracking-[0.2em] text-gold-ink">Business Address</h3>
+            {/* One line per row; whitespace-nowrap keeps each row whole on a phone. */}
+            <address className="mt-2 text-sm not-italic leading-relaxed text-muted [&>span]:block [&>span]:whitespace-nowrap">
+              <span>RKNEA Operations LLC</span>
+              <span>4325 E University Dr</span>
+              <span>Suite 30-210</span>
+              <span>Prosper, TX 75078</span>
             </address>
           </div>
           <div>
