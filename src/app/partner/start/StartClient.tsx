@@ -66,7 +66,7 @@ export default function StartClient({
 
       {dead ? (
         <Link
-          href="/login?next=/partner"
+          href="/partner"
           className="mt-8 inline-block border border-gold px-8 py-3 text-sm uppercase tracking-[0.2em] text-gold-ink transition-colors hover:bg-gold hover:text-black"
         >
           Sign In with a Password

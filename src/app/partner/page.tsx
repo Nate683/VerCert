@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { getAffiliateByEmail, computeAffiliateSummaries, listPayouts, getNextTier, getTierInfo } from "@/lib/affiliates";
 import { listOrders } from "@/lib/orders/store";
@@ -7,6 +6,7 @@ import { listPromoCodes } from "@/lib/promotions";
 import { listResources } from "@/lib/hq";
 import type { Customer, Order } from "@/lib/types";
 import { SetPasswordCard } from "./SetPasswordCard";
+import { PartnerSignIn } from "./PartnerSignIn";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Partner Portal | VeriCert", robots: { index: false, follow: false } };
@@ -63,7 +63,8 @@ export default async function PartnerPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const customer = await getCurrentCustomer();
-  if (!customer) redirect("/login?next=/partner");
+  // Affiliates sign in right here rather than being sent to /login.
+  if (!customer) return <PartnerSignIn />;
 
   // Arrived by sign-in link (/partner/start), which left a short-lived
   // set-password token on the account: offer to choose a password with it.

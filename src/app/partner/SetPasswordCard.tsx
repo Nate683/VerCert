@@ -10,7 +10,7 @@ function dropWelcomeFromUrl() {
 }
 
 // Offered on /partner right after someone arrives by sign-in link, so next
-// time they can sign in at /login without needing another link. `token` is
+// time they can sign in at /partner without needing another link. `token` is
 // the short-lived set-password token that link issued; saving goes through
 // the normal reset-password endpoint and its password rules.
 export function SetPasswordCard({ token, email }: { token: string; email: string }) {
@@ -48,7 +48,7 @@ export function SetPasswordCard({ token, email }: { token: string; email: string
       <section className="mt-8 border border-gold/20 bg-surface p-5">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Password Saved</h2>
         <p className="mt-3 text-sm text-muted">
-          Next time, sign in at /login with <strong className="text-navy">{email}</strong> and your new password.
+          Next time, sign in at /partner with <strong className="text-navy">{email}</strong> and your new password.
         </p>
       </section>
     );
@@ -58,7 +58,7 @@ export function SetPasswordCard({ token, email }: { token: string; email: string
     <section className="mt-8 border border-gold/20 bg-surface p-5">
       <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Choose a Password</h2>
       <p className="mt-3 text-sm text-muted">
-        Your sign-in link has now been used. Set a password so you can sign in at /login with{" "}
+        Your sign-in link has now been used. Set a password so you can sign in at /partner with{" "}
         <strong className="text-navy">{email}</strong>. Already have one? You can skip this.
       </p>
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
