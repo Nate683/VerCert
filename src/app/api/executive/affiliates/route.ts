@@ -6,6 +6,9 @@ import {
   computeAffiliateSummaries,
   getAllPayouts,
   issueAffiliateSetPasswordToken,
+  createAffiliateSignInLink,
+  SignInLinkError,
+  type SignInLink,
 } from "@/lib/affiliates";
 import { listOrders } from "@/lib/orders/store";
 import { listPromoCodes } from "@/lib/promotions";
@@ -99,7 +102,17 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     } catch (err) {
       console.error("Failed to send affiliate invite email:", err);
     }
-    return NextResponse.json({ affiliate });
+    // Shown straight away in /command to copy or text, so getting in never
+    // depends on the email above arriving. The affiliate is saved either way.
+    let signInLink: SignInLink | null = null;
+    let signInLinkError: string | null = null;
+    try {
+      signInLink = await createAffiliateSignInLink(affiliate, actor?.email);
+    } catch (err) {
+      if (err instanceof SignInLinkError) signInLinkError = err.message;
+      else console.error("Failed to create affiliate sign-in link:", err);
+    }
+    return NextResponse.json({ affiliate, signInLink, signInLinkError });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Could not create affiliate." },

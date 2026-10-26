@@ -15,7 +15,15 @@ export {
 } from "./store";
 export { computeAffiliateSummaries } from "./stats";
 export { AFFILIATE_TIERS, getTierInfo, getTierRank, getNextTier } from "./tiers";
-export { issueAffiliateSetPasswordToken } from "./access";
+export { issueAffiliateSetPasswordToken, ensureAffiliateAccount } from "./access";
+export {
+  createAffiliateSignInLink,
+  checkSignInLink,
+  redeemSignInLink,
+  SignInLinkError,
+  type SignInLink,
+  type SignInLinkState,
+} from "./sign-in-links";
 export {
   listInviteCodes,
   getInviteCodeByCode,

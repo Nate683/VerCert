@@ -17,6 +17,16 @@ type FormState = {
   customerDiscountPercent: string;
 };
 
+type ShownLink = { name: string; phone?: string; url: string; expiresAt: string };
+
+// Pre-filled text message. "?&body=" opens with the text filled in on both
+// iPhone and Android.
+function smsHref(link: ShownLink): string {
+  const firstName = link.name.trim().split(/\s+/)[0] || "there";
+  const body = `Hi ${firstName}, here's your VeriCert partner portal link. It works once: ${link.url}`;
+  return `sms:${(link.phone ?? "").replace(/[^\d+]/g, "")}?&body=${encodeURIComponent(body)}`;
+}
+
 function emptyForm(): FormState {
   return {
     name: "",
@@ -48,6 +58,9 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [inviteSentId, setInviteSentId] = useState<string | null>(null);
+  const [linkingId, setLinkingId] = useState<string | null>(null);
+  const [shownLink, setShownLink] = useState<ShownLink | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const [structure, setStructure] = useState<CommissionStructureContent | null>(null);
   const [structureSaving, setStructureSaving] = useState(false);
@@ -96,6 +109,14 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
       if (!res.ok) throw new Error(data.error ?? "Could not create affiliate.");
       setForm(emptyForm());
       setCreating(false);
+      setShownLink(null);
+      if (data.signInLink) {
+        showLink({ name: data.affiliate.name, phone: data.affiliate.phone, ...data.signInLink });
+      } else {
+        setError(
+          `Affiliate saved, but no sign-in link was made: ${data.signInLinkError ?? "try Get Sign-In Link on their row."}`
+        );
+      }
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not create affiliate.");
@@ -140,6 +161,39 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
       await load();
     } finally {
       setRegeneratingId(null);
+    }
+  }
+
+  function showLink(link: ShownLink) {
+    setCopied(false);
+    setShownLink(link);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function handleGetSignInLink(a: AffiliateSummary) {
+    setLinkingId(a.id);
+    setError(null);
+    setShownLink(null);
+    try {
+      const res = await fetch(`/api/executive/affiliates/${a.id}/sign-in-link`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not make a sign-in link.");
+      showLink({ name: a.name, phone: a.phone, ...data.signInLink });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not make a sign-in link.");
+    } finally {
+      setLinkingId(null);
+    }
+  }
+
+  async function handleCopyLink() {
+    if (!shownLink) return;
+    try {
+      await navigator.clipboard.writeText(shownLink.url);
+      setCopied(true);
+    } catch {
+      // Clipboard blocked: the link is selected in the box for a manual copy.
+      (document.getElementById("affiliate-sign-in-link") as HTMLInputElement | null)?.select();
     }
   }
 
@@ -230,6 +284,48 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
           <p className="mt-4 border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">{error}</p>
         )}
 
+        {shownLink && isCommand && (
+          <div className="mt-4 border border-gold/40 bg-black p-4">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-xs uppercase tracking-[0.2em] text-gold">Sign-In Link — {shownLink.name}</p>
+              <button
+                type="button"
+                onClick={() => setShownLink(null)}
+                className="text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+            <input
+              id="affiliate-sign-in-link"
+              readOnly
+              value={shownLink.url}
+              onFocus={(e) => e.currentTarget.select()}
+              className="mt-3 w-full border border-white/15 bg-black px-2 py-1.5 font-mono text-xs text-white focus:border-gold focus:outline-none"
+            />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+              >
+                {copied ? "Copied" : "Copy Link"}
+              </button>
+              <a
+                href={smsHref(shownLink)}
+                className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+              >
+                Text It{shownLink.phone ? ` to ${shownLink.phone}` : ""}
+              </a>
+            </div>
+            <p className="mt-3 text-xs text-white/50">
+              Opens their partner portal, signed in, then offers to set a password. Works once, until{" "}
+              {new Date(shownLink.expiresAt).toLocaleString()}. Making a new link cancels this one. Anyone
+              holding it can open {shownLink.name}&apos;s portal, so send it only to them.
+            </p>
+          </div>
+        )}
+
         <div className="mt-6 overflow-x-auto">
           {loading ? (
             <p className="text-sm text-white/30">Loading...</p>
@@ -262,7 +358,7 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                     <td className="py-3 pr-4 font-mono text-xs">{a.code ?? "—"}</td>
                     <td className="py-3 pr-4">
                       <p className="font-mono text-xs text-gold">{a.portalCode ?? "—"}</p>
-                      <p className="text-[10px] text-white/30">Use instead of password at /login</p>
+                      <p className="text-[10px] text-white/30">Not used at /login — send a sign-in link</p>
                       {isCommand && (
                         <div className="mt-1 flex flex-wrap gap-2">
                           <button
@@ -272,6 +368,14 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                             className="text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-gold disabled:opacity-40"
                           >
                             {regeneratingId === a.id ? "Regenerating..." : "Regenerate"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleGetSignInLink(a)}
+                            disabled={linkingId === a.id}
+                            className="text-[10px] uppercase tracking-[0.1em] text-gold/80 hover:text-gold disabled:opacity-40"
+                          >
+                            {linkingId === a.id ? "Making..." : "Get Sign-In Link"}
                           </button>
                           <button
                             type="button"

@@ -5,7 +5,8 @@ import { getAffiliateByEmail, computeAffiliateSummaries, listPayouts, getNextTie
 import { listOrders } from "@/lib/orders/store";
 import { listPromoCodes } from "@/lib/promotions";
 import { listResources } from "@/lib/hq";
-import type { Order } from "@/lib/types";
+import type { Customer, Order } from "@/lib/types";
+import { SetPasswordCard } from "./SetPasswordCard";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Partner Portal | VeriCert", robots: { index: false, follow: false } };
@@ -51,9 +52,23 @@ function isQualifying(order: Order): boolean {
   return Boolean(order.paidAt) && order.status !== "cancelled" && !order.refundedAt;
 }
 
-export default async function PartnerPage() {
+function liveResetToken(customer: Customer): string | null {
+  if (!customer.resetToken || !customer.resetTokenExpiresAt) return null;
+  return new Date(customer.resetTokenExpiresAt).getTime() > Date.now() ? customer.resetToken : null;
+}
+
+export default async function PartnerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const customer = await getCurrentCustomer();
   if (!customer) redirect("/login?next=/partner");
+
+  // Arrived by sign-in link (/partner/start), which left a short-lived
+  // set-password token on the account: offer to choose a password with it.
+  const welcome = (await searchParams).welcome === "1";
+  const setPasswordToken = welcome ? liveResetToken(customer) : null;
 
   const affiliate = await getAffiliateByEmail(customer.email);
 
@@ -127,6 +142,8 @@ export default async function PartnerPage() {
             Go to HQ →
           </Link>
         </div>
+
+        {setPasswordToken && <SetPasswordCard token={setPasswordToken} email={customer.email} />}
 
         {checklistDone < checklist.length && (
           <section className="mt-8 border border-gold/20 bg-surface p-5">

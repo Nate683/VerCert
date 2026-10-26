@@ -598,6 +598,23 @@ async function main() {
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS inventory_slug_size_label_idx ON inventory (slug, size_label)`;
   await sql`ALTER TABLE inventory DROP CONSTRAINT IF EXISTS inventory_pkey`;
 
+  // Single-use sign-in links for affiliates, made in /command and texted or
+  // sent by hand. Only the SHA-256 of the token is stored; making a new link
+  // for an affiliate deletes their unused ones.
+  await sql`
+    CREATE TABLE IF NOT EXISTS sign_in_links (
+      id TEXT PRIMARY KEY,
+      token_hash TEXT NOT NULL UNIQUE,
+      user_id TEXT NOT NULL,
+      affiliate_id TEXT NOT NULL,
+      created_by TEXT,
+      created_at TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      used_at TEXT
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS sign_in_links_affiliate_id_idx ON sign_in_links (affiliate_id)`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 
