@@ -149,6 +149,7 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "Parent Operating Entity: RKNEA Operations LLC",
     "Throughout this policy, \"VeriCert Peptides\" refers to the parent legal entity RKNEA Operations LLC. This policy outlines how customer account data, order records, and transaction metadata are processed and secured.",
     "Access to the VeriCert Peptides catalog, product information, and ordering requires registration. When an account is created we record name, email address, and shipping details. Passwords are stored using salted hashing. Access to the catalog is restricted to registered accounts.",
+    "If you subscribe to our mailing list, we collect your email address along with the date, the page you subscribed from, and your IP address, which we retain as a record of your consent. You may unsubscribe at any time using the link in any marketing email or by contacting us at info@vericertpeptides.com.",
     "Order data, batch assignments, and shipment tracking information are processed for order fulfillment and record keeping.",
     "Payment methods available to customers are displayed at checkout. Payment transactions may be processed through authorized third-party payment service providers. VeriCert Peptides does not store complete payment card numbers on its own servers.",
     "## Analytics and Account Activity",
