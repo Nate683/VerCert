@@ -8,6 +8,7 @@ import { Footer } from "./Footer";
 import { ExecModeToggle } from "./ExecModeToggle";
 import { TickerBanner } from "./TickerBanner";
 import { PrelaunchBanner } from "./PrelaunchBanner";
+import { PRELAUNCH_BANNER_ENABLED } from "@/lib/prelaunch";
 import { AgeGate } from "./AgeGate";
 import type { SaleBannerContent, ContactContent } from "@/lib/site-content";
 import { track } from "@/lib/track-client";
@@ -58,8 +59,9 @@ export function SiteChrome({
       )}
       {/* Announcement for signed-out visitors. Prices are public on the
           homepage (owner's decision, October 18 2026), so it speaks of
-          ordering and certificates rather than "full pricing". */}
-      {!loading && !user && (
+          ordering and certificates rather than "full pricing". Hidden while
+          the pre-launch banner is on (lib/prelaunch.ts), which replaces it. */}
+      {!loading && !user && !PRELAUNCH_BANNER_ENABLED && (
         <div className="bg-navy px-4 py-2 text-center text-xs leading-relaxed text-white/85">
           Ordering and batch certificates are restricted to registered researchers.{" "}
           <Link href="/register" className="text-gold underline underline-offset-2 hover:text-white">
