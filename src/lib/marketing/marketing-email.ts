@@ -16,9 +16,12 @@ import { getUserById } from "@/lib/users/store";
 
 // The unsubscribe signature covers a purpose prefix so it can't be confused
 // with any other value signed with the same secret. It never expires: an old
-// email's link must keep working.
+// email's link must keep working, so it has its own secret, UNSUBSCRIBE_SECRET,
+// that is never rotated — when it was SESSION_SECRET, replacing that to sign
+// everyone out also broke every unsubscribe link already sent. Until it's set,
+// SESSION_SECRET is used as before.
 function getUnsubscribeSecret(): string {
-  return process.env.SESSION_SECRET || "vericert-dev-secret-change-me";
+  return process.env.UNSUBSCRIBE_SECRET || process.env.SESSION_SECRET || "vericert-dev-secret-change-me";
 }
 
 const unsubscribePayload = (userId: string) => `unsubscribe:${userId}`;
