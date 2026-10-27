@@ -21,15 +21,17 @@ export function Footer({ contact }: { contact: ContactContent }) {
       <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
-            {/* The one-colour gold lockup, served as the vector file. 52px is
-                15% larger than the 45px it replaced. */}
+            {/* The one-colour gold lockup, served as the vector file: 177px
+                wide (78px tall), 50% larger than the 52px-tall logo before it.
+                Where the column is narrower (around 1024px) it shrinks to fit,
+                keeping its proportions. */}
             <Image
               src="/VeriCert-Peptides-One-Color-Gold.svg"
               alt="VeriCert Peptides"
               width={441}
               height={194}
               unoptimized
-              className="h-[52px] w-auto"
+              className="h-auto w-[177px] max-w-full"
             />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
               Third-party verified research compounds for laboratory use.
@@ -89,12 +91,12 @@ export function Footer({ contact }: { contact: ContactContent }) {
 
         {/* The newsletter band runs divider to divider (pb-10 here, no top
             margin on the band below), so the watermark can be centred in it.
-            Watermark: the one-colour white lockup at 90% of its former size
+            Watermark: the one-colour gray lockup at 90% of its former size
             (45.5rem, capped so it stays clear of the form column on narrower
             desktops); hidden on phones and tablets. */}
         <div className="relative mt-16 border-t border-white/10 py-10">
           <Watermark
-            src="/VeriCert-Peptides-One-Color-White.svg"
+            src="/VeriCert-Peptides-One-Color-Gray.svg"
             className="v-watermark-footer right-0 top-1/2 hidden w-[40.95rem] max-w-[calc((100%-28rem)*0.9)] -translate-y-1/2 lg:block"
           />
           <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Stay Informed</h4>

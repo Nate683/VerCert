@@ -258,9 +258,9 @@ body {
   user-select: none;
 }
 
-/* The footer's watermark, beside the newsletter. */
+/* The footer's watermark, beside the newsletter: the gray lockup, faint. */
 .v-watermark-footer {
-  opacity: 0.1;
+  opacity: 0.08;
 }
 
 /* Loading skeleton — a slow shimmer over a dim block. Every async surface on
