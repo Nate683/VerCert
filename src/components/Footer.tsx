@@ -87,11 +87,12 @@ export function Footer({ contact }: { contact: ContactContent }) {
           <Watermark className="v-watermark-footer right-0 top-1/2 hidden w-[45.5rem] max-w-[calc(100%-28rem)] -translate-y-1/2 lg:block" />
           <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Stay Informed</h4>
           <p className="mt-3 max-w-sm text-sm text-white/70">
-            Occasional updates on new compounds and testing results. No spam.
+            Get exclusive offers, product launches, special promotions, and the latest VeriCert updates.
           </p>
           <div className="mt-4">
             <NewsletterSignup />
           </div>
+          <p className="mt-3 max-w-sm text-xs text-white/70">Sign up for promotional emails. Unsubscribe anytime.</p>
         </div>
 
         {/* One disclaimer row and one copyright row, nothing else. On the
