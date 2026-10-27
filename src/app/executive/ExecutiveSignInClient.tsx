@@ -41,9 +41,11 @@ function ExecutiveSignInForm() {
         <p className="mt-3 text-sm text-white/60">
           For VeriCert executives only. Your authenticator code is asked for next.
         </p>
-        {searchParams.get("reason") === "idle" && (
+        {(searchParams.get("reason") === "idle" || searchParams.get("reason") === "expired") && (
           <p role="status" className="mt-4 border border-gold/40 bg-gold/10 p-3 text-sm text-white/80">
-            You were signed out after a period of inactivity. Sign in again to continue.
+            {searchParams.get("reason") === "expired"
+              ? "Your 12-hour session has ended. Sign in again to continue."
+              : "You were signed out after a period of inactivity. Sign in again to continue."}
           </p>
         )}
 

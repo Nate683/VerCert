@@ -61,6 +61,14 @@ export async function verifyExpiringToken(
   secret: string,
   token: string | undefined
 ): Promise<string | null> {
+  return (await verifyExpiringTokenWithExpiry(secret, token))?.payload ?? null;
+}
+
+// The same check, also returning when the token expires.
+export async function verifyExpiringTokenWithExpiry(
+  secret: string,
+  token: string | undefined
+): Promise<{ payload: string; expiresAt: number } | null> {
   if (!token) return null;
   const parts = token.split(".");
   if (parts.length !== 3) return null;
@@ -70,5 +78,5 @@ export async function verifyExpiringToken(
   if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return null;
 
   const valid = await verifySignature(secret, `${payload}.${expiresAtRaw}`, signatureHex);
-  return valid ? payload : null;
+  return valid ? { payload, expiresAt } : null;
 }

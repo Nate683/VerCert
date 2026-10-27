@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { CUSTOMER_SESSION_COOKIE, verifyCustomerSessionToken } from "@/lib/users/session";
+import {
+  CUSTOMER_SESSION_COOKIE,
+  SESSION_RENEW_AFTER_MS,
+  SESSION_TTL_MS,
+  createCustomerSessionToken,
+  sessionCookieOptions,
+  verifyCustomerSessionToken,
+} from "@/lib/users/session";
 import { captureAttribution } from "@/lib/marketing/attribution";
 
 const REALMS = ["command", "office"] as const;
@@ -87,9 +94,23 @@ export async function proxy(request: NextRequest) {
   }
 
   const isApi = pathname.startsWith("/api/");
+  const session = await verifyCustomerSessionToken(token);
   let response: NextResponse;
-  if (isUngated(pathname) || (await verifyCustomerSessionToken(token))) {
+  if (isUngated(pathname) || session) {
     response = NextResponse.next();
+    // A customer's session runs 30 days from their last visit: once it's a
+    // day old, any page they open re-issues it. Pages only — the API routes
+    // that sign out or delete an account clear this cookie themselves, and a
+    // renewal on the same response could put it back. Staff sessions renew
+    // through /api/auth/keepalive instead.
+    const sessionAge = session ? SESSION_TTL_MS - (session.expiresAt - Date.now()) : 0;
+    if (session && !session.twoFactorVerified && !isApi && sessionAge > SESSION_RENEW_AFTER_MS) {
+      response.cookies.set(
+        CUSTOMER_SESSION_COOKIE,
+        await createCustomerSessionToken(session.userId),
+        sessionCookieOptions(SESSION_TTL_MS)
+      );
+    }
   } else if (isApi) {
     return NextResponse.json({ error: "Sign in to continue." }, { status: 401 });
   } else {

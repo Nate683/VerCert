@@ -1,18 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { IDLE_WARNING_MS, STAFF_IDLE_TIMEOUT_MS } from "@/lib/users/idle";
+import { IDLE_WARNING_MS, STAFF_IDLE_TIMEOUT_MS, STAFF_SESSION_MAX_MS } from "@/lib/users/idle";
 
-// Signs staff out after STAFF_IDLE_TIMEOUT_MS without activity, with a
-// warning and countdown first. Active for executives everywhere they're
-// signed in (the terminals and exec-mode editing on the storefront) and for
-// anyone on /hq.
+// Signs executives out after STAFF_IDLE_TIMEOUT_MS without activity, with a
+// warning and countdown first, everywhere they're signed in (the terminals,
+// /hq and exec-mode editing on the storefront). Customers and affiliates have
+// no idle clock: their session simply runs 30 days from their last visit.
 //
-// For an executive the server enforces it too: the session itself expires
-// unless /api/auth/keepalive extends it. The deadline is shared through
-// localStorage, so working in one tab keeps the others signed in.
+// The server enforces it too: the session itself expires unless
+// /api/auth/keepalive extends it, and never later than STAFF_SESSION_MAX_MS
+// after sign-in. The deadline is shared through localStorage, so working in
+// one tab keeps the others signed in.
 
 const DEADLINE_KEY = "vericert:idle-deadline";
 // Activity extends the session at most this often.
@@ -43,22 +43,25 @@ function formatCountdown(ms: number): string {
 
 export function IdleTimeout() {
   const { user } = useAuth();
-  const pathname = usePathname();
-  const active = Boolean(user && (user.role || pathname === "/hq" || pathname.startsWith("/hq/")));
-  if (!active) return null;
-  return <IdleClock executive={Boolean(user?.role)} />;
+  if (!user?.role) return null;
+  return <IdleClock />;
 }
 
-function IdleClock({ executive }: { executive: boolean }) {
-  const pathname = usePathname();
+type EndReason = "idle" | "expired";
+
+function IdleClock() {
   const [remaining, setRemaining] = useState<number>(STAFF_IDLE_TIMEOUT_MS);
+  // The deadline is the 12-hour limit rather than inactivity, so staying
+  // active can't extend it.
+  const [atLimit, setAtLimit] = useState(false);
   const deadlineRef = useRef<number | null>(null);
+  const limitRef = useRef<number | null>(null);
   const lastPingRef = useRef(0);
   const endingRef = useRef(false);
   const warningRef = useRef(false);
   const stayRef = useRef<HTMLButtonElement>(null);
 
-  const signOut = useCallback(async () => {
+  const signOut = useCallback(async (reason: EndReason) => {
     if (endingRef.current) return;
     endingRef.current = true;
     try {
@@ -67,10 +70,13 @@ function IdleClock({ executive }: { executive: boolean }) {
       // The session expires on its own; leaving the page is what matters.
     }
     // A full load, not router.push: it clears the dashboards' data out of memory.
-    window.location.assign(
-      executive ? "/executive?reason=idle" : `/login?next=${encodeURIComponent(pathname)}&reason=idle`
-    );
-  }, [pathname, executive]);
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign(`/executive?reason=${reason}`);
+  }, []);
+  const reasonNow = useCallback(
+    (): EndReason => (limitRef.current !== null && Date.now() >= limitRef.current - 1000 ? "expired" : "idle"),
+    []
+  );
 
   const extend = useCallback(
     async (force: boolean) => {
@@ -80,13 +86,16 @@ function IdleClock({ executive }: { executive: boolean }) {
       try {
         const res = await fetch("/api/auth/keepalive", { method: "POST", cache: "no-store" });
         if (res.status === 401) {
-          await signOut();
+          const data = (await res.json().catch(() => ({}))) as { limitReached?: boolean };
+          await signOut(data.limitReached ? "expired" : "idle");
           return;
         }
-        const data = (await res.json()) as { expiresAt?: number | null };
+        const data = (await res.json()) as { expiresAt?: number | null; limitAt?: number | null };
         const deadline = data.expiresAt ?? Date.now() + STAFF_IDLE_TIMEOUT_MS;
         deadlineRef.current = deadline;
         writeDeadline(deadline);
+        if (data.limitAt) limitRef.current = data.limitAt;
+        setAtLimit(limitRef.current !== null && deadline >= limitRef.current - 1000);
       } catch {
         // Offline for a moment: try again on the next activity.
         lastPingRef.current = 0;
@@ -118,7 +127,7 @@ function IdleClock({ executive }: { executive: boolean }) {
       const left = deadline - Date.now();
       warningRef.current = left <= IDLE_WARNING_MS;
       setRemaining(left);
-      if (left <= 0) void signOut();
+      if (left <= 0) void signOut(reasonNow());
     };
     const timer = window.setInterval(tick, 1000);
     // Timers are throttled in background tabs and stop while a laptop
@@ -132,7 +141,7 @@ function IdleClock({ executive }: { executive: boolean }) {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [extend, signOut]);
+  }, [extend, signOut, reasonNow]);
 
   const warning = remaining <= IDLE_WARNING_MS;
 
@@ -153,15 +162,18 @@ function IdleClock({ executive }: { executive: boolean }) {
       >
         <p className="text-xs uppercase tracking-[0.3em] text-gold">Session</p>
         <h2 id="idle-timeout-title" className="mt-2 font-serif text-2xl">
-          Still there?
+          {atLimit ? "Session ending" : "Still there?"}
         </h2>
         <p id="idle-timeout-body" className="mt-3 text-sm leading-relaxed text-white/80">
-          For security you&apos;ll be signed out after {STAFF_IDLE_TIMEOUT_MS / 60000} minutes without activity.
+          {atLimit
+            ? `For security, executive sessions end ${STAFF_SESSION_MAX_MS / 3600000} hours after signing in. Sign in again with your password and authenticator to continue.`
+            : `For security you'll be signed out after ${STAFF_IDLE_TIMEOUT_MS / 60000} minutes without activity.`}
         </p>
         <p className="mt-4 font-mono text-3xl tabular-nums text-gold" aria-live="off">
           {formatCountdown(remaining)}
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          {!atLimit && (
           <button
             ref={stayRef}
             type="button"
@@ -174,12 +186,13 @@ function IdleClock({ executive }: { executive: boolean }) {
           >
             Stay signed in
           </button>
+          )}
           <button
             type="button"
-            onClick={() => void signOut()}
+            onClick={() => void signOut(atLimit ? "expired" : "idle")}
             className="min-h-11 flex-1 border border-white/30 px-4 py-2.5 text-xs uppercase tracking-[0.15em] text-white transition-colors hover:border-gold hover:text-gold"
           >
-            Sign out now
+            {atLimit ? "Sign in again now" : "Sign out now"}
           </button>
         </div>
       </div>
