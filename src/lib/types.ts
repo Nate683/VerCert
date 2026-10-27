@@ -279,7 +279,9 @@ export type MarketingConsentSource =
   | "account_settings"
   | "newsletter_signup"
   | "unsubscribe_link"
-  | "spam_complaint";
+  | "spam_complaint"
+  // Staff removed the address from the newsletter at the person's request.
+  | "staff_request";
 
 // How a visitor first arrived — see lib/marketing/attribution.ts.
 export type Attribution = {

@@ -32,6 +32,7 @@ import { AlertsPanel } from "./AlertsPanel";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { CalendarPanel } from "./CalendarPanel";
 import { SegmentsPanel } from "./SegmentsPanel";
+import { SubscribersPanel } from "./SubscribersPanel";
 import { LiveIndicator } from "./LiveIndicator";
 import { useLiveRefresh } from "@/lib/executive/use-live-refresh";
 import { AnimatedNumber } from "./AnimatedNumber";
@@ -60,7 +61,8 @@ type Tab =
   | "documents"
   | "calendar"
   | "chat"
-  | "subscriptions";
+  | "subscriptions"
+  | "newsletter";
 
 // Tab names stay plain business English — no codenames, no jargon. The room
 // may be theatrical; the filing labels are not.
@@ -88,9 +90,10 @@ const BASE_TABS: { id: Tab; label: string }[] = [
 // these tabs. Affiliates is shared (both realms), but /office gets a
 // read-only view — see AffiliatesPanel's `variant` prop. Invite codes grant
 // instant affiliate access, so generating them is command-only too, and so
-// are Segments, which export customer contact lists.
+// are Segments and Subscribers, which export contact lists.
 const COMMAND_ONLY_TABS: { id: Tab; label: string }[] = [
   { id: "segments", label: "Segments" },
+  { id: "newsletter", label: "Subscribers" },
   { id: "promotions", label: "Promotions" },
   { id: "subscriptions", label: "Subscriptions" },
   { id: "invite-codes", label: "Invite Codes" },
@@ -246,6 +249,7 @@ export function ExecutiveTerminal({
           {tab === "calendar" && <CalendarPanel variant={variant} />}
           {tab === "customers" && <CustomersPanel variant={variant} />}
           {tab === "segments" && isCommand && <SegmentsPanel />}
+          {tab === "newsletter" && isCommand && <SubscribersPanel />}
           {tab === "chat" &&
             (hqMember ? (
               <ChatPanel member={hqMember} />

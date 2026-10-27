@@ -621,6 +621,40 @@ async function main() {
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS affiliate_id TEXT`;
   await sql`CREATE INDEX IF NOT EXISTS orders_affiliate_id_idx ON orders (affiliate_id)`;
 
+  // Newsletter list (the footer signup). One row per address, never a second:
+  // signing up again after unsubscribing reactivates the row with fresh
+  // consent. Unsubscribing marks the row rather than deleting it, so there is
+  // a record the request was honoured. Consent: the wording shown, when, and
+  // the IP it came from. confirmation_sent_at is for a confirmation email once
+  // sending is set up.
+  await sql`
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id TEXT PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'subscribed',
+      source_path TEXT,
+      consent_text TEXT NOT NULL,
+      consent_at TEXT NOT NULL,
+      consent_ip TEXT,
+      created_at TEXT NOT NULL,
+      unsubscribed_at TEXT,
+      unsubscribe_source TEXT,
+      confirmation_sent_at TEXT
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS newsletter_subscribers_created_at_idx ON newsletter_subscribers (created_at)`;
+  // The earlier footer form created an account per signup instead of a list
+  // row. Carry those opt-ins over once (re-running changes nothing).
+  await sql`
+    INSERT INTO newsletter_subscribers (id, email, status, source_path, consent_text, consent_at, consent_ip, created_at)
+    SELECT gen_random_uuid()::text, email, 'subscribed', NULL,
+           'Recorded by the earlier footer signup; the wording shown was not stored.',
+           COALESCE(marketing_consent_at, created_at), NULL, COALESCE(marketing_consent_at, created_at)
+      FROM users
+     WHERE marketing_consent AND marketing_consent_source = 'newsletter_signup'
+    ON CONFLICT (email) DO NOTHING
+  `;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

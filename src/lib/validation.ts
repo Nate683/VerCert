@@ -348,6 +348,12 @@ export const inlineEditSchema = z.object({
   patch: z.union([z.record(z.string(), z.unknown()), z.array(z.unknown())]),
 });
 
+// The footer newsletter form. `source` is the page it was submitted from.
+export const newsletterSignupSchema = z.object({
+  email: z.string().trim().toLowerCase().max(254, "That email address is too long.").email("Enter a valid email address."),
+  source: z.string().max(500).optional(),
+});
+
 export async function parseBody<T extends z.ZodTypeAny>(
   request: Request,
   schema: T

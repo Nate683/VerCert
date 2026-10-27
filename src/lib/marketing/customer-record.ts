@@ -7,6 +7,7 @@ import { getAffiliateById } from "@/lib/affiliates";
 import type { Attribution, Customer, CustomerInfo, SavedAddress } from "@/lib/types";
 import { listCustomerMetrics, type CustomerMetrics } from "./customer-metrics";
 import { heardAboutLabel } from "./heard-about";
+import { getSubscriberByEmail } from "@/lib/newsletter";
 
 // Everything VeriCert holds about one customer, as one document: the account,
 // every order, signed-in browsing, email engagement, and the marketing profile
@@ -34,6 +35,14 @@ export type CustomerRecord = {
     referredByAffiliate?: string;
     firstVisitSource?: Attribution;
   };
+  newsletter: {
+    status: string;
+    subscribedAt: string;
+    sourcePage?: string;
+    consentText: string;
+    consentIp?: string;
+    unsubscribedAt?: string;
+  } | null;
   marketingProfile: CustomerMetrics | null;
   orders: {
     reference: string;
@@ -92,7 +101,7 @@ function parseMetadata(raw: string | null): { slug?: string; path?: string } {
 }
 
 export async function buildCustomerRecord(user: Customer): Promise<CustomerRecord> {
-  const [orders, metrics, events, emails, products, affiliate, subscriptions] = await Promise.all([
+  const [orders, metrics, events, emails, products, affiliate, subscriptions, newsletter] = await Promise.all([
     getOrdersByCustomer(user.id),
     listCustomerMetrics({ userId: user.id }),
     query<EventRow>(
@@ -106,6 +115,7 @@ export async function buildCustomerRecord(user: Customer): Promise<CustomerRecor
     listProducts(),
     user.affiliateId ? getAffiliateById(user.affiliateId) : Promise.resolve(null),
     listSubscriptionsForCustomer(user.id),
+    getSubscriberByEmail(user.email),
   ]);
   const productName = (slug?: string) => products.find((p) => p.slug === slug)?.name;
 
@@ -135,6 +145,14 @@ export async function buildCustomerRecord(user: Customer): Promise<CustomerRecor
       ageAttestedAt: user.ageAttestedAt,
       referredByAffiliate: affiliate?.name,
       firstVisitSource: user.attribution,
+    },
+    newsletter: newsletter && {
+      status: newsletter.status,
+      subscribedAt: newsletter.consentAt,
+      sourcePage: newsletter.sourcePath,
+      consentText: newsletter.consentText,
+      consentIp: newsletter.consentIp,
+      unsubscribedAt: newsletter.unsubscribedAt,
     },
     marketingProfile: metrics[0] ?? null,
     orders: orders.map((o) => ({

@@ -39,6 +39,24 @@ export async function verifyLegacyUnsubscribeToken(email: string, token: string)
   return verifySignature(getUnsubscribeSecret(), email.toLowerCase(), token);
 }
 
+// Newsletter subscribers (lib/newsletter) have no account, so their links
+// name the subscriber row instead, under their own purpose prefix.
+const newsletterUnsubscribePayload = (subscriberId: string) => `newsletter-unsubscribe:${subscriberId}`;
+
+export async function createNewsletterUnsubscribeToken(subscriberId: string): Promise<string> {
+  return signValue(getUnsubscribeSecret(), newsletterUnsubscribePayload(subscriberId));
+}
+
+export async function verifyNewsletterUnsubscribeToken(subscriberId: string, token: string): Promise<boolean> {
+  return verifySignature(getUnsubscribeSecret(), newsletterUnsubscribePayload(subscriberId), token);
+}
+
+export async function buildNewsletterUnsubscribeUrls(subscriberId: string): Promise<{ page: string; oneClick: string }> {
+  const siteUrl = getSiteUrl();
+  const query = `s=${encodeURIComponent(subscriberId)}&t=${await createNewsletterUnsubscribeToken(subscriberId)}`;
+  return { page: `${siteUrl}/unsubscribe?${query}`, oneClick: `${siteUrl}/api/unsubscribe?${query}` };
+}
+
 export async function buildUnsubscribeUrls(userId: string): Promise<{ page: string; oneClick: string }> {
   const query = `u=${encodeURIComponent(userId)}&t=${await createUnsubscribeToken(userId)}`;
   const siteUrl = getSiteUrl();

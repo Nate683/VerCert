@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { Watermark } from "./Watermark";
+import { NEWSLETTER_DESCRIPTION, NEWSLETTER_NOTE } from "@/lib/newsletter/consent";
 import type { ContactContent } from "@/lib/site-content";
 
 // Placeholder values aren't real contact details yet — don't show them to customers.
@@ -101,12 +102,12 @@ export function Footer({ contact }: { contact: ContactContent }) {
           />
           <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Stay Informed</h4>
           <p className="mt-3 max-w-sm text-sm text-white/70">
-            Get exclusive offers, product launches, special promotions, and the latest VeriCert updates.
+            {NEWSLETTER_DESCRIPTION}
           </p>
           <div className="mt-4">
             <NewsletterSignup />
           </div>
-          <p className="mt-3 max-w-sm text-xs text-white/70">Sign up for promotional emails. Unsubscribe anytime.</p>
+          <p className="mt-3 max-w-sm text-xs text-white/70">{NEWSLETTER_NOTE}</p>
         </div>
 
         {/* One disclaimer row and one copyright row, nothing else. On the

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { setMarketingConsent } from "@/lib/users/store";
+import { syncNewsletterOptOut } from "@/lib/newsletter";
 import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   }
 
   const updated = await setMarketingConsent(user.id, body.marketingConsent, "account_settings");
+  if (!body.marketingConsent) await syncNewsletterOptOut(user.email, "account_settings");
   return NextResponse.json({
     marketingConsent: updated?.marketingConsent ?? body.marketingConsent,
     marketingConsentAt: updated?.marketingConsentAt ?? null,

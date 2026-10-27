@@ -7,7 +7,8 @@ import { query } from "@/lib/db";
 // state. An unpaid order can't be fulfilled without an address, so it's
 // cancelled rather than left pending. The IP recorded with each order's
 // research-use attestation goes too (the wording and time stay). Subscriptions
-// are cancelled and their shipping snapshot cleared.
+// are cancelled and their shipping snapshot cleared. The address leaves the
+// newsletter list entirely (its row is deleted, not just unsubscribed).
 export async function eraseCustomer(user: { id: string; email: string }): Promise<{ ordersAnonymized: number }> {
   const rows = await query<{ orders: number }>(
     `WITH anonymized AS (
@@ -38,6 +39,8 @@ export async function eraseCustomer(user: { id: string; email: string }): Promis
        DELETE FROM email_events WHERE user_id = $1 OR recipient = $2
      ), applications AS (
        DELETE FROM affiliate_applications WHERE lower(email) = $2 AND affiliate_id IS NULL
+     ), newsletter AS (
+       DELETE FROM newsletter_subscribers WHERE email = $2
      ), login_limits AS (
        DELETE FROM rate_limits WHERE bucket_key = 'login:account:' || $2
      ), account AS (
