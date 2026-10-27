@@ -32,6 +32,7 @@ const AUTH_PAGES = new Set([
   "/verify-email-change",
   "/two-factor",
   "/unsubscribe",
+  "/executive",
 ]);
 
 // Sections that handle their own sign-in. /command and /office are checked

@@ -11,6 +11,9 @@ export const loginSchema = z
     email: z.string().trim().toLowerCase().email(),
     password: z.string().min(1).max(200).optional(),
     portalCode: z.string().trim().max(20).optional(),
+    // Sent by the executive sign-in page (/executive), which signs in only
+    // the staff accounts.
+    audience: z.literal("executive").optional(),
   })
   .refine((data) => Boolean(data.password?.trim()) || Boolean(data.portalCode?.trim()), {
     message: "Password or affiliate code is required.",

@@ -39,8 +39,17 @@ function acknowledge() {
 }
 
 // The gate links to the Terms, so a visitor has to be able to read them before
-// agreeing: the legal pages are never covered.
-const UNGATED = new Set(["/terms", "/privacy-policy", "/refund-policy", "/shipping-policy", "/dashboard-policy"]);
+// agreeing: the legal pages are never covered. /two-factor is reached only by
+// an executive partway through signing in (from /executive, which has no
+// gate), so it must not stop them on a new device either.
+const UNGATED = new Set([
+  "/terms",
+  "/privacy-policy",
+  "/refund-policy",
+  "/shipping-policy",
+  "/dashboard-policy",
+  "/two-factor",
+]);
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';

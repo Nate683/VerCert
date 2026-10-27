@@ -12,8 +12,9 @@ import type { SaleBannerContent, ContactContent } from "@/lib/site-content";
 import { track } from "@/lib/track-client";
 import { useAuth } from "@/lib/auth-context";
 
-// The executive terminals (/command, /office) and the /hq shared workspace
-// render their own dedicated shell instead of the storefront header/footer.
+// The executive terminals (/command, /office), their sign-in page
+// (/executive) and the /hq shared workspace render their own dedicated shell
+// instead of the storefront header/footer.
 export function SiteChrome({
   saleBanner,
   contact,
@@ -26,7 +27,10 @@ export function SiteChrome({
   const pathname = usePathname();
   const { user, loading } = useAuth();
   const isExecutive =
-    pathname.startsWith("/command") || pathname.startsWith("/office") || pathname.startsWith("/hq");
+    pathname.startsWith("/command") ||
+    pathname.startsWith("/office") ||
+    pathname.startsWith("/executive") ||
+    pathname.startsWith("/hq");
 
   useEffect(() => {
     if (!isExecutive) track("page_view", { path: pathname });
@@ -37,7 +41,7 @@ export function SiteChrome({
   return (
     <>
       {/* Rendered inside this branch on purpose: the executive terminals
-          returned above, so /command, /office and /hq never see the gate. */}
+          returned above, so /command, /office, /executive and /hq never see the gate. */}
       <AgeGate />
       <ExecModeToggle />
       {saleBanner.active && saleBanner.message && (

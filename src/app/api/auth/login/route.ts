@@ -19,7 +19,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, loginSchema);
   if ("error" in parsed) return parsed.error;
-  const { email, password, portalCode } = parsed.data;
+  const { email, password, portalCode, audience } = parsed.data;
 
   // The per-IP limit above can be sidestepped by spreading guesses at one
   // account across many addresses; this caps attempts per account wherever
@@ -30,6 +30,13 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     windowMs: 15 * 60 * 1000,
   });
   if (!accountLimit.allowed) return rateLimitResponse(accountLimit.retryAfterSeconds);
+
+  // The executive page signs in only the two staff accounts. Anyone else gets
+  // the same answer as a wrong password, so the page confirms nothing.
+  const realm = getRealmForEmail(email);
+  if (audience === "executive" && (!realm || portalCode)) {
+    return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
+  }
 
   // Affiliate quick-login: a portal code stands in for a password. The code
   // must belong to an affiliate whose email matches what was entered, so a
@@ -56,7 +63,6 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   // First-ever login for a staff email provisions its account so there's no
   // separate signup step for executives.
-  const realm = getRealmForEmail(email);
   if (realm) await ensureStaffAccount(realm);
 
   const user = await getUserByEmail(email);
@@ -69,7 +75,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   // finishes signing in (enrolling an authenticator first if there isn't one).
   if (requiresTwoFactor(user)) {
     await startTwoFactorChallenge(user.id);
-    return NextResponse.json({ ok: true, twoFactorRequired: true });
+    // The executive page goes on to the account's own terminal.
+    const next = audience === "executive" && realm ? `/${realm}` : undefined;
+    return NextResponse.json({ ok: true, twoFactorRequired: true, next });
   }
 
   await setCustomerSessionCookie(user.id);
