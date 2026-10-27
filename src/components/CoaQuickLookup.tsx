@@ -5,7 +5,7 @@ import { useState } from "react";
 import { COA_LOOKUP_ENABLED, openCoaLookup } from "@/lib/coa-lookup";
 
 /**
- * Batch-number lookup: the emblem, the batch input and a gold Verify button.
+ * Lot-number lookup: the emblem, the lot-number input and a gold Verify button.
  * Every lookup on the site is this component, so they all submit to the one
  * handler in lib/coa-lookup.ts. It renders nothing while that handler's flag
  * is off.
@@ -32,7 +32,7 @@ export function CoaQuickLookup({ tone = "light", id = "coa-batch" }: { tone?: "l
           <Image src="/icon.png" alt="VeriCert" width={40} height={40} className="h-10 w-10" />
         </span>
         <label htmlFor={id} className="sr-only">
-          Batch number
+          Lot number
         </label>
         <input
           id={id}

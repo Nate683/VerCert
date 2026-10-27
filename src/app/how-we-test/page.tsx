@@ -15,7 +15,7 @@ const STAGES = [
   {
     step: "01",
     title: "Sampling",
-    body: "A representative sample is drawn from each production lot before any of it is packaged. Lots are never pooled — every batch number corresponds to one physical run of material.",
+    body: "A representative sample is drawn from each production lot before any of it is packaged. Lots are never pooled — every lot number corresponds to one physical run of material.",
   },
   {
     step: "02",
@@ -40,13 +40,13 @@ const STAGES = [
   {
     step: "06",
     title: "Publication",
-    body: "The full report is archived against its batch number and published here. It stays available permanently — including after that lot has sold out.",
+    body: "The full report is archived against its lot number and published here. It stays available permanently — including after that lot has sold out.",
   },
 ];
 
 const COA_FIELDS = [
   {
-    field: "Batch Number",
+    field: "Lot Number",
     meaning: "The specific production lot. It appears on your vial label and is the key to everything below.",
   },
   {
@@ -132,9 +132,9 @@ export default function HowWeTestPage() {
         {/* Shown only while batch lookups are enabled (lib/coa-lookup.ts). */}
         {COA_LOOKUP_ENABLED && (
           <>
-            <h2 className="font-serif text-3xl text-navy">Check Your Batch</h2>
+            <h2 className="font-serif text-3xl text-navy">Check Your Lot</h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
-              Enter the batch number from your vial label to open the testing
+              Enter the lot number from your vial label to open the testing
               laboratory&apos;s record for that lot.
             </p>
             <div className="mt-8">
@@ -146,7 +146,7 @@ export default function HowWeTestPage() {
         <div className={COA_LOOKUP_ENABLED ? "mt-16 border-t border-hairline pt-10" : ""}>
           <h3 className="font-serif text-xl text-navy">Still have a question?</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted">
-            If a figure on your certificate doesn&apos;t look right, or the batch
+            If a figure on your certificate doesn&apos;t look right, or the lot
             number won&apos;t resolve, tell us and we will look into it directly.
           </p>
           <div className="mt-6 flex flex-wrap gap-4">

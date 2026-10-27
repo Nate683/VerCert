@@ -224,7 +224,7 @@ export default async function AccountPage() {
       {COA_LOOKUP_ENABLED && (
         <section className="mt-12 border-t border-hairline pt-8">
           <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Certificate Lookup</h2>
-          <p className="mt-2 text-sm text-muted">Enter the batch number from a vial label to open its certificate of analysis.</p>
+          <p className="mt-2 text-sm text-muted">Enter the lot number from a vial label to open its certificate of analysis.</p>
           <div className="mt-4">
             <CoaQuickLookup id="account-coa-batch" />
           </div>

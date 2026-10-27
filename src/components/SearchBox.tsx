@@ -171,7 +171,7 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
                 <Image src="/icon.png" alt="" width={32} height={32} className="h-8 w-8" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm text-white">Verify batch {query.trim()}</span>
+                <span className="block truncate text-sm text-white">Verify lot {query.trim()}</span>
                 <span className="block truncate text-[11px] text-white/60">Opens the testing laboratory&apos;s record</span>
               </span>
             </button>

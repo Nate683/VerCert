@@ -38,7 +38,7 @@ export default function NotFound() {
             Looking for a certificate?
           </p>
           <p className="mt-2 text-sm text-muted">
-            Enter the batch number from your vial label.
+            Enter the lot number from your vial label.
           </p>
           <div className="mt-4">
             <CoaQuickLookup id="not-found-coa-batch" />

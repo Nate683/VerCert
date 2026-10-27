@@ -584,7 +584,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             <input
               value={form.batchNumbers}
               onChange={(e) => setForm((f) => ({ ...f, batchNumbers: e.target.value }))}
-              placeholder="Batch numbers, comma separated"
+              placeholder="Lot numbers, comma separated"
               className="input-field sm:col-span-2"
             />
             <textarea

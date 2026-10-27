@@ -208,7 +208,7 @@ export default async function ProductDetailPage({
               </Link>
             </div>
             <p className="mt-2 text-xs leading-relaxed text-muted">
-              Each batch is tested independently. Match the number on your vial
+              Each lot is tested independently. Match the number on your vial
               label to pull its certificate.
             </p>
             {product.batchNumbers.length > 0 ? (
@@ -232,7 +232,7 @@ export default async function ProductDetailPage({
                 ))}
               </ul>
             ) : (
-              <p className="mt-4 text-xs text-muted">Certificates are published as each batch clears testing.</p>
+              <p className="mt-4 text-xs text-muted">Certificates are published as each lot clears testing.</p>
             )}
             {/* Quick check for a vial already in hand; renders only while
                 batch lookups are enabled. */}

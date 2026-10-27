@@ -8,7 +8,7 @@ export const GET = withApiErrorHandling(async (request: Request) => {
   const { searchParams } = new URL(request.url);
   const batch = searchParams.get("batch")?.trim();
   if (!batch) {
-    return NextResponse.json({ error: "A batch number is required." }, { status: 400 });
+    return NextResponse.json({ error: "A lot number is required." }, { status: 400 });
   }
 
   const result = await lookupCoa(batch);

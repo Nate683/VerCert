@@ -541,7 +541,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
         <p className="text-xs uppercase tracking-[0.2em] text-white/40">Cost of Goods — Purchases</p>
         <form onSubmit={handleAddCogs} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <input value={cogsForm.productSlug} onChange={(e) => setCogsForm({ ...cogsForm, productSlug: e.target.value })} placeholder="Product slug" className="input-field" />
-          <input value={cogsForm.batchNumber} onChange={(e) => setCogsForm({ ...cogsForm, batchNumber: e.target.value })} placeholder="Batch number" className="input-field" />
+          <input value={cogsForm.batchNumber} onChange={(e) => setCogsForm({ ...cogsForm, batchNumber: e.target.value })} placeholder="Lot number" className="input-field" />
           <input value={cogsForm.supplier} onChange={(e) => setCogsForm({ ...cogsForm, supplier: e.target.value })} placeholder="Supplier" className="input-field" />
           <input required type="number" min="1" value={cogsForm.quantity} onChange={(e) => setCogsForm({ ...cogsForm, quantity: e.target.value })} placeholder="Quantity" className="input-field" />
           <input required type="number" step="0.01" min="0" value={cogsForm.purchasePriceUsd} onChange={(e) => setCogsForm({ ...cogsForm, purchasePriceUsd: e.target.value })} placeholder="Purchase price (per unit)" className="input-field" />

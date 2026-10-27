@@ -218,7 +218,7 @@ export default async function Home() {
             <VeriCertLogo className="h-14 w-auto" />
             <h2 className="mt-8 font-serif text-3xl text-white lg:text-4xl">Every Batch. Certified.</h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/80">
-              Already have a product in hand? Enter its batch number to pull the independent laboratory report.
+              Already have a product in hand? Enter its lot number to pull the independent laboratory report.
             </p>
             <div className="mt-8 w-full max-w-xl">
               <CoaQuickLookup tone="dark" id="home-coa-batch" />

@@ -104,7 +104,7 @@ export const GET = withApiErrorHandling(async (request: Request) => {
       ...expenses.map((e) => `${e.date},${e.category},${e.vendor ?? ""},${e.amount.toFixed(2)},${e.paymentMethod ?? ""},${(e.notes ?? "").replace(/,/g, ";")}`),
       "",
       "All COGS Entries",
-      "Date Received,Product,Batch,Supplier,Quantity,Purchase Price",
+      "Date Received,Product,Lot Number,Supplier,Quantity,Purchase Price",
       ...cogsEntries.map(
         (c) => `${c.dateReceived},${c.productSlug ?? ""},${c.batchNumber ?? ""},${c.supplier ?? ""},${c.quantity},${c.purchasePriceUsd.toFixed(2)}`
       ),

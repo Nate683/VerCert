@@ -59,7 +59,7 @@ export const DEFAULT_ABOUT: AboutContent = {
     },
     {
       title: "Traceability from Lot to Certificate",
-      body: "Every vial carries a batch number that maps to its certificate of analysis. Certificates come from the testing laboratory directly, so the chain from lot to document stays unbroken.",
+      body: "Every vial carries a lot number that maps to its certificate of analysis. Certificates come from the testing laboratory directly, so the chain from lot to document stays unbroken.",
     },
     {
       title: "Professional Reagent Standards",
@@ -80,16 +80,16 @@ export const DEFAULT_FAQ: FaqItem[] = [
     a: "Purity is quantified by reverse-phase HPLC and reported as an area percentage against a certified reference standard. Identity is separately confirmed using mass spectrometry.",
   },
   {
-    q: "Where do I find the batch number for my order?",
-    a: "The batch number is printed on the vial label. It's also shown next to each item on your order page and in your order confirmation email. The certificate of analysis for that batch is matched to it by that number.",
+    q: "Where do I find the lot number for my order?",
+    a: "The lot number is printed on the vial label. It's also shown next to each item on your order page and in your order confirmation email. The certificate of analysis for that lot is matched to it by that number.",
   },
   {
     q: "Who performs your testing?",
     a: "Testing is conducted by accredited third-party analytical laboratories that have no ownership or affiliation with VeriCert, ensuring the results are independent.",
   },
   {
-    q: "What if I can't find the certificate for my batch?",
-    a: "Contact us with your order reference and the batch number from your vial label, and we'll help you find it. Certificates are published as each batch clears testing.",
+    q: "What if I can't find the certificate for my lot?",
+    a: "Contact us with your order reference and the lot number from your vial label, and we'll help you find it. Certificates are published as each lot clears testing.",
   },
   {
     q: "Do you ship internationally?",
@@ -97,11 +97,11 @@ export const DEFAULT_FAQ: FaqItem[] = [
   },
   {
     q: "Can I request additional documentation, such as a safety data sheet?",
-    a: "Yes. Reach out via the Contact page with the product name and batch number, and we will provide any available supporting documentation.",
+    a: "Yes. Reach out via the Contact page with the product name and lot number, and we will provide any available supporting documentation.",
   },
   {
     q: "How can I verify the analytical documentation for a specific lot?",
-    a: "The batch number printed on each vial is how a certificate of analysis is matched to that batch. Each certificate reports the independent third-party testing performed on that batch, such as HPLC purity analysis and mass spectrometry identity confirmation. Certificates are published as each batch clears testing; if one isn't available yet for your batch, contact us with your order reference and batch number.",
+    a: "The lot number printed on each vial is how a certificate of analysis is matched to that lot. Each certificate reports the independent third-party testing performed on that lot, such as HPLC purity analysis and mass spectrometry identity confirmation. Certificates are published as each lot clears testing; if one isn't available yet for your lot, contact us with your order reference and lot number.",
   },
   {
     q: "Do you offer tailored distribution logistics for high-volume research institutions?",

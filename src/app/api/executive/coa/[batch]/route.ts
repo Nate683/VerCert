@@ -24,7 +24,7 @@ export const POST = withApiErrorHandling(async (
   const { batch } = await params;
   const known = await getAllBatchNumbers();
   if (!known.some((b) => b.batch === batch)) {
-    return NextResponse.json({ error: "Unknown batch number." }, { status: 404 });
+    return NextResponse.json({ error: "Unknown lot number." }, { status: 404 });
   }
 
   const formData = await request.formData();

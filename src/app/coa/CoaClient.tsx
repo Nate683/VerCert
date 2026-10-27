@@ -50,7 +50,7 @@ function CoaLookupForm() {
     <div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:flex-row">
         <label htmlFor="coa-lookup" className="sr-only">
-          Batch number
+          Lot number
         </label>
         <input
           id="coa-lookup"
@@ -82,9 +82,9 @@ function CoaLookupForm() {
 
       {!loading && result === null && (
         <div className="mt-10 border border-hairline p-8 text-center">
-          <p className="font-serif text-xl text-navy">No record for that batch</p>
+          <p className="font-serif text-xl text-navy">No record for that lot number</p>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted">
-            Nothing is filed under &ldquo;{searched}&rdquo;. Batch numbers are
+            Nothing is filed under &ldquo;{searched}&rdquo;. Lot numbers are
             printed on the vial label and look like{" "}
             <span className="font-mono text-muted">VC-BPC-2411</span> —
             check for a mistyped character or a missing hyphen.
@@ -114,7 +114,7 @@ function CoaLookupForm() {
                 Certificate of Analysis
               </p>
               <h2 className="mt-2 font-serif text-2xl text-navy">{result.productName}</h2>
-              <p className="mt-1 font-mono text-xs text-muted">Batch {result.batchNumber}</p>
+              <p className="mt-1 font-mono text-xs text-muted">Lot {result.batchNumber}</p>
               <p className="mt-3 font-mono text-3xl text-gold-ink">
                 {result.purityPercent !== null ? `${result.purityPercent.toFixed(1)}%` : "—"}
                 <span className="ml-2 font-sans text-xs uppercase tracking-[0.18em] text-muted">
@@ -172,7 +172,7 @@ function CoaLookupForm() {
           </div>
 
           <p className="mt-6 text-xs leading-relaxed text-muted">
-            This certificate reflects analysis of the referenced batch only.
+            This certificate reflects analysis of the referenced lot only.
             For laboratory research use. Not for human or veterinary use.
           </p>
 
