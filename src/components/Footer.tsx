@@ -95,7 +95,9 @@ export function Footer({ contact }: { contact: ContactContent }) {
             Watermark: the one-colour gray lockup at 90% of its former size
             (45.5rem, capped so it stays clear of the form column on narrower
             desktops); hidden on phones and tablets. */}
-        <div className="relative mt-16 border-t border-white/10 py-10">
+        {/* id: the pre-launch banner's "Join our list" link lands here; scroll-mt
+            keeps it clear of the sticky header. */}
+        <div id="newsletter" className="relative mt-16 scroll-mt-28 border-t border-white/10 py-10">
           <Watermark
             src="/VeriCert-Peptides-One-Color-Gray.svg"
             className="v-watermark-footer right-0 top-1/2 hidden w-[40.95rem] max-w-[calc((100%-28rem)*0.9)] -translate-y-1/2 lg:block"

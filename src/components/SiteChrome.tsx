@@ -7,6 +7,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { ExecModeToggle } from "./ExecModeToggle";
 import { TickerBanner } from "./TickerBanner";
+import { PrelaunchBanner } from "./PrelaunchBanner";
 import { AgeGate } from "./AgeGate";
 import type { SaleBannerContent, ContactContent } from "@/lib/site-content";
 import { track } from "@/lib/track-client";
@@ -68,6 +69,7 @@ export function SiteChrome({
         </div>
       )}
       <TickerBanner />
+      <PrelaunchBanner />
       <Header />
       <main className="flex-1">{children}</main>
       <Footer contact={contact} />
