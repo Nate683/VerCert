@@ -68,7 +68,7 @@ function SigningInAs({ email }: { email: string }) {
   return (
     <p className="mt-8 text-center text-xs text-muted">
       Signing in as {email}.{" "}
-      <Link href="/login" className="underline-offset-4 hover:text-gold-ink hover:underline">
+      <Link href="/executive" className="underline-offset-4 hover:text-gold-ink hover:underline">
         Use a different account
       </Link>
     </p>

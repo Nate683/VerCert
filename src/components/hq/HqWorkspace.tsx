@@ -25,7 +25,7 @@ export function HqWorkspace({ member }: { member: HqMember }) {
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    router.push(member.kind === "executive" ? "/executive" : "/login");
     router.refresh();
   }
 

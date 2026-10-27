@@ -46,10 +46,10 @@ export function IdleTimeout() {
   const pathname = usePathname();
   const active = Boolean(user && (user.role || pathname === "/hq" || pathname.startsWith("/hq/")));
   if (!active) return null;
-  return <IdleClock />;
+  return <IdleClock executive={Boolean(user?.role)} />;
 }
 
-function IdleClock() {
+function IdleClock({ executive }: { executive: boolean }) {
   const pathname = usePathname();
   const [remaining, setRemaining] = useState<number>(STAFF_IDLE_TIMEOUT_MS);
   const deadlineRef = useRef<number | null>(null);
@@ -67,9 +67,10 @@ function IdleClock() {
       // The session expires on its own; leaving the page is what matters.
     }
     // A full load, not router.push: it clears the dashboards' data out of memory.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.assign(`/login?next=${encodeURIComponent(pathname)}&reason=idle`);
-  }, [pathname]);
+    window.location.assign(
+      executive ? "/executive?reason=idle" : `/login?next=${encodeURIComponent(pathname)}&reason=idle`
+    );
+  }, [pathname, executive]);
 
   const extend = useCallback(
     async (force: boolean) => {

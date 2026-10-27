@@ -40,5 +40,6 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     resetTokenExpiresAt: undefined,
   });
 
-  return NextResponse.json({ ok: true });
+  // Executives can't sign in at /login, so send them back to their own page.
+  return NextResponse.json({ ok: true, next: user.role ? "/executive" : "/login" });
 });

@@ -164,7 +164,7 @@ export function ExecutiveTerminal({
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    router.push("/executive");
     router.refresh();
   }
 

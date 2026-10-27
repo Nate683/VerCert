@@ -19,9 +19,10 @@ export default async function TwoFactorPage({
   const { next: rawNext } = await searchParams;
   const next = safeNextPath(typeof rawNext === "string" ? rawNext : null) ?? "/account";
 
-  // Only reachable between a correct password and a finished sign-in.
+  // Only reachable between a correct password and a finished sign-in, which
+  // for an executive starts at /executive.
   const user = await getTwoFactorChallengeUser();
-  if (!user) redirect(`/login?next=${encodeURIComponent(next)}`);
+  if (!user) redirect("/executive");
 
   const mode = (await isTwoFactorEnabled(user.id)) ? "verify" : "enroll";
   return <TwoFactorClient mode={mode} email={user.email} next={next} />;

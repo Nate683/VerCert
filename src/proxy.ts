@@ -81,7 +81,7 @@ export async function proxy(request: NextRequest) {
     // mark is sent back to sign in before the page even runs.
     const session = await verifyCustomerSessionToken(token);
     if (!session?.twoFactorVerified) {
-      return NextResponse.redirect(new URL(`/login?next=/${realm}`, request.url));
+      return NextResponse.redirect(new URL("/executive", request.url));
     }
     return NextResponse.next();
   }

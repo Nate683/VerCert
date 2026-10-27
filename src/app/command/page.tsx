@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default async function CommandPage() {
   const customer = await getCurrentCustomer();
-  if (customer?.role !== "command") redirect("/login?next=/command");
+  if (customer?.role !== "command") redirect("/executive");
 
   const identity = EXECUTIVE_IDENTITY.command;
   return (

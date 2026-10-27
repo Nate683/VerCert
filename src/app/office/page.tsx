@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default async function OfficePage() {
   const customer = await getCurrentCustomer();
-  if (customer?.role !== "office") redirect("/login?next=/office");
+  if (customer?.role !== "office") redirect("/executive");
 
   const identity = EXECUTIVE_IDENTITY.office;
   return (

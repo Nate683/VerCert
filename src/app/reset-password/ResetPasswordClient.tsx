@@ -27,7 +27,7 @@ function ResetPasswordForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "This reset link is invalid or has expired.");
       setDone(true);
-      setTimeout(() => router.push("/login"), 2000);
+      setTimeout(() => router.push(data.next ?? "/login"), 2000);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "This reset link is invalid or has expired."

@@ -37,6 +37,15 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   if (audience === "executive" && (!realm || portalCode)) {
     return NextResponse.json({ error: "Incorrect email or password." }, { status: 401 });
   }
+  // And the staff accounts sign in only there — never on /login or the
+  // partner form. Refused before the password is checked and before
+  // ensureStaffAccount runs, so an attempt here can't touch the account.
+  if (realm && audience !== "executive") {
+    return NextResponse.json(
+      { error: "This account signs in on the executive sign-in page." },
+      { status: 401 }
+    );
+  }
 
   // Affiliate quick-login: a portal code stands in for a password. The code
   // must belong to an affiliate whose email matches what was entered, so a
@@ -76,7 +85,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   if (requiresTwoFactor(user)) {
     await startTwoFactorChallenge(user.id);
     // The executive page goes on to the account's own terminal.
-    const next = audience === "executive" && realm ? `/${realm}` : undefined;
+    const next = realm ? `/${realm}` : undefined;
     return NextResponse.json({ ok: true, twoFactorRequired: true, next });
   }
 
