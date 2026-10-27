@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { getCurrentCustomer } from "@/lib/users/current-user";
-import { getAffiliateByEmail, computeAffiliateSummaries, listPayouts, getNextTier, getTierInfo } from "@/lib/affiliates";
+import {
+  getAffiliateByEmail,
+  computeAffiliateSummaries,
+  isCreditedTo,
+  listPayouts,
+  getNextTier,
+  getTierInfo,
+} from "@/lib/affiliates";
 import { listOrders } from "@/lib/orders/store";
 import { listPromoCodes } from "@/lib/promotions";
 import { listResources } from "@/lib/hq";
@@ -91,7 +98,7 @@ export default async function PartnerPage({
     ]);
     const [summary] = computeAffiliateSummaries([affiliate], orders, promoCodes, payouts);
 
-    const driven = orders.filter((o) => o.promoCodeId && o.promoCodeId === affiliate.promoCodeId && isQualifying(o));
+    const driven = orders.filter((o) => isCreditedTo(o, affiliate) && isQualifying(o));
 
     // Personal best: highest single calendar-month revenue driven.
     const monthTotals = new Map<string, number>();

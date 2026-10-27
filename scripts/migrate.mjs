@@ -615,6 +615,12 @@ async function main() {
   `;
   await sql`CREATE INDEX IF NOT EXISTS sign_in_links_affiliate_id_idx ON sign_in_links (affiliate_id)`;
 
+  // The affiliate an order is credited to, fixed when it's placed: the promo
+  // code's affiliate, or else the one the customer signed up through by
+  // referral link. Older orders leave it empty and are matched by promo code.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS affiliate_id TEXT`;
+  await sql`CREATE INDEX IF NOT EXISTS orders_affiliate_id_idx ON orders (affiliate_id)`;
+
   console.log("[db:migrate] Schema is up to date.");
 }
 

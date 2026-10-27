@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { listProducts, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import { createOrder, updateOrder } from "@/lib/orders/store";
 import { validatePromoCode } from "@/lib/promotions";
+import { creditedAffiliateId } from "@/lib/affiliates";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
 import { isPaymentMethodAvailable } from "@/lib/payments/availability";
 import { sendOrderConfirmationEmail, sendAdminNotification } from "@/lib/email";
@@ -137,6 +138,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   }
 
   const total = Math.max(0, subtotal - discountAmount);
+  const affiliateId = await creditedAffiliateId({ promoAffiliateId, customer: currentCustomer });
 
   const order = await createOrder({
     paymentMethod,
@@ -151,6 +153,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     discountAmount,
     freeShipping,
     researchAttestation: { text: RESEARCH_ATTESTATION, at: new Date().toISOString(), ip },
+    affiliateId,
   });
 
   // Each subscribed line becomes a subscription; this order is its first

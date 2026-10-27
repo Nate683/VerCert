@@ -6,6 +6,14 @@ function isQualifying(order: Order): boolean {
   return Boolean(order.paidAt) && order.status !== "cancelled" && !order.refundedAt;
 }
 
+// Whether an order counts toward this affiliate. Orders record who they're
+// credited to (a promo code's affiliate, or the customer's referrer); ones
+// placed before that was recorded are matched by promo code, as they were.
+export function isCreditedTo(order: Order, affiliate: Pick<Affiliate, "id" | "promoCodeId">): boolean {
+  if (order.affiliateId) return order.affiliateId === affiliate.id;
+  return Boolean(order.promoCodeId) && order.promoCodeId === affiliate.promoCodeId;
+}
+
 function commissionForOrder(affiliate: Affiliate, order: Order): number {
   if (affiliate.commissionType === "flat") return affiliate.commissionFlatAmount;
   return order.total * (affiliate.commissionRate / 100);
@@ -23,9 +31,7 @@ export function computeAffiliateSummaries(
   return affiliates
     .map((affiliate) => {
       const code = affiliate.promoCodeId ? codeById.get(affiliate.promoCodeId) : undefined;
-      const driven = orders.filter(
-        (o) => o.promoCodeId && o.promoCodeId === affiliate.promoCodeId && isQualifying(o)
-      );
+      const driven = orders.filter((o) => isCreditedTo(o, affiliate) && isQualifying(o));
       const ytdDriven = driven.filter((o) => new Date(o.paidAt!).getFullYear() === now.getFullYear());
 
       const grossRevenue = driven.reduce((sum, o) => sum + o.total, 0);

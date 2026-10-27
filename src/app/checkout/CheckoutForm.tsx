@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart, cartLineKey } from "@/lib/cart-context";
@@ -62,10 +62,13 @@ export function CheckoutForm({
   initialEmail,
   initialAddress,
   bankTransferAvailable,
+  referralPromoCode,
 }: {
   initialEmail: string;
   initialAddress?: SavedAddress;
   bankTransferAvailable: boolean;
+  /** The referring affiliate's code, applied for the customer once the cart has loaded. */
+  referralPromoCode?: string;
 }) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
@@ -128,8 +131,10 @@ export function CheckoutForm({
     setFieldErrors((prev) => (prev[name] ? { ...prev, [name]: undefined } : prev));
   }
 
-  async function handleApplyPromo() {
-    if (!promoInput.trim() || promoChecking) return;
+  // A silent attempt (the referral code) shows no error if the code doesn't
+  // apply to this order — the affiliate is still credited without it.
+  async function applyPromo(code: string, { silent = false } = {}) {
+    if (!code.trim() || promoChecking) return;
     setPromoChecking(true);
     setPromoError(null);
     try {
@@ -137,7 +142,7 @@ export function CheckoutForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code: promoInput.trim(),
+          code: code.trim(),
           items: items.map((item) => ({
             slug: item.slug,
             sizeLabel: item.sizeLabel,
@@ -148,7 +153,7 @@ export function CheckoutForm({
       const data = await res.json();
       if (!res.ok || !data.valid) {
         setAppliedPromo(null);
-        setPromoError(data.message ?? data.error ?? "That code isn't valid for this order.");
+        if (!silent) setPromoError(data.message ?? data.error ?? "That code isn't valid for this order.");
         return;
       }
       setAppliedPromo({
@@ -157,11 +162,24 @@ export function CheckoutForm({
         freeShipping: data.freeShipping,
       });
     } catch {
-      setPromoError("Couldn't reach the server. Check your connection and try again.");
+      if (!silent) setPromoError("Couldn't reach the server. Check your connection and try again.");
     } finally {
       setPromoChecking(false);
     }
   }
+
+  function handleApplyPromo() {
+    void applyPromo(promoInput);
+  }
+
+  // Once, when the cart is there to price it against.
+  const referralTried = useRef(false);
+  useEffect(() => {
+    if (!referralPromoCode || referralTried.current || items.length === 0) return;
+    referralTried.current = true;
+    void applyPromo(referralPromoCode, { silent: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a one-time attempt once items exist
+  }, [referralPromoCode, items.length]);
 
   function handleRemovePromo() {
     setAppliedPromo(null);

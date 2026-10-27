@@ -1,5 +1,7 @@
 import { getProductBySlug, isOnSale, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import { createOrder } from "@/lib/orders/store";
+import { creditedAffiliateId } from "@/lib/affiliates/referral";
+import { getUserById } from "@/lib/users/store";
 import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
 import { findInsufficientStock } from "@/lib/inventory";
 import { sendOrderConfirmationEmail, sendTransactionalEmail, sendAdminNotification } from "@/lib/email";
@@ -90,6 +92,8 @@ async function runOne(sub: Subscription, now: Date): Promise<RunResult> {
     // Accepted when the customer subscribed, and it covers every delivery.
     researchAttestation: { text: RESEARCH_ATTESTATION, at: sub.createdAt },
     subscriptionId: sub.id,
+    // A renewal is credited to the customer's referrer like any other order.
+    affiliateId: await creditedAffiliateId({ customer: await getUserById(sub.customerId) }),
   });
 
   // The next one is due one interval after this one was due, so a run that

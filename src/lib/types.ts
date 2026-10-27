@@ -175,6 +175,10 @@ export type Order = {
   researchAttestation?: { text: string; at: string; ip?: string };
   // Set on orders created by a subscription run.
   subscriptionId?: string;
+  // The affiliate credited with this order (see lib/affiliates/referral.ts).
+  // Absent on orders placed before it was recorded; those are credited by
+  // promo code.
+  affiliateId?: string;
 };
 
 export type RefundReasonCode =

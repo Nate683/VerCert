@@ -13,7 +13,8 @@ export {
   getAllPayouts,
   type CreateAffiliateInput,
 } from "./store";
-export { computeAffiliateSummaries } from "./stats";
+export { computeAffiliateSummaries, isCreditedTo } from "./stats";
+export { getReferringAffiliate, creditedAffiliateId } from "./referral";
 export { AFFILIATE_TIERS, getTierInfo, getTierRank, getNextTier } from "./tiers";
 export { issueAffiliateSetPasswordToken, ensureAffiliateAccount } from "./access";
 export {
