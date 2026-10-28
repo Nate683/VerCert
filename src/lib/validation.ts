@@ -2,6 +2,7 @@ import { z } from "zod";
 import { NextResponse } from "next/server";
 import { HEARD_ABOUT_VALUES } from "@/lib/marketing/heard-about";
 import { PASSWORD_MAX_LENGTH } from "@/lib/users/password-policy";
+import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
 
 // Shared zod schemas for the highest-risk request bodies (auth + money
 // paths). Parse with `parseBody` to get a consistent 400 response shape.
@@ -21,13 +22,31 @@ export const loginSchema = z
 
 // Registration asks only for what an account needs. Shipping address comes at
 // first checkout, and there is deliberately no date of birth, ID or free-text
-// use-case field — age is the age-gate attestation.
+// use-case field: the research category is a fixed, self-reported list, and
+// age is the age gate plus the acknowledgment ticked on the form.
 export const registerSchema = z.object({
   firstName: z.string().trim().min(1, "Enter your first name.").max(100),
   lastName: z.string().trim().min(1, "Enter your last name.").max(100),
   email: z.string().trim().toLowerCase().email(),
   // Length, common-password and personal-word rules: passwordProblem().
   password: z.string().min(1, "Choose a password.").max(PASSWORD_MAX_LENGTH),
+  researchCategory: z.enum(RESEARCH_CATEGORIES, { error: "Select your research category." }),
+  // Normalised to E.164. Storing it never opts anyone in to texts.
+  phone: z
+    .string({ error: "Enter a valid phone number." })
+    .max(30, "Enter a valid phone number.")
+    .transform((value, ctx) => {
+      const phone = normalizePhone(value);
+      if (!phone) {
+        ctx.addIssue({ code: "custom", message: "Enter a valid phone number." });
+        return z.NEVER;
+      }
+      return phone;
+    }),
+  // The statement above Create Account must be ticked; the server records it.
+  acknowledgment: z.literal(true, {
+    error: "Confirm the age and research-use statement to create your account.",
+  }),
   company: z.string().trim().max(200).optional(),
   heardAbout: z.enum(HEARD_ABOUT_VALUES).optional(),
   // Absent means no: consent is only ever what the form actually sent.

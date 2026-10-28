@@ -497,6 +497,12 @@ async function main() {
   // When the visitor accepted the 21+ age gate — the attestation itself; a
   // date of birth is never collected.
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS age_attested_at TEXT`;
+  // Self-reported research category, and the registration acknowledgment
+  // exactly as worded when it was ticked (with when). Nullable: accounts
+  // created before the form asked for them have none.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS research_category TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_ack_text TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_ack_at TEXT`;
   // Marketing attribution: the affiliate credited with the account, and the
   // first-visit source (referral code, UTM tags, referring site) as JSON.
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS affiliate_id TEXT`;

@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { safeNextPath } from "@/lib/safe-next";
 import { PasswordField } from "@/components/PasswordField";
 import { COA_LOOKUP_ENABLED } from "@/lib/coa-lookup";
+import { REGISTRATION_ACKNOWLEDGMENT, RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
 
 // What an account opens up. Every line is something the site does today;
 // keep it that way when editing. The certificate line depends on the batch
@@ -31,11 +32,36 @@ const ALL_BENEFITS = [
   },
   {
     title: "Faster checkout, your data in your hands",
-    body: "Save a shipping address for next time. Download everything we hold about you, or delete your account, from your account page.",
+    body: "Manage your saved information and account preferences securely through your customer dashboard.",
     icon: "M5 12l4 4L19 6",
   },
 ];
 const ACCOUNT_BENEFITS = ALL_BENEFITS.filter((b) => !b.needsCoaLookup || COA_LOOKUP_ENABLED);
+
+const POLICY_LINKS: Record<string, string> = {
+  "Terms of Sale": "/terms",
+  "Privacy Policy": "/privacy-policy",
+};
+
+// The stored wording, with the two policy names turned into links — what the
+// customer reads is exactly what the account records.
+function AcknowledgmentText() {
+  return REGISTRATION_ACKNOWLEDGMENT.split(/(Terms of Sale|Privacy Policy)/).map((part, i) =>
+    POLICY_LINKS[part] ? (
+      <Link
+        key={i}
+        href={POLICY_LINKS[part]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-gold-ink underline underline-offset-2 hover:text-navy"
+      >
+        {part}
+      </Link>
+    ) : (
+      part
+    )
+  );
+}
 
 function RegisterForm() {
   const router = useRouter();
@@ -45,7 +71,10 @@ function RegisterForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [marketingConsent, setMarketingConsent] = useState(true);
+  const [researchCategory, setResearchCategory] = useState("");
+  const [phone, setPhone] = useState("");
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
   // No affiliate option on the form itself: an invite link
   // (/register?affiliate=1&code=…, also via /signup) is the way in, and only
   // then is the invite code shown.
@@ -72,6 +101,9 @@ function RegisterForm() {
           lastName,
           email,
           password,
+          researchCategory,
+          phone,
+          acknowledgment: acknowledged,
           marketingConsent,
           isAffiliate: asAffiliate,
           inviteCode: asAffiliate ? inviteCode : undefined,
@@ -93,6 +125,11 @@ function RegisterForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // The same check the server makes, so a typo is caught before the request.
+    if (!normalizePhone(phone)) {
+      setError("Enter a valid phone number, e.g. (555) 123-4567, or +44 20 7946 0958 outside the US.");
+      return;
+    }
     await submit(isAffiliate);
   }
 
@@ -109,8 +146,8 @@ function RegisterForm() {
           Open the full catalog
         </h1>
         <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
-          A free account is how you buy from VeriCert. It takes a minute: your name, email, and a
-          password. We ask for a shipping address only when you check out.
+          Create your free VeriCert research account to access our catalog, view available compounds
+          and pricing, and manage your research orders.
         </p>
 
         <ul className="mt-8 space-y-6">
@@ -168,6 +205,40 @@ function RegisterForm() {
             autoComplete="email"
             className="input-field-light"
           />
+          <div>
+            <label htmlFor="register-research-category" className="mb-1.5 block text-xs text-muted">
+              Researcher / Business Type*
+            </label>
+            <select
+              id="register-research-category"
+              required
+              value={researchCategory}
+              onChange={(e) => setResearchCategory(e.target.value)}
+              className={`input-field-light ${researchCategory ? "" : "text-muted/70"}`}
+            >
+              <option value="" disabled>
+                Select your research category
+              </option>
+              {RESEARCH_CATEGORIES.map((category) => (
+                <option key={category} value={category} className="text-navy">
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+          <input
+            id="register-phone"
+            required
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Phone number"
+            aria-label="Phone number"
+            autoComplete="tel"
+            inputMode="tel"
+            maxLength={30}
+            className="input-field-light"
+          />
           <PasswordField
             id="register-password"
             value={password}
@@ -210,6 +281,19 @@ function RegisterForm() {
               )}
             </div>
           )}
+          <label className="flex cursor-pointer items-start gap-3 text-xs leading-relaxed text-muted">
+            <input
+              id="register-acknowledgment"
+              type="checkbox"
+              required
+              checked={acknowledged}
+              onChange={(e) => setAcknowledged(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-gold"
+            />
+            <span>
+              <AcknowledgmentText />
+            </span>
+          </label>
           <button
             type="submit"
             disabled={submitting}
@@ -217,17 +301,6 @@ function RegisterForm() {
           >
             {submitting ? "Creating Account..." : "Create Account"}
           </button>
-          <p className="text-center text-xs leading-relaxed text-muted">
-            By creating an account you confirm you are 21 or older and agree to our{" "}
-            <Link href="/terms" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-gold-ink">
-              Terms of Sale
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-gold-ink">
-              Privacy Policy
-            </Link>
-            .
-          </p>
         </form>
 
         <p className="mt-4 text-center text-xs text-muted">

@@ -267,6 +267,12 @@ export type Customer = {
   heardAbout?: string; // a HEARD_ABOUT_OPTIONS value
   // When the visitor accepted the 21+ age gate. No date of birth is collected.
   ageAttestedAt?: string;
+  // Self-reported at registration (a RESEARCH_CATEGORIES value), and the
+  // registration acknowledgment exactly as worded when it was ticked. Absent
+  // on accounts created before these were asked.
+  researchCategory?: string;
+  registrationAckText?: string;
+  registrationAckAt?: string;
   // The affiliate credited with the account (their referral link at signup,
   // or their promo code on a first order), and the first-visit source.
   affiliateId?: string;

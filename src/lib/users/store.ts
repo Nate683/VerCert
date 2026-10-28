@@ -35,6 +35,9 @@ type UserRow = {
   phone: string | null;
   sms_opt_in: boolean;
   age_attested_at: string | null;
+  research_category: string | null;
+  registration_ack_text: string | null;
+  registration_ack_at: string | null;
   affiliate_id: string | null;
   attribution: string | null;
 };
@@ -79,6 +82,9 @@ function rowToUser(row: UserRow): Customer {
     phone: row.phone ?? undefined,
     smsOptIn: Boolean(row.sms_opt_in),
     ageAttestedAt: row.age_attested_at ?? undefined,
+    researchCategory: row.research_category ?? undefined,
+    registrationAckText: row.registration_ack_text ?? undefined,
+    registrationAckAt: row.registration_ack_at ?? undefined,
     affiliateId: row.affiliate_id ?? undefined,
     attribution: parseAttribution(row.attribution),
   };
@@ -102,6 +108,9 @@ export type CreateUserInput = {
   verificationToken: string;
   verificationTokenExpiresAt: string;
   ageAttestedAt?: string;
+  researchCategory?: string;
+  registrationAckText?: string;
+  registrationAckAt?: string;
   affiliateId?: string;
   attribution?: Attribution;
 };
@@ -137,6 +146,9 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
     verificationToken: input.verificationToken,
     verificationTokenExpiresAt: input.verificationTokenExpiresAt,
     ageAttestedAt: input.ageAttestedAt,
+    researchCategory: input.researchCategory,
+    registrationAckText: input.registrationAckText,
+    registrationAckAt: input.registrationAckAt,
     affiliateId: input.affiliateId,
     attribution: input.attribution,
   };
@@ -146,8 +158,8 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
       (id, email, name, first_name, last_name, company, heard_about, password_hash, marketing_consent,
        marketing_consent_at, marketing_consent_source,
        sms_opt_in, phone, email_verified, created_at, verification_token, verification_token_expires_at,
-       age_attested_at, affiliate_id, attribution)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
+       age_attested_at, research_category, registration_ack_text, registration_ack_at, affiliate_id, attribution)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)`,
     [
       user.id,
       user.email,
@@ -167,6 +179,9 @@ export async function createUser(input: CreateUserInput): Promise<Customer> {
       user.verificationToken ?? null,
       user.verificationTokenExpiresAt ?? null,
       user.ageAttestedAt ?? null,
+      user.researchCategory ?? null,
+      user.registrationAckText ?? null,
+      user.registrationAckAt ?? null,
       user.affiliateId ?? null,
       user.attribution ? JSON.stringify(user.attribution) : null,
     ]

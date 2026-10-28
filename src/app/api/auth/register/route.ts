@@ -17,6 +17,7 @@ import {
 import { ATTRIBUTION_COOKIE, decodeAttribution } from "@/lib/marketing/attribution";
 import { AGE_GATE_COOKIE } from "@/lib/age-gate";
 import { registerSchema, parseBody } from "@/lib/validation";
+import { REGISTRATION_ACKNOWLEDGMENT } from "@/lib/users/registration";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { logActivity } from "@/lib/activity-log";
@@ -32,8 +33,21 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, registerSchema);
   if ("error" in parsed) return parsed.error;
-  const { firstName, lastName, email, password, company, heardAbout, marketingConsent, isAffiliate, inviteCode } =
-    parsed.data;
+  // researchCategory, phone and acknowledgment are required by the schema, so
+  // a request that skips the form fails here exactly as the form would.
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    researchCategory,
+    phone,
+    company,
+    heardAbout,
+    marketingConsent,
+    isAffiliate,
+    inviteCode,
+  } = parsed.data;
 
   const weakPassword = await passwordProblem(password, { email, firstName, lastName });
   if (weakPassword) return NextResponse.json({ error: weakPassword }, { status: 400 });
@@ -95,6 +109,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const name = `${firstName} ${lastName}`;
   const verificationToken = generateToken();
+  const acceptedAt = new Date().toISOString();
   const user = await createUser({
     email,
     name,
@@ -102,12 +117,17 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     lastName,
     company: company || undefined,
     heardAbout,
+    researchCategory,
+    // Contact only: smsOptIn stays false, so no text is ever sent to it.
+    phone,
     passwordHash: await hashPassword(password),
     marketingConsent: marketingConsent === true,
     marketingConsentSource: "registration",
     verificationToken,
     verificationTokenExpiresAt: new Date(Date.now() + VERIFICATION_TTL_MS).toISOString(),
-    ageAttestedAt: new Date().toISOString(),
+    ageAttestedAt: acceptedAt,
+    registrationAckText: REGISTRATION_ACKNOWLEDGMENT,
+    registrationAckAt: acceptedAt,
     affiliateId: referrer?.id,
     attribution,
   });
