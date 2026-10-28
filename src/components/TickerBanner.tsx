@@ -1,16 +1,14 @@
 import { VialGlyph } from "./VialGlyph";
 
-// Owner-approved phrases only (October 18 2026). Claims such as ISO/IEC 17025
-// accreditation, sterility incubation, fentanyl screening, a minimum purity,
-// 24-hour dispatch and cloud temperature logging were cut pending
-// verification; don't add them back.
+// Owner's list of October 27 2026, cut to the phrases the system can back up.
+// The testing and handling phrases (every lot independently tested, 99.0%
+// minimum purity, certificate verification, elite protocol, sterility and
+// endotoxin, heavy metals and fentanyl, TFA and residual solvents, identity/
+// purity/quantity, lot-specific certificates, cold storage, protective
+// packaging) are held back until certificates and handling records exist to
+// support them; don't add them back before then.
 const ITEMS = [
-  "Independent third-party testing on every batch lot",
-  "Certificate of analysis available for every lot number",
-  "RP-HPLC purity and mass spectrometry identity confirmation",
-  "Cold storage maintained prior to dispatch",
-  "Temperature-stable packaging on every shipment",
-  "Tracked shipping · Dispatch within 1–2 business days",
+  "U.S.-based customer service & order support",
 ];
 
 // The track holds two identical runs and is translated by exactly -50%, so
