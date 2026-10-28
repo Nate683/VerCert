@@ -33,8 +33,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, registerSchema);
   if ("error" in parsed) return parsed.error;
-  // researchCategory, phone and acknowledgment are required by the schema, so
-  // a request that skips the form fails here exactly as the form would.
+  // Phone and acknowledgment are required by the schema, and the research
+  // category below (except for a valid affiliate invite), so a request that
+  // skips the form fails exactly as the form would.
   const {
     firstName,
     lastName,
@@ -101,6 +102,12 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     }
   }
 
+  // Affiliates aren't asked for a research category; everyone else must pick
+  // one. An invalid invite code was refused above, so inviteRow is reliable.
+  if (!inviteRow && !researchCategory) {
+    return NextResponse.json({ error: "Select your research category." }, { status: 400 });
+  }
+
   // Where the visitor first came from, recorded by the proxy on arrival. A
   // referral code only credits an active affiliate, and never applies to
   // someone signing up as an affiliate themselves.
@@ -117,7 +124,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     lastName,
     company: company || undefined,
     heardAbout,
-    researchCategory,
+    researchCategory: inviteRow ? undefined : researchCategory,
     // Contact only: smsOptIn stays false, so no text is ever sent to it.
     phone,
     passwordHash: await hashPassword(password),

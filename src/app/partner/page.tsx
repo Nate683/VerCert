@@ -14,6 +14,7 @@ import { listResources } from "@/lib/hq";
 import type { Customer, Order } from "@/lib/types";
 import { SetPasswordCard } from "./SetPasswordCard";
 import { PartnerSignIn } from "./PartnerSignIn";
+import { PartnerAcknowledgment } from "./PartnerAcknowledgment";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Partner Portal | VeriCert", robots: { index: false, follow: false } };
@@ -89,6 +90,10 @@ export default async function PartnerPage({
         />
       );
     }
+
+    // Every partner has the registration acknowledgment on record before the
+    // dashboard opens; older and executive-created accounts give it here once.
+    if (!customer.registrationAckAt) return <PartnerAcknowledgment />;
 
     const [orders, promoCodes, payouts, resources] = await Promise.all([
       listOrders(),

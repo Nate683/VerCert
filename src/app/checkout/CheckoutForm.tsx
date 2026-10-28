@@ -8,6 +8,7 @@ import { track } from "@/lib/track-client";
 import type { PaymentMethod, SavedAddress } from "@/lib/types";
 import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
 import { isPaymentMethodAvailable } from "@/lib/payments/availability";
+import { RESEARCH_CATEGORIES } from "@/lib/users/registration";
 
 // The only two ways to pay. No card, Apple Pay or Google Pay inputs, not even
 // as placeholders.
@@ -63,12 +64,15 @@ export function CheckoutForm({
   initialAddress,
   bankTransferAvailable,
   referralPromoCode,
+  askResearchCategory = false,
 }: {
   initialEmail: string;
   initialAddress?: SavedAddress;
   bankTransferAvailable: boolean;
   /** The referring affiliate's code, applied for the customer once the cart has loaded. */
   referralPromoCode?: string;
+  /** An affiliate with no research category on file: required with this order. */
+  askResearchCategory?: boolean;
 }) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
@@ -96,6 +100,7 @@ export function CheckoutForm({
   // The first option shown (bank transfer, when configured).
   const [method, setMethod] = useState<PaymentMethod>(paymentOptions[0]?.value ?? "bank_transfer");
   const [agreed, setAgreed] = useState(false);
+  const [researchCategory, setResearchCategory] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
@@ -214,6 +219,11 @@ export function CheckoutForm({
     setError(null);
 
     if (!validate()) return;
+    if (askResearchCategory && !researchCategory) {
+      setError("Select your research category before placing your order.");
+      document.getElementById("checkout-research-category")?.focus();
+      return;
+    }
     if (!agreed) {
       setError("Please confirm the research-use statement before placing your order.");
       return;
@@ -238,6 +248,7 @@ export function CheckoutForm({
           paymentMethod: method,
           promoCode: appliedPromo?.code,
           researchAttestation: agreed,
+          ...(askResearchCategory ? { researchCategory } : {}),
           items: items.map((item) => ({
             slug: item.slug,
             sizeLabel: item.sizeLabel,
@@ -414,6 +425,30 @@ export function CheckoutForm({
           </section>
 
           <div className="space-y-4">
+            {askResearchCategory && (
+              <div className="border border-hairline p-4">
+                <label htmlFor="checkout-research-category" className="mb-1.5 block text-xs text-muted">
+                  Researcher / Business Type*
+                </label>
+                <select
+                  id="checkout-research-category"
+                  required
+                  value={researchCategory}
+                  onChange={(e) => setResearchCategory(e.target.value)}
+                  className={`input-field-light ${researchCategory ? "" : "text-muted/70"}`}
+                >
+                  <option value="" disabled>
+                    Select your research category
+                  </option>
+                  {RESEARCH_CATEGORIES.map((category) => (
+                    <option key={category} value={category} className="text-navy">
+                      {category}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-xs text-muted">Required once. We save it to your account.</p>
+              </div>
+            )}
             <label className="flex cursor-pointer items-start gap-3 border border-hairline p-4 text-sm leading-relaxed text-muted">
               <input
                 type="checkbox"

@@ -7,7 +7,8 @@ import { useAuth } from "@/lib/auth-context";
 import { safeNextPath } from "@/lib/safe-next";
 import { PasswordField } from "@/components/PasswordField";
 import { COA_LOOKUP_ENABLED } from "@/lib/coa-lookup";
-import { REGISTRATION_ACKNOWLEDGMENT, RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
+import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
+import { AcknowledgmentText } from "@/components/AcknowledgmentText";
 
 // What an account opens up. Every line is something the site does today;
 // keep it that way when editing. The certificate line depends on the batch
@@ -37,31 +38,6 @@ const ALL_BENEFITS = [
   },
 ];
 const ACCOUNT_BENEFITS = ALL_BENEFITS.filter((b) => !b.needsCoaLookup || COA_LOOKUP_ENABLED);
-
-const POLICY_LINKS: Record<string, string> = {
-  "Terms of Sale": "/terms",
-  "Privacy Policy": "/privacy-policy",
-};
-
-// The stored wording, with the two policy names turned into links — what the
-// customer reads is exactly what the account records.
-function AcknowledgmentText() {
-  return REGISTRATION_ACKNOWLEDGMENT.split(/(Terms of Sale|Privacy Policy)/).map((part, i) =>
-    POLICY_LINKS[part] ? (
-      <Link
-        key={i}
-        href={POLICY_LINKS[part]}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-gold-ink underline underline-offset-2 hover:text-navy"
-      >
-        {part}
-      </Link>
-    ) : (
-      part
-    )
-  );
-}
 
 function RegisterForm() {
   const router = useRouter();
@@ -101,7 +77,7 @@ function RegisterForm() {
           lastName,
           email,
           password,
-          researchCategory,
+          ...(asAffiliate ? {} : { researchCategory }),
           phone,
           acknowledgment: acknowledged,
           marketingConsent,
@@ -135,6 +111,13 @@ function RegisterForm() {
 
   async function handleContinueAsCustomer() {
     setIsAffiliate(false);
+    // A customer account needs the research category the invite skipped.
+    if (!researchCategory) {
+      setError("Select your research category, then create your account.");
+      setInvalidCode(false);
+      requestAnimationFrame(() => document.getElementById("register-research-category")?.focus());
+      return;
+    }
     await submit(false);
   }
 
@@ -205,27 +188,30 @@ function RegisterForm() {
             autoComplete="email"
             className="input-field-light"
           />
-          <div>
-            <label htmlFor="register-research-category" className="mb-1.5 block text-xs text-muted">
-              Researcher / Business Type*
-            </label>
-            <select
-              id="register-research-category"
-              required
-              value={researchCategory}
-              onChange={(e) => setResearchCategory(e.target.value)}
-              className={`input-field-light ${researchCategory ? "" : "text-muted/70"}`}
-            >
-              <option value="" disabled>
-                Select your research category
-              </option>
-              {RESEARCH_CATEGORIES.map((category) => (
-                <option key={category} value={category} className="text-navy">
-                  {category}
+          {/* Affiliates signing up by invite aren't asked for a category. */}
+          {!isAffiliate && (
+            <div>
+              <label htmlFor="register-research-category" className="mb-1.5 block text-xs text-muted">
+                Researcher / Business Type*
+              </label>
+              <select
+                id="register-research-category"
+                required
+                value={researchCategory}
+                onChange={(e) => setResearchCategory(e.target.value)}
+                className={`input-field-light ${researchCategory ? "" : "text-muted/70"}`}
+              >
+                <option value="" disabled>
+                  Select your research category
                 </option>
-              ))}
-            </select>
-          </div>
+                {RESEARCH_CATEGORIES.map((category) => (
+                  <option key={category} value={category} className="text-navy">
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <input
             id="register-phone"
             required

@@ -10,6 +10,7 @@ import { TickerBanner } from "./TickerBanner";
 import { PrelaunchBanner } from "./PrelaunchBanner";
 import { PRELAUNCH_BANNER_ENABLED } from "@/lib/prelaunch";
 import { AgeGate } from "./AgeGate";
+import { ResearchProfilePrompt } from "./ResearchProfilePrompt";
 import type { SaleBannerContent, ContactContent } from "@/lib/site-content";
 import { track } from "@/lib/track-client";
 import { useAuth } from "@/lib/auth-context";
@@ -45,6 +46,7 @@ export function SiteChrome({
       {/* Rendered inside this branch on purpose: the executive terminals
           returned above, so /command, /office, /executive and /hq never see the gate. */}
       <AgeGate />
+      <ResearchProfilePrompt />
       <ExecModeToggle />
       {saleBanner.active && saleBanner.message && (
         <div className="bg-gold px-4 py-2 text-center text-xs uppercase tracking-[0.15em] text-black">

@@ -179,6 +179,9 @@ export type Order = {
   // Absent on orders placed before it was recorded; those are credited by
   // promo code.
   affiliateId?: string;
+  // The credited affiliate is the buyer: the discount applies, but the order
+  // earns no commission and isn't counted as driven by them.
+  selfPurchase?: boolean;
 };
 
 export type RefundReasonCode =
@@ -273,6 +276,9 @@ export type Customer = {
   researchCategory?: string;
   registrationAckText?: string;
   registrationAckAt?: string;
+  // When an older customer account answered or skipped the one-time prompt
+  // for those details (components/ResearchProfilePrompt.tsx).
+  researchPromptResolvedAt?: string;
   // The affiliate credited with the account (their referral link at signup,
   // or their promo code on a first order), and the first-visit source.
   affiliateId?: string;

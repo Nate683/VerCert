@@ -14,7 +14,7 @@ export {
   type CreateAffiliateInput,
 } from "./store";
 export { computeAffiliateSummaries, isCreditedTo } from "./stats";
-export { getReferringAffiliate, creditedAffiliateId } from "./referral";
+export { getReferringAffiliate, creditedAffiliateId, isSelfPurchase } from "./referral";
 export { AFFILIATE_TIERS, getTierInfo, getTierRank, getNextTier } from "./tiers";
 export { issueAffiliateSetPasswordToken, ensureAffiliateAccount } from "./access";
 export {

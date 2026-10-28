@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { listProducts, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import { createOrder, updateOrder } from "@/lib/orders/store";
 import { validatePromoCode } from "@/lib/promotions";
-import { creditedAffiliateId } from "@/lib/affiliates";
+import { creditedAffiliateId, getAffiliateByEmail, isSelfPurchase } from "@/lib/affiliates";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
 import { isPaymentMethodAvailable } from "@/lib/payments/availability";
 import { sendOrderConfirmationEmail, sendAdminNotification } from "@/lib/email";
@@ -43,7 +43,18 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, createOrderSchema);
   if ("error" in parsed) return parsed.error;
-  const { customer, items, paymentMethod, promoCode } = parsed.data;
+  const { customer, items, paymentMethod, promoCode, researchCategory } = parsed.data;
+
+  // Affiliates never see the customer prompt for a research category, so one
+  // with none on file gives it here. It's saved to the account with the order.
+  const affiliateNeedingCategory =
+    !currentCustomer.researchCategory && Boolean(await getAffiliateByEmail(currentCustomer.email));
+  if (affiliateNeedingCategory && !researchCategory) {
+    return NextResponse.json(
+      { error: "Select your research category before placing your order.", researchCategoryRequired: true },
+      { status: 400 }
+    );
+  }
 
   // Refused before anything is saved, so a hidden method can't leave an order
   // behind that has no way to be paid.
@@ -139,6 +150,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const total = Math.max(0, subtotal - discountAmount);
   const affiliateId = await creditedAffiliateId({ promoAffiliateId, customer: currentCustomer });
+  const selfPurchase = await isSelfPurchase(affiliateId, currentCustomer.email);
 
   const order = await createOrder({
     paymentMethod,
@@ -154,6 +166,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     freeShipping,
     researchAttestation: { text: RESEARCH_ATTESTATION, at: new Date().toISOString(), ip },
     affiliateId,
+    selfPurchase,
   });
 
   // Each subscribed line becomes a subscription; this order is its first
@@ -175,7 +188,8 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   // Remember the shipping address used for next time. And if this is the
   // first time the account has used an affiliate's promo code, credit that
-  // affiliate with the account — the first affiliate credited keeps it.
+  // affiliate with the account — the first affiliate credited keeps it (never
+  // an affiliate's own code on their own account).
   await updateUser(currentCustomer.id, {
     savedAddress: {
       address: customer.address,
@@ -184,7 +198,8 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       postalCode: customer.postalCode,
       country: customer.country,
     },
-    ...(promoAffiliateId && !currentCustomer.affiliateId ? { affiliateId: promoAffiliateId } : {}),
+    ...(promoAffiliateId && !currentCustomer.affiliateId && !selfPurchase ? { affiliateId: promoAffiliateId } : {}),
+    ...(affiliateNeedingCategory && researchCategory ? { researchCategory } : {}),
   });
 
   const provider = getPaymentProvider(paymentMethod);

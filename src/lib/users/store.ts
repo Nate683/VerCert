@@ -38,6 +38,7 @@ type UserRow = {
   research_category: string | null;
   registration_ack_text: string | null;
   registration_ack_at: string | null;
+  research_prompt_resolved_at: string | null;
   affiliate_id: string | null;
   attribution: string | null;
 };
@@ -85,6 +86,7 @@ function rowToUser(row: UserRow): Customer {
     researchCategory: row.research_category ?? undefined,
     registrationAckText: row.registration_ack_text ?? undefined,
     registrationAckAt: row.registration_ack_at ?? undefined,
+    researchPromptResolvedAt: row.research_prompt_resolved_at ?? undefined,
     affiliateId: row.affiliate_id ?? undefined,
     attribution: parseAttribution(row.attribution),
   };
@@ -283,6 +285,10 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   phone: "phone",
   smsOptIn: "sms_opt_in",
   ageAttestedAt: "age_attested_at",
+  researchCategory: "research_category",
+  registrationAckText: "registration_ack_text",
+  registrationAckAt: "registration_ack_at",
+  researchPromptResolvedAt: "research_prompt_resolved_at",
   affiliateId: "affiliate_id",
   attribution: "attribution",
 };

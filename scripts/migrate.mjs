@@ -503,6 +503,9 @@ async function main() {
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS research_category TEXT`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_ack_text TEXT`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS registration_ack_at TEXT`;
+  // When an older customer account answered or skipped the one-time prompt
+  // for those details. Set either way, so the prompt never comes back.
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS research_prompt_resolved_at TEXT`;
   // Marketing attribution: the affiliate credited with the account, and the
   // first-visit source (referral code, UTM tags, referring site) as JSON.
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS affiliate_id TEXT`;
@@ -626,6 +629,10 @@ async function main() {
   // referral link. Older orders leave it empty and are matched by promo code.
   await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS affiliate_id TEXT`;
   await sql`CREATE INDEX IF NOT EXISTS orders_affiliate_id_idx ON orders (affiliate_id)`;
+  // An affiliate buying with their own code (or through their own referral):
+  // they keep the discount but the order earns no commission. Set when the
+  // order is placed; earlier orders stay false.
+  await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS self_purchase BOOLEAN NOT NULL DEFAULT FALSE`;
 
   // Newsletter list (the footer signup). One row per address, never a second:
   // signing up again after unsubscribing reactivates the row with fresh

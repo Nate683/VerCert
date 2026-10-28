@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import type { ResearchProfileGaps } from "@/lib/users/research-profile";
 
 type AuthUser = {
   id: string;
@@ -8,6 +9,7 @@ type AuthUser = {
   marketingConsent: boolean;
   emailVerified: boolean;
   role: "command" | "office" | null;
+  researchProfileGaps: ResearchProfileGaps | null;
 };
 
 type AuthContextValue = {

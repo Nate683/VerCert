@@ -9,7 +9,10 @@ function isQualifying(order: Order): boolean {
 // Whether an order counts toward this affiliate. Orders record who they're
 // credited to (a promo code's affiliate, or the customer's referrer); ones
 // placed before that was recorded are matched by promo code, as they were.
+// An affiliate's own purchase counts toward no one: no commission, no
+// revenue driven, no tier progress. Every commission figure goes through here.
 export function isCreditedTo(order: Order, affiliate: Pick<Affiliate, "id" | "promoCodeId">): boolean {
+  if (order.selfPurchase) return false;
   if (order.affiliateId) return order.affiliateId === affiliate.id;
   return Boolean(order.promoCodeId) && order.promoCodeId === affiliate.promoCodeId;
 }

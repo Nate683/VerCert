@@ -1,6 +1,6 @@
 import { getProductBySlug, isOnSale, pricedSizes, resolveUnitPrice } from "@/lib/products";
 import { createOrder } from "@/lib/orders/store";
-import { creditedAffiliateId } from "@/lib/affiliates/referral";
+import { creditedAffiliateId, isSelfPurchase } from "@/lib/affiliates/referral";
 import { getUserById } from "@/lib/users/store";
 import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
 import { findInsufficientStock } from "@/lib/inventory";
@@ -81,6 +81,9 @@ async function runOne(sub: Subscription, now: Date): Promise<RunResult> {
   }
 
   const total = line.priceUsd * line.quantity;
+  const subscriber = await getUserById(sub.customerId);
+  // A renewal is credited to the customer's referrer like any other order.
+  const affiliateId = await creditedAffiliateId({ customer: subscriber });
   const order = await createOrder({
     paymentMethod: "bank_transfer",
     customerId: sub.customerId,
@@ -92,8 +95,8 @@ async function runOne(sub: Subscription, now: Date): Promise<RunResult> {
     // Accepted when the customer subscribed, and it covers every delivery.
     researchAttestation: { text: RESEARCH_ATTESTATION, at: sub.createdAt },
     subscriptionId: sub.id,
-    // A renewal is credited to the customer's referrer like any other order.
-    affiliateId: await creditedAffiliateId({ customer: await getUserById(sub.customerId) }),
+    affiliateId,
+    selfPurchase: subscriber ? await isSelfPurchase(affiliateId, subscriber.email) : false,
   });
 
   // The next one is due one interval after this one was due, so a run that

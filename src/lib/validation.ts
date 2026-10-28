@@ -30,7 +30,9 @@ export const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   // Length, common-password and personal-word rules: passwordProblem().
   password: z.string().min(1, "Choose a password.").max(PASSWORD_MAX_LENGTH),
-  researchCategory: z.enum(RESEARCH_CATEGORIES, { error: "Select your research category." }),
+  // Required unless signing up through a valid affiliate invite; the route
+  // enforces that, since only it can check the code.
+  researchCategory: z.enum(RESEARCH_CATEGORIES, { error: "Select your research category." }).optional(),
   // Normalised to E.164. Storing it never opts anyone in to texts.
   phone: z
     .string({ error: "Enter a valid phone number." })
@@ -111,6 +113,9 @@ export const createOrderSchema = z.object({
     .max(50),
   paymentMethod: z.enum(["crypto", "bank_transfer"]),
   promoCode: z.string().trim().max(40).optional(),
+  // Asked at checkout only of an affiliate with none on file; the route
+  // decides when it's required.
+  researchCategory: z.enum(RESEARCH_CATEGORIES, { error: "Select your research category." }).optional(),
   // The research-use statement must be ticked; the server records it.
   researchAttestation: z.literal(true, {
     error: "Confirm the research-use statement before placing your order.",
