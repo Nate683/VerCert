@@ -3,14 +3,12 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 import { safeNextPath } from "@/lib/safe-next";
 import { VeriCertLogo } from "@/components/VeriCertLogo";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,9 +34,10 @@ function LoginForm() {
         router.push(`/two-factor?next=${encodeURIComponent(next)}`);
         return;
       }
-      await refresh();
-      router.push(next);
-      router.refresh();
+      // A full page load, not router.push: links prefetched while signed out
+      // cached the gate's redirect to /register, and router.refresh() clears
+      // only the current page, so the next click on Shop would replay it.
+      window.location.assign(next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Incorrect email or password.");
       setSubmitting(false);

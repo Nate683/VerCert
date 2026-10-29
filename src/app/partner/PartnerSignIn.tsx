@@ -3,14 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 
 // What a signed-out visitor to /partner sees, so affiliates sign in where
 // their portal is instead of being sent to the storefront's /login. Same
 // endpoint and rules as /login; nothing links here from the public site.
 export function PartnerSignIn() {
   const router = useRouter();
-  const { refresh } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,8 +32,9 @@ export function PartnerSignIn() {
         router.push("/two-factor?next=/partner");
         return;
       }
-      await refresh();
-      router.refresh();
+      // A full reload, not router.refresh(): links prefetched while signed out
+      // cached the gate's redirect to /register, and only a reload clears them.
+      window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Incorrect email or password.");
       setSubmitting(false);

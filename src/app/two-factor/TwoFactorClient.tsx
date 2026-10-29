@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { useAuth } from "@/lib/auth-context";
 
@@ -34,15 +33,12 @@ async function postJson<T>(url: string, body: unknown, fallback: string): Promis
   return data as T;
 }
 
-// The API has already set the session cookie by the time this runs; it just
-// brings the client's auth state up to date and moves on.
+// The API has already set the session cookie by the time this runs. A full
+// page load, not router.push: links prefetched while signed out cached the
+// gate's redirect, and router.refresh() clears only the current page.
 function useFinishSignIn(next: string) {
-  const router = useRouter();
-  const { refresh } = useAuth();
   return async () => {
-    await refresh();
-    router.push(next);
-    router.refresh();
+    window.location.assign(next);
   };
 }
 

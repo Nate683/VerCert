@@ -2,8 +2,7 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { useSearchParams } from "next/navigation";
 import { safeNextPath } from "@/lib/safe-next";
 import { PasswordField } from "@/components/PasswordField";
 import { COA_LOOKUP_ENABLED } from "@/lib/coa-lookup";
@@ -40,9 +39,7 @@ const ALL_BENEFITS = [
 const ACCOUNT_BENEFITS = ALL_BENEFITS.filter((b) => !b.needsCoaLookup || COA_LOOKUP_ENABLED);
 
 function RegisterForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const { refresh } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -90,9 +87,10 @@ function RegisterForm() {
         setInvalidCode(Boolean(data.invalidCode));
         throw new Error(data.error ?? "Something went wrong creating your account.");
       }
-      await refresh();
-      router.push(data.isAffiliate ? "/partner" : next);
-      router.refresh();
+      // A full page load, not router.push: links prefetched while signed out
+      // cached the gate's redirect to /register, which router.refresh() leaves
+      // in place (it clears only the current page).
+      window.location.assign(data.isAffiliate ? "/partner" : next);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong creating your account.");
       setSubmitting(false);
