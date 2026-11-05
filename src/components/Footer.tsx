@@ -35,8 +35,8 @@ export function Footer({ contact }: { contact: ContactContent }) {
               className="h-auto w-[177px] max-w-full"
             />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
-              Third-party verified research compounds for laboratory use.
-              Every batch, certified.
+              Research compounds for laboratory use, with third-party
+              verification of every batch.
             </p>
           </div>
 

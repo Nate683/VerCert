@@ -3,7 +3,7 @@ import RegisterClient from "./RegisterClient";
 
 export const metadata: Metadata = {
   title: "Create an Account | VeriCert",
-  description: "Create a VeriCert research account to see the catalog, pricing and batch certificates.",
+  description: "Create a VeriCert research account to see the catalog and pricing.",
   robots: { index: false, follow: false },
 };
 

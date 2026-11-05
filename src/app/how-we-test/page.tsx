@@ -7,7 +7,7 @@ import { buildMetadata } from "@/lib/seo";
 export const metadata = buildMetadata({
   title: "How We Test | VeriCert",
   description:
-    "How VeriCert verifies every batch: independent HPLC and mass spectrometry analysis, what each figure on a certificate of analysis means, and how to check yours.",
+    "How VeriCert will verify every batch: independent HPLC and mass spectrometry analysis, and what each figure on a certificate of analysis means.",
   path: "/how-we-test",
 });
 
@@ -15,12 +15,12 @@ const STAGES = [
   {
     step: "01",
     title: "Sampling",
-    body: "A representative sample is drawn from each production lot before any of it is packaged. Lots are never pooled — every lot number corresponds to one physical run of material.",
+    body: "A representative sample will be drawn from each production lot before any of it is packaged. Lots will never be pooled — every lot number will correspond to one physical run of material.",
   },
   {
     step: "02",
     title: "Independent Analysis",
-    body: "Samples go to accredited third-party analytical laboratories with no commercial relationship to VeriCert. We do not run our own confirmatory testing, because a supplier grading its own work is not verification.",
+    body: "Samples will go to accredited third-party analytical laboratories with no ownership or affiliation with VeriCert. We do not run our own confirmatory testing, because a supplier grading its own work is not verification.",
   },
   {
     step: "03",
@@ -40,7 +40,7 @@ const STAGES = [
   {
     step: "06",
     title: "Publication",
-    body: "The full report is archived against its lot number and published here. It stays available permanently — including after that lot has sold out.",
+    body: "The full report will be archived against its lot number and published here. It will stay available permanently — including after that lot has sold out.",
   },
 ];
 
@@ -81,10 +81,10 @@ export default function HowWeTestPage() {
             How We Test
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
-            Every claim VeriCert makes about a compound is traceable to a
+            Every claim VeriCert makes about a compound will be traceable to a
             document produced by someone other than us. This page explains
-            exactly how that works — the process, the instruments, and how to
-            read the certificate that comes with your order.
+            exactly how that will work — the process, the instruments, and how to
+            read the certificate that will come with your order.
           </p>
         </div>
       </section>

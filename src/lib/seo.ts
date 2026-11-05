@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const SITE_NAME = "VeriCert";
 export const DEFAULT_DESCRIPTION =
-  "VeriCert supplies third-party tested research peptides and reference compounds for laboratory use, with a certificate of analysis for every batch.";
+  "VeriCert supplies research peptides and reference compounds for laboratory use. Every batch will be third-party tested, with a certificate of analysis.";
 
 // Builds consistent title/description/canonical/OG/Twitter metadata for a page.
 export function buildMetadata({

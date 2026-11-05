@@ -17,9 +17,9 @@ export type HomeHeroContent = {
 
 export const DEFAULT_HOME_HERO: HomeHeroContent = {
   badge: "Research Use Only",
-  headline: "Research Peptides,\nVerified to the Batch.",
+  headline: "Research Peptides,\nBuilt for Verification.",
   subtext:
-    "VeriCert supplies high-purity synthetic peptides and reference compounds for laboratory research, each accompanied by an independent certificate of analysis.",
+    "VeriCert supplies synthetic peptides and reference compounds for laboratory research. Each lot will be accompanied by an independent certificate of analysis.",
   ctaPrimaryLabel: "Shop the Collection",
 };
 
@@ -31,7 +31,10 @@ export type HomeSectionsContent = {
   cta: boolean;
 };
 
-export const DEFAULT_HOME_SECTIONS: HomeSectionsContent = { trust: true, cta: true };
+// "Every Batch. Certified." (cta) is hidden until certificates exist — owner,
+// 2026-11-04. Set cta back to true here to show it: a hidden section doesn't
+// render its EXEC MODE toggle, so it can't be switched back on from the page.
+export const DEFAULT_HOME_SECTIONS: HomeSectionsContent = { trust: true, cta: false };
 
 export type AboutPillar = { title: string; body: string };
 
@@ -48,18 +51,18 @@ export type AboutContent = {
 export const DEFAULT_ABOUT: AboutContent = {
   headline: "Built for the Bench, Not the Bottle",
   intro:
-    "VeriCert Peptides provides independently tested research compounds for laboratory and analytical applications. Access to our full product catalog, pricing, inventory information, and purchasing is reserved for registered research customers, including independent researchers, laboratories, academic institutions, and commercial research organizations. Certificates of Analysis will be available for public verification without requiring an account. Customers confirm they are 21 or older when creating an account and certify with every order that products are intended exclusively for laboratory research use, not human or veterinary consumption.",
+    "VeriCert Peptides provides research compounds for laboratory and analytical applications. Every lot will be independently tested. Access to our full product catalog, pricing, inventory information, and purchasing is reserved for registered research customers, including independent researchers, laboratories, academic institutions, and commercial research organizations. Certificates of Analysis will be available for public verification without requiring an account. Customers confirm they are 21 or older when creating an account and certify with every order that products are intended exclusively for laboratory research use, not human or veterinary consumption.",
   valuesHeading: "Our Core Values",
   valuesIntro:
     "At VeriCert Peptides, we stand for analytical precision and supply chain transparency. Our operations are built on independent scientific verification, designed to meet the requirements of independent, corporate, and academic research institutions. We do not participate in consumer retail marketing. We maintain rigorous laboratory-focused quality and handling standards across our catalog to support research applications.",
   pillars: [
     {
       title: "Independent Validation",
-      body: "Every compound distributed under the VeriCert framework undergoes independent third-party laboratory validation. Reverse-phase HPLC purity profiles and mass spectrometry identity confirmation are completed before a lot is released.",
+      body: "Every compound distributed under the VeriCert framework will undergo independent third-party laboratory validation. Reverse-phase HPLC purity profiles and mass spectrometry identity confirmation will be completed before a lot is released.",
     },
     {
       title: "Traceability from Lot to Certificate",
-      body: "Every vial carries a lot number that maps to its certificate of analysis. Certificates come from the testing laboratory directly, so the chain from lot to document stays unbroken.",
+      body: "Every vial will carry a lot number that maps to its certificate of analysis. Certificates will come from the testing laboratory directly, so the chain from lot to document stays unbroken.",
     },
     {
       title: "Professional Reagent Standards",
@@ -85,7 +88,7 @@ export const DEFAULT_FAQ: FaqItem[] = [
   },
   {
     q: "Who performs your testing?",
-    a: "Testing is conducted by accredited third-party analytical laboratories that have no ownership or affiliation with VeriCert, ensuring the results are independent.",
+    a: "Testing will be conducted by accredited third-party analytical laboratories that have no ownership or affiliation with VeriCert, ensuring the results are independent.",
   },
   {
     q: "What if I can't find the certificate for my lot?",

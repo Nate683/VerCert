@@ -47,7 +47,7 @@ export default async function OpengraphImage() {
             color: GOLD,
           }}
         >
-          Certificate of analysis on every lot · Research use only
+          Research use only
         </div>
       </div>
     ),

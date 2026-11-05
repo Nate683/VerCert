@@ -6,7 +6,7 @@ import { getContent, DEFAULT_ABOUT } from "@/lib/site-content";
 export const metadata = buildMetadata({
   title: "About | VeriCert",
   description:
-    "VeriCert Peptides supplies independently validated research compounds to verified independent, corporate and institutional research entities.",
+    "VeriCert Peptides supplies research compounds to verified independent, corporate and institutional research entities. Every lot will be independently validated.",
   path: "/about",
 });
 

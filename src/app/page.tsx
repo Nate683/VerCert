@@ -18,7 +18,7 @@ import { getContent, DEFAULT_HOME_HERO, DEFAULT_FEATURED, DEFAULT_HOME_SECTIONS 
 export const metadata = buildMetadata({
   title: "VeriCert | Research Peptides, Verified",
   description:
-    "High-purity synthetic peptides and reference compounds for laboratory research, each accompanied by an independent certificate of analysis.",
+    "Synthetic peptides and reference compounds for laboratory research. Each lot will be accompanied by an independent certificate of analysis.",
   path: "/",
 });
 
@@ -29,15 +29,15 @@ export const dynamic = "force-dynamic";
 const TRUST_POINTS = [
   {
     title: "HPLC-MS Verified",
-    body: "Every lot is analyzed by reverse-phase HPLC and mass spectrometry to confirm identity and quantify purity before release.",
+    body: "Every lot will be analyzed by reverse-phase HPLC and mass spectrometry to confirm identity and quantify purity before release.",
   },
   {
     title: "Certificate Per Batch",
-    body: "A full certificate of analysis is issued for each production batch and archived for independent verification at any time.",
+    body: "A full certificate of analysis will be issued for each production batch and archived for independent verification at any time.",
   },
   {
     title: "Independent Laboratories",
-    body: "Testing is performed by accredited third-party analytical laboratories with no affiliation to VeriCert.",
+    body: "Testing will be performed by accredited third-party analytical laboratories with no affiliation to VeriCert.",
   },
 ];
 
@@ -174,7 +174,7 @@ export default async function Home() {
                 Verification, Not Assumption
               </h2>
               <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted">
-                Every compound VeriCert distributes is tested by an independent
+                Every compound VeriCert distributes will be tested by an independent
                 laboratory before it reaches a researcher&apos;s bench.
               </p>
             </ScrollReveal>
