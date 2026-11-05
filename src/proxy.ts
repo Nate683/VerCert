@@ -20,6 +20,7 @@ const PUBLIC_PAGES = new Set([
   "/about",
   "/how-we-test",
   "/contact",
+  "/faq",
   "/privacy-policy",
   "/terms",
   "/refund-policy",
