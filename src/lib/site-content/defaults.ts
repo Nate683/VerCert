@@ -275,7 +275,6 @@ export const DEFAULT_POLICIES: PoliciesContent = {
     "Customer Data Export: Where available, customers may download a file containing their account information and order history.",
     "Upon account deletion, eligible unpaid orders will be canceled in accordance with the applicable payment and order-processing terms. Any active product subscriptions or paid membership plans associated with the account will be canceled in accordance with their respective terms, if such programs are offered at the time of deletion. Records required for accounting, regulatory compliance, payment reconciliation, or other lawful purposes may be retained as described in the applicable policies.",
     "An account cannot be deleted while an order is being prepared; it can be deleted once that order has shipped. Copies of emails already exchanged with us, and our email provider's delivery records, are kept separately from the account. For any of these requests, or any other question about personal information, contact us at info@vericertpeptides.com.",
-    "VeriCert Peptides operates a limited referral partner program by invitation. It is not open for public enrollment. Participation is subject to separate eligibility requirements and terms provided to approved partners.",
   ],
 };
 

@@ -5,6 +5,7 @@ import { validatePromoCode } from "@/lib/promotions";
 import { creditedAffiliateId, getAffiliateByEmail, isSelfPurchase } from "@/lib/affiliates";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
 import { isPaymentMethodAvailable } from "@/lib/payments/availability";
+import { getBankTransferDetails } from "@/lib/bank-details";
 import { sendOrderConfirmationEmail, sendAdminNotification } from "@/lib/email";
 import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getCurrentCustomer } from "@/lib/users/current-user";
@@ -56,9 +57,12 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     );
   }
 
-  // Refused before anything is saved, so a hidden method can't leave an order
-  // behind that has no way to be paid.
-  if (!isPaymentMethodAvailable(paymentMethod)) {
+  // Refused before anything is saved, so a hidden method — or bank transfer
+  // without its account details set — can't leave an order behind that has no
+  // way to be paid (checkout hides both; this covers a direct API call).
+  const bankTransferUnconfigured =
+    paymentMethod === "bank_transfer" && !getBankTransferDetails().isConfigured;
+  if (!isPaymentMethodAvailable(paymentMethod) || bankTransferUnconfigured) {
     return NextResponse.json(
       { error: "That payment method isn't available right now. Please choose another." },
       { status: 400 }

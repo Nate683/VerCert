@@ -7,6 +7,7 @@ import { findInsufficientStock } from "@/lib/inventory";
 import { sendOrderConfirmationEmail, sendTransactionalEmail, sendAdminNotification } from "@/lib/email";
 import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getSiteUrl } from "@/lib/site-url";
+import { getBankTransferDetails } from "@/lib/bank-details";
 import { logActivity } from "@/lib/activity-log";
 import type { CartItem } from "@/lib/types";
 import { isSubscribable, subscriptionUnitPrice, intervalLabel } from "./rules";
@@ -14,7 +15,7 @@ import { addDays, listDueSubscriptions, updateSubscription, type Subscription } 
 
 const ACTOR = "system:subscriptions";
 
-export type RunResult = { reference?: string; subscriptionId: string; outcome: "ordered" | "waiting_for_stock" | "paused" };
+export type RunResult = { reference?: string; subscriptionId: string; outcome: "ordered" | "waiting_for_stock" | "paused" | "payment_unavailable" };
 
 // Places the order for every active subscription that's due. Payment is
 // manual, so each run creates an ordinary order awaiting payment and emails
@@ -78,6 +79,14 @@ async function runOne(sub: Subscription, now: Date): Promise<RunResult> {
     const reason = "Waiting for stock — the order is placed as soon as it's back.";
     if (sub.statusReason !== reason) await updateSubscription(sub.id, { statusReason: reason });
     return { subscriptionId: sub.id, outcome: "waiting_for_stock" };
+  }
+
+  // Checked before anything is saved, as in /api/orders: without the bank
+  // details there is no way to pay, so no order is left behind. The due date
+  // isn't moved, so the next daily run places it once they're set.
+  if (!getBankTransferDetails().isConfigured) {
+    console.warn(`[subscriptions] ${sub.id} not ordered: bank transfer isn't configured.`);
+    return { subscriptionId: sub.id, outcome: "payment_unavailable" };
   }
 
   const total = line.priceUsd * line.quantity;

@@ -41,11 +41,14 @@ const AUTH_PAGES = new Set([
   "/two-factor",
   "/unsubscribe",
   "/executive",
+  // Where an affiliate's texted one-time sign-in link lands. The rest of
+  // /partner (and the old /affiliate path) needs an account.
+  "/partner/start",
 ]);
 
 // Sections that handle their own sign-in. /command and /office are checked
 // separately below.
-const OWN_AUTH_SECTIONS = ["/account", "/hq", "/partner", "/affiliate", "/order"];
+const OWN_AUTH_SECTIONS = ["/account", "/hq", "/order"];
 
 // API routes that are public or check auth themselves. The rest — catalog,
 // COA lookup, promo validation, orders — need a signed-in customer.
