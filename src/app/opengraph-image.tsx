@@ -35,7 +35,7 @@ export default async function OpengraphImage() {
         <img src={`data:image/png;base64,${logo}`} width={441 * 1.15} height={194 * 1.15} alt="" />
         <div style={{ display: "flex", width: 160, height: 2, backgroundColor: GOLD, marginTop: 34 }} />
         <div style={{ display: "flex", fontSize: 38, marginTop: 34, color: "#ffffff" }}>
-          Research peptides, verified to the batch
+          Research peptides, built for verification
         </div>
         <div
           style={{
