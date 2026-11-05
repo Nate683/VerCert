@@ -343,7 +343,7 @@ export function AddToCartPanel({
       )}
 
       <ul className="mt-5 space-y-1.5 text-xs text-muted">
-        <li>Certificate of analysis included with every batch.</li>
+        <li>Certificate of analysis will be included with every batch.</li>
         <li>Tracked shipping · Ships within 1–2 business days.</li>
         <li>
           <Link href="/shipping-policy" className="inline-block py-1.5 underline-offset-4 hover:text-gold-ink hover:underline">

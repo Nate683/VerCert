@@ -1,12 +1,13 @@
 import { listProducts } from "@/lib/products";
 import { toStorefrontProduct } from "@/lib/products/storefront";
 import { withStock } from "@/lib/inventory";
+import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { ShopClient } from "./ShopClient";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
   title: "Shop | VeriCert",
-  description: "Browse VeriCert's catalog of third-party tested research peptides and reference compounds.",
+  description: "Browse VeriCert's catalog of research peptides and reference compounds, each lot to be third-party tested.",
   path: "/shop",
 });
 
@@ -15,7 +16,7 @@ export const metadata = buildMetadata({
 export const dynamic = "force-dynamic";
 
 export default async function ShopPage() {
-  const products = await withStock(await listProducts());
+  const products = await withCertifiedPurity(await withStock(await listProducts()));
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
@@ -23,8 +24,8 @@ export default async function ShopPage() {
         <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Catalog</p>
         <h1 className="mt-3 font-serif text-4xl text-navy">Research Compounds</h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">
-          Every compound is supplied strictly for laboratory research and is
-          accompanied by an independent certificate of analysis. Not for
+          Every compound is supplied strictly for laboratory research and will
+          be accompanied by an independent certificate of analysis. Not for
           human or veterinary use.
         </p>
       </div>

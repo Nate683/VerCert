@@ -15,6 +15,7 @@ import { productImageAlt, productImageSources } from "@/lib/products/images";
 import { formatPurity, specText } from "@/lib/products/specs";
 import { blendComponents } from "@/lib/products/blend-components";
 import { withStock } from "@/lib/inventory";
+import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { SCHEMA_AVAILABILITY } from "@/lib/products/stock";
 import { getContent } from "@/lib/site-content";
 import { DEFAULT_SUBSCRIPTION_SETTINGS, isSubscribable, subscriptionsEnabled } from "@/lib/subscriptions/rules";
@@ -54,9 +55,11 @@ export default async function ProductDetailPage({
   const { slug } = await params;
   // Inactive products are fetched too, only so a blend's component card can
   // show a compound's photo even when that compound isn't for sale itself.
-  const [found, catalog] = await Promise.all([getProductBySlug(slug), listProducts({ includeInactive: true })]);
+  const [found, fullCatalog] = await Promise.all([getProductBySlug(slug), listProducts({ includeInactive: true })]);
   if (!found || !isOnSale(found)) notFound();
-  const [product, ...allProducts] = await withStock([found, ...catalog.filter(isOnSale)]);
+  // Purity is kept only where an uploaded certificate backs it (certified-purity.ts).
+  const [certifiedFound, ...catalog] = await withCertifiedPurity([found, ...fullCatalog]);
+  const [product, ...allProducts] = await withStock([certifiedFound, ...catalog.filter(isOnSale)]);
   const components = blendComponents(product, catalog);
   const subscriptionSettings = await getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS);
 
@@ -208,8 +211,9 @@ export default async function ProductDetailPage({
               </Link>
             </div>
             <p className="mt-2 text-xs leading-relaxed text-muted">
-              Each lot is tested independently. Match the number on your vial
-              label to pull its certificate.
+              Each lot will be tested independently. Once certificates are
+              published, match the number on your vial label to pull its
+              certificate.
             </p>
             {product.batchNumbers.length > 0 ? (
               <ul className="mt-4 space-y-2">
