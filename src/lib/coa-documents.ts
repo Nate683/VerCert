@@ -2,8 +2,7 @@ import { query } from "@/lib/db";
 import type { CoaDocument } from "@/lib/types";
 
 // Server-only Postgres-backed store for uploaded COA files (PDF/image),
-// keyed by batch number — separate from the auto-generated text COA in
-// lib/coa.ts, which always renders regardless of whether a file exists.
+// keyed by batch number.
 
 type CoaDocumentRow = { batch_number: string; file_url: string; uploaded_at: string };
 

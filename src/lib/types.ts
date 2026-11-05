@@ -65,24 +65,6 @@ export type CoaDocument = {
   uploadedAt: string;
 };
 
-export type CoaResult = {
-  batchNumber: string;
-  productName: string;
-  casNumber: string | null;
-  purityPercent: number | null;
-  testMethod: string;
-  dateTested: string;
-  dateIssued: string;
-  lab: string;
-  appearance: string;
-  fileUrl?: string;
-  tests: {
-    parameter: string;
-    method: string;
-    result: string;
-  }[];
-};
-
 export type CartItem = {
   slug: string;
   name: string;

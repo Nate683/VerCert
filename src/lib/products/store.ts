@@ -78,14 +78,6 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   return rows[0] ? rowToProduct(rows[0]) : null;
 }
 
-export async function getProductByBatchNumber(batch: string): Promise<Product | null> {
-  const rows = await query<ProductRow>(
-    `${SELECT_ALL} WHERE batch_numbers::jsonb @> to_jsonb($1::text)`,
-    [batch]
-  );
-  return rows[0] ? rowToProduct(rows[0]) : null;
-}
-
 export async function getAllBatchNumbers(): Promise<{ batch: string; product: Product }[]> {
   const products = await listProducts();
   return products.flatMap((p) => p.batchNumbers.map((batch) => ({ batch, product: p })));

@@ -3,7 +3,6 @@ export { resolveUnitPrice, isPriced, pricedSizes } from "./pricing";
 export {
   listProducts,
   getProductBySlug,
-  getProductByBatchNumber,
   getAllBatchNumbers,
   createProduct,
   updateProduct,

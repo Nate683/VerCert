@@ -13,7 +13,7 @@ import { captureAttribution } from "@/lib/marketing/attribution";
 const REALMS = ["command", "office"] as const;
 
 // Storefront pages a signed-out visitor may see. The catalog, product pages,
-// COA lookup, cart, checkout and everything else need an account — and so
+// cart, checkout and everything else need an account — and so
 // does any page added later, until it's listed here.
 const PUBLIC_PAGES = new Set([
   "/",
@@ -51,7 +51,7 @@ const AUTH_PAGES = new Set([
 const OWN_AUTH_SECTIONS = ["/account", "/hq", "/order"];
 
 // API routes that are public or check auth themselves. The rest — catalog,
-// COA lookup, promo validation, orders — need a signed-in customer.
+// promo validation, orders — need a signed-in customer.
 const UNGATED_API = [
   "/api/auth",
   "/api/account",
