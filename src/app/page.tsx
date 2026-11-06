@@ -152,7 +152,8 @@ export default async function Home() {
           <HomeFeaturedGrid products={featuredForView} pricingLocked={!signedIn} />
           {!signedIn && (
             <p className="mt-8 text-center text-sm text-muted">
-              Ordering and batch certificates are for registered researchers.{" "}
+              Ordering is reserved for registered research customers. Certificates of Analysis will be
+              available for public verification without requiring an account.{" "}
               <Link href="/register" className="text-gold-ink underline underline-offset-4 hover:text-navy">
                 Create a free account
               </Link>{" "}
