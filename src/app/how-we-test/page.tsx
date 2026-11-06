@@ -51,7 +51,7 @@ const COA_FIELDS = [
   },
   {
     field: "Purity (%)",
-    meaning: "The proportion of the sample that is the target compound, by HPLC peak area. 98% and above is our release specification.",
+    meaning: "The proportion of the sample that is the target compound, by HPLC peak area. 99.0% and above is our release specification.",
   },
   {
     field: "Test Method",
