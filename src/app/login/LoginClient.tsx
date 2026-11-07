@@ -15,7 +15,9 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const next = safeNextPath(searchParams.get("next")) ?? "/account";
+  // A plain sign-in lands on the homepage; a sign-in sent here from a
+  // protected page (?next=/checkout, /account, …) still returns there.
+  const next = safeNextPath(searchParams.get("next")) ?? "/";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

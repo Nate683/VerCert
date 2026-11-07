@@ -1,14 +1,20 @@
 import { VialGlyph } from "./VialGlyph";
 
-// Owner's list of October 27 2026, cut to the phrases the system can back up.
-// The testing and handling phrases (every lot independently tested, 99.0%
-// minimum purity, certificate verification, elite protocol, sterility and
-// endotoxin, heavy metals and fentanyl, TFA and residual solvents, identity/
-// purity/quantity, lot-specific certificates, cold storage, protective
-// packaging) are held back until certificates and handling records exist to
-// support them; don't add them back before then.
+// Owner's list of November 7 2026 (with the owner's same-day wording changes to
+// 01, 04, 09 and 10): exactly these twelve, in this order.
 const ITEMS = [
-  "U.S.-based customer service & order support",
+  "EVERY LOT WILL BE INDEPENDENTLY TESTED",
+  "99.0% MINIMUM PURITY RELEASE STANDARD",
+  "INDEPENDENT LABORATORY CERTIFICATE VERIFICATION",
+  "ELITE TESTING PROTOCOL FOR EVERY PRODUCTION LOT",
+  "STERILITY & ENDOTOXIN TESTING",
+  "HEAVY METALS & FENTANYL SCREENING",
+  "TFA & RESIDUAL SOLVENTS ANALYSIS",
+  "IDENTITY, PURITY & QUANTITY VERIFICATION",
+  "LOT-SPECIFIC CERTIFICATES OF ANALYSIS",
+  "COLD STORAGE PRIOR TO DISPATCH",
+  "TEMPERATURE-CONSCIOUS PROTECTIVE PACKAGING",
+  "U.S.-BASED CUSTOMER SERVICE & ORDER SUPPORT",
 ];
 
 // The track holds two identical runs and is translated by exactly -50%, so

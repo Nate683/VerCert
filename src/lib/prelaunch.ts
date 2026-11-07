@@ -5,12 +5,15 @@
 // its own when this is switched off. All of the banner's wording lives here.
 export const PRELAUNCH_BANNER_ENABLED = true;
 
+// Signed-out wording. Signed-in visitors see signedInMessage instead.
 export const PRELAUNCH_BANNER = {
   label: "Ordering opens soon",
   // Rendered in order: text, link, text, link, text.
   registerLink: { text: "Create a free account", href: "/register" },
   middle: "to browse the full catalog, or",
-  // The footer's newsletter section (id="newsletter" in components/Footer.tsx).
-  listLink: { text: "join our list", href: "#newsletter" },
+  // The footer's signup section (id="stay-informed" in components/Footer.tsx),
+  // on the homepage; on the homepage itself it scrolls there in place.
+  listLink: { text: "join our list", href: "/#stay-informed" },
   end: "to be notified when we open.",
+  signedInMessage: "Don't just trust our brand. Verify our standards.",
 } as const;

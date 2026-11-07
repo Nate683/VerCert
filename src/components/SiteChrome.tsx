@@ -21,10 +21,13 @@ import { useAuth } from "@/lib/auth-context";
 export function SiteChrome({
   saleBanner,
   contact,
+  signedInAtRender,
   children,
 }: {
   saleBanner: SaleBannerContent;
   contact: ContactContent;
+  /** The session as the server read it for this render (root layout). */
+  signedInAtRender: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -73,7 +76,7 @@ export function SiteChrome({
         </div>
       )}
       <TickerBanner />
-      <PrelaunchBanner />
+      <PrelaunchBanner signedInAtRender={signedInAtRender} />
       <Header />
       <main className="flex-1">{children}</main>
       <Footer contact={contact} />

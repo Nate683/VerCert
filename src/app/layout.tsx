@@ -9,6 +9,7 @@ import { ExecModeProvider } from "@/lib/exec-mode-context";
 import { buildMetadata, SITE_NAME } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 import { getContent, DEFAULT_SALE_BANNER, DEFAULT_CONTACT } from "@/lib/site-content";
+import { getCurrentCustomer } from "@/lib/users/current-user";
 
 const displayFont = Playfair_Display({
   variable: "--font-display",
@@ -58,6 +59,9 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const saleBanner = await getContent("sale_banner", DEFAULT_SALE_BANNER);
   const contact = await getContent("contact_page", DEFAULT_CONTACT);
+  // The session as the server sees it (the same check as /api/auth/me), so
+  // the announcement bar's first paint matches the visitor's signed-in state.
+  const signedInAtRender = Boolean(await getCurrentCustomer());
 
   // Page ground lives in globals.css: the unlayered `body` rule there
   // overrides bg-* / text-* utilities set on this element, so putting the
@@ -71,7 +75,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <AuthProvider>
           <ExecModeProvider>
             <CartProvider>
-              <SiteChrome saleBanner={saleBanner} contact={contact}>{children}</SiteChrome>
+              <SiteChrome saleBanner={saleBanner} contact={contact} signedInAtRender={signedInAtRender}>
+                {children}
+              </SiteChrome>
             </CartProvider>
             <IdleTimeout />
           </ExecModeProvider>

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
-import { VeriCertLogo } from "./VeriCertLogo";
+import Image from "next/image";
 import { SearchBox } from "./SearchBox";
 import { CoaEmblem } from "./CoaEmblem";
 
@@ -28,10 +28,21 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gold/15 bg-navy/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4 lg:px-10">
+      {/* Vertical padding trimmed by exactly what the larger logo added, so
+          the header keeps its height (73.6px, and 87px from sm). */}
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-[7.15px] sm:gap-4 sm:px-6 sm:py-[10.6px] lg:px-10">
         <Link href="/" className="flex min-h-11 shrink-0 items-center" aria-label="VeriCert home">
-          {/* 35% larger than the old h-9 / sm:h-10; width follows (w-auto). */}
-          <VeriCertLogo className="h-[48.6px] w-auto sm:h-[54px]" priority />
+          {/* The one-colour gray-and-gold lockup, as a vector. 120% of the
+              previous 48.6px / 54px height; width follows the 441:194 artwork. */}
+          <Image
+            src="/VeriCert-Peptides-One-Color-Gray-Gold.svg"
+            alt="VeriCert Peptides"
+            width={441}
+            height={194}
+            unoptimized
+            priority
+            className="h-[58.32px] w-auto sm:h-[64.8px]"
+          />
         </Link>
 
         <nav className="hidden items-center gap-6 xl:flex">
