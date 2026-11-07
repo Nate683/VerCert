@@ -42,9 +42,10 @@ export function Header() {
               50 visible). mt-[2.92px] centres the artwork itself: the file has
               2.9px more transparent space below it than above at this size.
               xl:mr-2 puts ≈28px between the artwork's right edge and SHOP.
-              -translate-y-[6px] lifts the artwork optically so the nav labels'
-              centreline meets the lower part of the wordmark, just above
-              PEPTIDES; a transform, so the layout and header height don't move. */}
+              -translate-y-[6px] lifts the artwork optically; from xl, where the
+              nav labels sit beside it, 10px puts the gap between VeriCert and
+              PEPTIDES at about SHOP's centreline. A transform, so the layout
+              and header height don't move. */}
           <Image
             src="/VeriCert-Peptides-One-Color-Gray-Gold.svg"
             alt="VeriCert Peptides"
@@ -52,7 +53,7 @@ export function Header() {
             height={135}
             unoptimized
             priority
-            className="mt-[2.92px] h-[57.37px] w-auto -translate-y-[6px]"
+            className="mt-[2.92px] h-[57.37px] w-auto -translate-y-[6px] xl:-translate-y-[10px]"
           />
         </Link>
 

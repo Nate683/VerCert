@@ -93,21 +93,24 @@ export default async function Home() {
         {/* Top padding is trimmed by exactly what the larger logo adds (it was
             py-28 with a 200 × 88 logo), so the headline and the hero's height
             stay where they were. */}
-        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 pt-[110px] pb-28 text-center sm:pt-[91.5px] lg:px-10">
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 pt-[110px] pb-10 text-center sm:pt-[91.5px] lg:px-10">
           {/* Edge watermarks: the gray emblem, oversized and cropped by the
               page edges, as on the packaging. The layer is inset by this
               wrapper's own padding, so it is exactly as tall as the content
-              group (logo top to button bottom) and each emblem's height follows
-              it. It spans the hero's full width (100cqw of the section, which
-              excludes the scrollbar) so the crop is measured from the page
-              edges. 45% of each emblem sits off the edge from 1400px; 75% from
-              lg to 1399px, where the margins beside the ≈670px headline are too
-              narrow for more; hidden below lg. Decorative only: behind the
-              content, no pointer events, hidden from assistive tech, 5% opacity
-              on the emblems alone. */}
+              group (logo top to button bottom; bottom-[136px] = the motto's
+              68px margin + 28px line + the wrapper's 40px padding) and each
+              emblem is 87.5% of that height, centred on it. It spans the hero's
+              full width (100cqw of the section, which excludes the scrollbar)
+              so the crop is measured from the page edges. 45% of each emblem
+              sits off the edge from 1400px; 75% from lg to 1399px, where the
+              margins beside the ≈670px headline are too narrow for more; hidden
+              below lg. The right emblem is mirrored (scale, a separate CSS
+              property from the translate that positions it). Decorative only:
+              behind the content, no pointer events, hidden from assistive
+              tech, 7% opacity on the emblems alone. */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute top-[110px] bottom-28 left-1/2 -z-[1] hidden w-[100cqw] -translate-x-1/2 select-none sm:top-[91.5px] lg:block"
+            className="pointer-events-none absolute top-[110px] bottom-[136px] left-1/2 -z-[1] hidden w-[100cqw] -translate-x-1/2 select-none sm:top-[91.5px] lg:block"
           >
             <Image
               src="/VeriCert-Emblem-Gray.svg"
@@ -115,7 +118,7 @@ export default async function Home() {
               width={312}
               height={345}
               unoptimized
-              className="absolute top-0 left-0 h-full w-auto max-w-none -translate-x-[75%] opacity-5 min-[1400px]:-translate-x-[45%]"
+              className="absolute top-1/2 left-0 h-[87.5%] w-auto max-w-none -translate-x-[75%] -translate-y-1/2 opacity-7 min-[1400px]:-translate-x-[45%]"
             />
             <Image
               src="/VeriCert-Emblem-Gray.svg"
@@ -123,7 +126,7 @@ export default async function Home() {
               width={312}
               height={345}
               unoptimized
-              className="absolute top-0 right-0 h-full w-auto max-w-none translate-x-[75%] opacity-5 min-[1400px]:translate-x-[45%]"
+              className="absolute top-1/2 right-0 h-[87.5%] w-auto max-w-none translate-x-[75%] -translate-y-1/2 -scale-x-100 opacity-7 min-[1400px]:translate-x-[45%]"
             />
           </div>
           {/* Full-colour lockup, as a vector. The artwork fills 267 × 118 of
@@ -170,6 +173,13 @@ export default async function Home() {
               {hero.ctaPrimaryLabel}
             </Link>
           </div>
+          {/* The motto, as a quiet signature in the white space under the
+              button that the wrapper's bottom padding used to hold (pb-28 →
+              pb-10): 48px + 24px line + 40px on phones keeps the hero's height;
+              68px + 28px + 40px from sm adds 24px. */}
+          <p className="mt-12 font-serif text-[15px] leading-6 italic text-muted opacity-[0.68] sm:mt-[68px] sm:text-lg sm:leading-7">
+            Don&apos;t just trust our brand. Verify our standards.
+          </p>
         </div>
       </section>
 
