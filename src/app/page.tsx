@@ -67,7 +67,7 @@ export default async function Home() {
       {/* Hero — a light editorial band. The type is navy with no scrim under
           it, so an uploaded hero photo has to sit behind a heavy paper veil
           rather than carry the composition the way the dark hero did. */}
-      <section className="relative isolate flex min-h-[85vh] items-center overflow-hidden border-b border-hairline bg-paper">
+      <section className="@container relative isolate flex min-h-[85vh] items-center overflow-hidden border-b border-hairline bg-paper">
         {hero.heroImageUrl ? (
           <>
             <EditableImage contentKey="home_hero" field="heroImageUrl">
@@ -90,8 +90,54 @@ export default async function Home() {
           </EditableImage>
         )}
 
-        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 py-28 text-center lg:px-10">
-          <VeriCertLogo className="mx-auto block h-auto w-[200px]" ground="light" priority />
+        {/* Top padding is trimmed by exactly what the larger logo adds (it was
+            py-28 with a 200 × 88 logo), so the headline and the hero's height
+            stay where they were. */}
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 pt-[110px] pb-28 text-center sm:pt-[91.5px] lg:px-10">
+          {/* Edge watermarks: the gray emblem, oversized and cropped by the
+              page edges, as on the packaging. The layer is inset by this
+              wrapper's own padding, so it is exactly as tall as the content
+              group (logo top to button bottom) and each emblem's height follows
+              it. It spans the hero's full width (100cqw of the section, which
+              excludes the scrollbar) so the crop is measured from the page
+              edges. 45% of each emblem sits off the edge from 1400px; 75% from
+              lg to 1399px, where the margins beside the ≈670px headline are too
+              narrow for more; hidden below lg. Decorative only: behind the
+              content, no pointer events, hidden from assistive tech, 5% opacity
+              on the emblems alone. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-[110px] bottom-28 left-1/2 -z-[1] hidden w-[100cqw] -translate-x-1/2 select-none sm:top-[91.5px] lg:block"
+          >
+            <Image
+              src="/VeriCert-Emblem-Gray.svg"
+              alt=""
+              width={312}
+              height={345}
+              unoptimized
+              className="absolute top-0 left-0 h-full w-auto max-w-none -translate-x-[75%] opacity-5 min-[1400px]:-translate-x-[45%]"
+            />
+            <Image
+              src="/VeriCert-Emblem-Gray.svg"
+              alt=""
+              width={312}
+              height={345}
+              unoptimized
+              className="absolute top-0 right-0 h-full w-auto max-w-none translate-x-[75%] opacity-5 min-[1400px]:translate-x-[45%]"
+            />
+          </div>
+          {/* Full-colour lockup, as a vector. The artwork fills 267 × 118 of
+              its 298 × 149 viewBox: at 217px wide it shows ≈194.5 × 85.8, 1.6×
+              the old JPG's 121.5 × 53.1 visible artwork. 180px on phones. */}
+          <Image
+            src="/VeriCert-Peptides-Full-Color-RGB-V2.svg"
+            alt="VeriCert Peptides"
+            width={298}
+            height={149}
+            unoptimized
+            priority
+            className="mx-auto block h-auto w-[180px] sm:w-[217px]"
+          />
           <EditableText
             value={hero.badge}
             as="p"

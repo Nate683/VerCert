@@ -41,7 +41,10 @@ export function Header() {
               box makes the visible logo 50px tall (119.6 × 57.4 box, 113.3 ×
               50 visible). mt-[2.92px] centres the artwork itself: the file has
               2.9px more transparent space below it than above at this size.
-              xl:mr-2 puts ≈28px between the artwork's right edge and SHOP. */}
+              xl:mr-2 puts ≈28px between the artwork's right edge and SHOP.
+              -translate-y-[6px] lifts the artwork optically so the nav labels'
+              centreline meets the lower part of the wordmark, just above
+              PEPTIDES; a transform, so the layout and header height don't move. */}
           <Image
             src="/VeriCert-Peptides-One-Color-Gray-Gold.svg"
             alt="VeriCert Peptides"
@@ -49,7 +52,7 @@ export function Header() {
             height={135}
             unoptimized
             priority
-            className="mt-[2.92px] h-[57.37px] w-auto"
+            className="mt-[2.92px] h-[57.37px] w-auto -translate-y-[6px]"
           />
         </Link>
 
