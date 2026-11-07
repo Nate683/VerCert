@@ -28,20 +28,28 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-gold/15 bg-navy/95 backdrop-blur">
-      {/* Vertical padding trimmed by exactly what the larger logo added, so
-          the header keeps its height (73.6px, and 87px from sm). */}
+      {/* The logo link's fixed height (58.32px, and 64.8px from sm) and this
+          padding set the header's height: 73.6px, and 87px from sm. */}
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-[7.15px] sm:gap-4 sm:px-6 sm:py-[10.6px] lg:px-10">
-        <Link href="/" className="flex min-h-11 shrink-0 items-center" aria-label="VeriCert home">
-          {/* The one-colour gray-and-gold lockup, as a vector. 120% of the
-              previous 48.6px / 54px height; width follows the 441:194 artwork. */}
+        <Link
+          href="/"
+          className="flex h-[58.32px] shrink-0 items-center sm:h-[64.8px] xl:mr-2"
+          aria-label="VeriCert home"
+        >
+          {/* The one-colour gray-and-gold lockup, as a vector. The artwork
+              fills 267.05 × 117.88 of its 282 × 135.24 viewBox, so a 57.37px
+              box makes the visible logo 50px tall (119.6 × 57.4 box, 113.3 ×
+              50 visible). mt-[2.92px] centres the artwork itself: the file has
+              2.9px more transparent space below it than above at this size.
+              xl:mr-2 puts ≈28px between the artwork's right edge and SHOP. */}
           <Image
             src="/VeriCert-Peptides-One-Color-Gray-Gold.svg"
             alt="VeriCert Peptides"
-            width={441}
-            height={194}
+            width={282}
+            height={135}
             unoptimized
             priority
-            className="h-[58.32px] w-auto sm:h-[64.8px]"
+            className="mt-[2.92px] h-[57.37px] w-auto"
           />
         </Link>
 
