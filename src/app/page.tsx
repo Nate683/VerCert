@@ -27,18 +27,20 @@ export const metadata = buildMetadata({
 // Products tab, so this page is rendered on demand rather than prebuilt.
 export const dynamic = "force-dynamic";
 
+// Owner-approved wording, November 7 2026. Analytical methods are described on
+// /how-we-test, not here.
 const TRUST_POINTS = [
   {
-    title: "HPLC-MS Verified",
-    body: "Every lot will be analyzed by reverse-phase HPLC and mass spectrometry to confirm identity and quantify purity before release.",
+    title: "Independently Verified",
+    body: "Each received lot undergoes independent laboratory analysis against VeriCert's established quality specifications before release.",
   },
   {
-    title: "Certificate Per Batch",
-    body: "A full certificate of analysis will be issued for each production batch and archived for independent verification at any time.",
+    title: "Certificate Per Lot",
+    body: "VeriCert randomly selects samples from each received lot for independent testing, with results documented in a lot-specific Certificate of Analysis.",
   },
   {
     title: "Independent Laboratories",
-    body: "Testing will be performed by accredited third-party analytical laboratories with no affiliation to VeriCert.",
+    body: "Testing is performed by independent third-party laboratories, with applicable accreditation verified for the services provided.",
   },
 ];
 
@@ -93,21 +95,20 @@ export default async function Home() {
         {/* Top padding is trimmed by exactly what the larger logo adds (it was
             py-28 with a 200 × 88 logo), so the headline and the hero's height
             stay where they were. */}
-        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 pt-[110px] pb-10 text-center sm:pt-[91.5px] lg:px-10">
-          {/* Edge watermarks: the gray emblem, oversized and cropped by the
-              page edges, as on the packaging. The layer is inset by this
+        {/* The bottom padding keeps the clear space under the button: 112px on
+            phones, 136px from sm (the space the hero has held since the motto
+            was added and then removed, so its height is unchanged). */}
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 pt-[110px] pb-28 text-center sm:pt-[91.5px] sm:pb-[136px] lg:px-10">
+          {/* Left edge watermark: the gray emblem, oversized and cropped by the
+              page's left edge, as on the packaging. The layer is inset by this
               wrapper's own padding, so it is exactly as tall as the content
-              group (logo top to button bottom; bottom-[136px] = the motto's
-              68px margin + 28px line + the wrapper's 40px padding) and each
-              emblem is 87.5% of that height, centred on it. It spans the hero's
-              full width (100cqw of the section, which excludes the scrollbar)
-              so the crop is measured from the page edges. 45% of each emblem
-              sits off the edge from 1400px; 75% from lg to 1399px, where the
-              margins beside the ≈670px headline are too narrow for more; hidden
-              below lg. The right emblem is mirrored (scale, a separate CSS
-              property from the translate that positions it). Decorative only:
-              behind the content, no pointer events, hidden from assistive
-              tech, 7% opacity on the emblems alone. */}
+              group (logo top to button bottom) and the emblem is 87.5% of that
+              height, centred on it. It spans the hero's full width (100cqw of
+              the section, which excludes the scrollbar) so the crop is measured
+              from the page edge: 45% off the edge from 1400px, 75% from lg to
+              1399px; hidden below lg. Decorative only: behind the content, no
+              pointer events, hidden from assistive tech, 5% opacity on the
+              emblem alone. */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute top-[110px] bottom-[136px] left-1/2 -z-[1] hidden w-[100cqw] -translate-x-1/2 select-none sm:top-[91.5px] lg:block"
@@ -118,15 +119,7 @@ export default async function Home() {
               width={312}
               height={345}
               unoptimized
-              className="absolute top-1/2 left-0 h-[87.5%] w-auto max-w-none -translate-x-[75%] -translate-y-1/2 opacity-7 min-[1400px]:-translate-x-[45%]"
-            />
-            <Image
-              src="/VeriCert-Emblem-Gray.svg"
-              alt=""
-              width={312}
-              height={345}
-              unoptimized
-              className="absolute top-1/2 right-0 h-[87.5%] w-auto max-w-none translate-x-[75%] -translate-y-1/2 -scale-x-100 opacity-7 min-[1400px]:translate-x-[45%]"
+              className="absolute top-1/2 left-0 h-[87.5%] w-auto max-w-none -translate-x-[75%] -translate-y-1/2 opacity-5 min-[1400px]:-translate-x-[45%]"
             />
           </div>
           {/* Full-colour lockup, as a vector. The artwork fills 267 × 118 of
@@ -173,14 +166,23 @@ export default async function Home() {
               {hero.ctaPrimaryLabel}
             </Link>
           </div>
-          {/* The motto, as a quiet signature in the white space under the
-              button that the wrapper's bottom padding used to hold (pb-28 →
-              pb-10): 48px + 24px line + 40px on phones keeps the hero's height;
-              68px + 28px + 40px from sm adds 24px. */}
-          <p className="mt-12 font-serif text-[15px] leading-6 italic text-muted opacity-[0.68] sm:mt-[68px] sm:text-lg sm:leading-7">
-            Don&apos;t just trust our brand. Verify our standards.
-          </p>
         </div>
+        {/* Lower-right emblem: the same gray emblem, small and complete, set in
+            the white space below and right of the content, a counterweight to
+            the large cropped one on the left. Original orientation, 5% opacity,
+            fully inside the hero. The circle fills 275 of the file's 312 units
+            of width, so 272px wide draws a ≈240px circle (from 1400px); 160px
+            (≈141px circle) from lg to 1399px, where a larger one would crowd
+            the paragraph; hidden below lg. Decorative only. */}
+        <Image
+          src="/VeriCert-Emblem-Gray.svg"
+          alt=""
+          aria-hidden="true"
+          width={312}
+          height={345}
+          unoptimized
+          className="pointer-events-none absolute right-8 bottom-8 -z-[1] hidden h-auto w-[160px] select-none opacity-5 lg:block min-[1400px]:right-20 min-[1400px]:w-[272px]"
+        />
       </section>
 
       {/* The rest of the light storefront shell. The hero above is light too
