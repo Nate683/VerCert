@@ -10,13 +10,19 @@ import type { Product } from "@/lib/types";
 import type { BlendComponentInfo } from "@/lib/products/blend-components";
 import { VialGlyph } from "@/components/VialGlyph";
 import { intervalLabel, subscriptionUnitPrice } from "@/lib/subscriptions/rules";
+import { AVAILABILITY_LABELS, availabilityStatus, isPurchasable } from "@/lib/products/availability";
 
 export function AddToCartPanel({
   product,
   components = {},
   subscription = null,
+  orderingEnabled,
+  orderingUnavailableLabel,
 }: {
   product: Product;
+  // The ordering switch (lib/ordering.ts) and its heading, read on the server.
+  orderingEnabled: boolean;
+  orderingUnavailableLabel: string;
   components?: Record<string, BlendComponentInfo>;
   // Set only when subscribe-and-save is on and this product qualifies.
   subscription?: { discountPercent: number; intervalDays: number[] } | null;
@@ -36,6 +42,10 @@ export function AddToCartPanel({
   // added (checkout would refuse it), and the quantity can't exceed what's left.
   const stock = product.sizeStock?.[size.label] ?? product.stock;
   const outOfStock = stock?.status === "out";
+  // Availability status first: anything but In Stock can't be bought, and
+  // In Stock only while ordering is on and this size has units.
+  const status = availabilityStatus(product);
+  const purchasable = isPurchasable(product, stock, orderingEnabled);
   const maxQuantity = stock ? Math.max(1, Math.min(999, stock.remaining)) : 999;
   const tierPrice = resolveUnitPrice(size, quantity);
   const subscribing = Boolean(subscription && intervalDays);
@@ -52,6 +62,7 @@ export function AddToCartPanel({
     .find((tier) => tier.minQuantity > quantity);
 
   function handleAdd() {
+    if (!purchasable) return;
     addItem({
       slug: product.slug,
       name: product.name,
@@ -154,7 +165,12 @@ export function AddToCartPanel({
         </div>
       )}
 
-      {stock && (
+      {status !== "in_stock" ? (
+        <p className="mt-6 flex items-center gap-2 text-sm text-muted">
+          <span aria-hidden="true" className="h-2 w-2 rounded-full bg-muted" />
+          {AVAILABILITY_LABELS[status]}
+        </p>
+      ) : stock && (
         <p className={`mt-6 flex items-center gap-2 text-sm ${stock.status === "out" ? "text-muted" : "text-navy"}`}>
           <span
             aria-hidden="true"
@@ -171,7 +187,7 @@ export function AddToCartPanel({
       )}
 
       {/* Subscribe and save: single compounds only, when a discount is set. */}
-      {subscription && !outOfStock && (
+      {subscription && purchasable && (
         <fieldset className="mt-6">
           <legend className="text-xs uppercase tracking-[0.25em] text-gold-ink">Purchase</legend>
           <div className="mt-3 space-y-2">
@@ -318,10 +334,20 @@ export function AddToCartPanel({
       <button
         type="button"
         onClick={handleAdd}
-        disabled={outOfStock}
+        disabled={!purchasable}
         className="mt-5 w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:cursor-not-allowed disabled:border-hairline disabled:bg-surface disabled:text-muted"
       >
-        {outOfStock ? "Out of Stock" : added ? "Added ✓" : subscribing ? "Subscribe & Add to Cart" : "Add to Cart"}
+        {status !== "in_stock"
+          ? AVAILABILITY_LABELS[status]
+          : outOfStock
+            ? "Out of Stock"
+            : !orderingEnabled
+              ? orderingUnavailableLabel
+              : added
+                ? "Added ✓"
+                : subscribing
+                  ? "Subscribe & Add to Cart"
+                  : "Add to Cart"}
       </button>
 
       {added && (

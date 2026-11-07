@@ -7,7 +7,7 @@ import { ProductImage } from "./ProductImage";
 import { useExecMode } from "@/lib/exec-mode-context";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
 import { pricedSizes } from "@/lib/products/pricing";
-import { stockLabel } from "@/lib/products/stock";
+import { availabilityLabel, availabilityStatus } from "@/lib/products/availability";
 
 // The tile's unit price. One size (or the one a signed-out homepage tile
 // carries, see withPublicPrice): "$64.99 / 10mg vial". Several: the range,
@@ -90,12 +90,17 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
         {/* Info block. Deliberately dark against the light shell so the tile
             reads as one object and the image sits on a matching ground. */}
         <div className="flex flex-1 flex-col border-t border-gold/15 bg-navy p-5">
-          <div className="mb-3 flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.16em]">
+          {/* Wraps rather than truncating the category when the status is long
+              ("Pending Independent Testing"). */}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.16em]">
             {product.category ? <span className="truncate text-gold">{product.category}</span> : <span />}
-            {/* Stock from the inventory table (withStock). Without it, say
-                nothing rather than claim "In Stock". */}
+            {/* The availability status (lib/products/availability.ts). In Stock
+                defers to the inventory table (withStock): without stock data,
+                say nothing rather than claim "In Stock". */}
             {!active ? (
               <span className="shrink-0 text-white/50">Unavailable</span>
+            ) : availabilityStatus(product) !== "in_stock" ? (
+              <span className="shrink-0 text-white/55">{availabilityLabel(product, product.stock)}</span>
             ) : product.stock ? (
               <span
                 className={`shrink-0 ${
@@ -106,7 +111,7 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
                       : "text-white/70"
                 }`}
               >
-                {stockLabel(product.stock)}
+                {availabilityLabel(product, product.stock)}
               </span>
             ) : null}
           </div>

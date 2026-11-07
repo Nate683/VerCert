@@ -48,7 +48,12 @@ export type Product = {
   primaryImageUrl?: string;
   galleryImageUrls?: string[];
   sortOrder?: number;
+  // Visibility: whether the product appears in the shop at all. Independent
+  // of availabilityStatus.
   active?: boolean;
+  // Coming Soon / Pending Independent Testing / In Stock / Out of Stock
+  // (lib/products/availability.ts). Only In Stock can be bought.
+  availabilityStatus?: import("./products/availability").AvailabilityStatus;
   costUsd?: number;
   createdAt?: string;
   updatedAt?: string;

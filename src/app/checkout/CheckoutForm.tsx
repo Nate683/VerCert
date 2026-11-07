@@ -65,6 +65,8 @@ export function CheckoutForm({
   bankTransferAvailable,
   referralPromoCode,
   askResearchCategory = false,
+  orderingEnabled,
+  orderingUnavailable,
 }: {
   initialEmail: string;
   initialAddress?: SavedAddress;
@@ -73,6 +75,9 @@ export function CheckoutForm({
   referralPromoCode?: string;
   /** An affiliate with no research category on file: required with this order. */
   askResearchCategory?: boolean;
+  /** The ordering switch and its message, both from lib/ordering.ts. */
+  orderingEnabled: boolean;
+  orderingUnavailable: { heading: string; body: string };
 }) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
@@ -83,6 +88,9 @@ export function CheckoutForm({
     (o) => isPaymentMethodAvailable(o.value) && (o.value !== "bank_transfer" || bankTransferAvailable)
   );
   const noPaymentMethod = paymentOptions.length === 0;
+  // Ordering switched off, or no way to pay: the payment section shows the
+  // ordering-unavailable message and the order can't be placed.
+  const orderingClosed = !orderingEnabled || noPaymentMethod;
 
   const [values, setValues] = useState<FormValues>({
     email: initialEmail,
@@ -215,6 +223,7 @@ export function CheckoutForm({
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (orderingClosed) return;
     if (submitting) return;
     setError(null);
 
@@ -382,16 +391,13 @@ export function CheckoutForm({
               3 · Payment Method
             </h2>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {noPaymentMethod && (
-                <p className="border border-hairline p-5 text-sm leading-relaxed text-muted sm:col-span-2">
-                  Online payment isn&apos;t available right now. Email{" "}
-                  <a href="mailto:info@vericertpeptides.com" className="text-gold-ink underline underline-offset-2">
-                    info@vericertpeptides.com
-                  </a>{" "}
-                  and we&apos;ll help you place your order.
-                </p>
+              {orderingClosed && (
+                <div role="status" className="border border-hairline p-5 sm:col-span-2">
+                  <h3 className="font-serif text-lg text-navy">{orderingUnavailable.heading}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{orderingUnavailable.body}</p>
+                </div>
               )}
-              {paymentOptions.map((option) => (
+              {!orderingClosed && paymentOptions.map((option) => (
                 <label
                   key={option.value}
                   className={`cursor-pointer border p-5 transition-colors ${
@@ -472,7 +478,7 @@ export function CheckoutForm({
 
             <button
               type="submit"
-              disabled={submitting || noPaymentMethod}
+              disabled={submitting || orderingClosed}
               className="w-full border border-gold bg-gold py-3.5 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-gold disabled:hover:text-black"
             >
               {submitting ? "Placing order…" : `Place Order · $${total.toFixed(2)}`}

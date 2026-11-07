@@ -3,6 +3,7 @@ import { getCurrentCustomer } from "@/lib/users/current-user";
 import { getBankTransferDetails } from "@/lib/bank-details";
 import { getAffiliateByEmail, getReferringAffiliate } from "@/lib/affiliates";
 import { CheckoutForm } from "./CheckoutForm";
+import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export default async function CheckoutPage() {
   // An affiliate with no research category on file gives one here; customers
   // are asked by the one-time prompt instead.
   const askResearchCategory = !customer.researchCategory && Boolean(await getAffiliateByEmail(customer.email));
+  const orderingEnabled = await isOrderingEnabled();
 
   return (
     <CheckoutForm
@@ -24,6 +26,8 @@ export default async function CheckoutPage() {
       bankTransferAvailable={getBankTransferDetails().isConfigured}
       referralPromoCode={referrer ? customer.attribution?.ref?.toUpperCase() : undefined}
       askResearchCategory={askResearchCategory}
+      orderingEnabled={orderingEnabled}
+      orderingUnavailable={ORDERING_UNAVAILABLE}
     />
   );
 }

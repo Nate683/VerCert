@@ -11,6 +11,8 @@ import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { updateUser } from "@/lib/users/store";
 import { findInsufficientStock } from "@/lib/inventory";
+import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
+import { availabilityStatus } from "@/lib/products/availability";
 import type { CartItem } from "@/lib/types";
 import { createOrderSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
@@ -33,6 +35,12 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       { error: "Please sign in to complete your purchase." },
       { status: 401 }
     );
+  }
+
+  // Ordering switched off (lib/ordering.ts): refused before anything is read
+  // or saved, whatever the request contains.
+  if (!(await isOrderingEnabled())) {
+    return NextResponse.json({ error: ORDERING_UNAVAILABLE.body, orderingUnavailable: true }, { status: 403 });
   }
 
   const ip = getClientIp(request);
@@ -80,6 +88,13 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     const size = product && pricedSizes(product).find((s) => s.label === item.sizeLabel);
     if (!product || !size) {
       return NextResponse.json({ error: `Invalid cart item: ${item.slug}` }, { status: 400 });
+    }
+    // Only In Stock can be bought; units are checked below with the rest of the cart.
+    if (availabilityStatus(product) !== "in_stock") {
+      return NextResponse.json(
+        { error: `${product.name} isn't available to order right now. Remove it from your cart to continue.` },
+        { status: 409 }
+      );
     }
     const listPrice = resolveUnitPrice(size, item.quantity);
     let priceUsd = listPrice;

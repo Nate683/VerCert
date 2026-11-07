@@ -43,6 +43,8 @@ export function SiteContentPanel() {
   const [faq, setFaq] = useState<FaqItem[] | null>(null);
   const [contact, setContact] = useState<ContactContent | null>(null);
   const [policies, setPolicies] = useState<PoliciesContent | null>(null);
+  // The online-ordering switch (lib/ordering.ts) and the key it's saved under.
+  const [ordering, setOrdering] = useState<{ enabled: boolean; key: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -58,6 +60,7 @@ export function SiteContentPanel() {
       setFaq(data.faqItems);
       setContact(data.contactPage);
       setPolicies(data.policies);
+      setOrdering(data.ordering);
     }
     if (productsRes.ok) {
       const data = await productsRes.json();
@@ -105,12 +108,34 @@ export function SiteContentPanel() {
     }
   }
 
-  if (loading || !hero || !featured || !about || !faq || !contact || !policies) {
+  if (loading || !hero || !featured || !about || !faq || !contact || !policies || !ordering) {
     return <p className="text-sm text-white/30">Loading...</p>;
   }
 
   return (
     <div className="space-y-6">
+      {/* Online ordering: off shows the "Ordering Temporarily Unavailable"
+          message at checkout and refuses every order. Takes effect at once. */}
+      <div className={SECTION_CARD}>
+        <p className="text-xs uppercase tracking-[0.2em] text-white/40">Online Ordering</p>
+        <label className="input-field mt-4 flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={ordering.enabled}
+            onChange={(e) => setOrdering({ ...ordering, enabled: e.target.checked })}
+            className="h-4 w-4 accent-gold"
+          />
+          <span className="text-sm text-white/70">
+            {ordering.enabled
+              ? "On — customers can place orders"
+              : "Off — checkout shows \"Ordering Temporarily Unavailable\" and no order can be placed"}
+          </span>
+        </label>
+        <SaveButton saving={savingKey === ordering.key} onClick={() => save(ordering.key, { enabled: ordering.enabled })} />
+        {savedKey === ordering.key && <span className="ml-3 text-xs text-gold">Saved.</span>}
+        {saveError?.key === ordering.key && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
+      </div>
+
       {/* Homepage Hero */}
       <div className={SECTION_CARD}>
         <p className="text-xs uppercase tracking-[0.2em] text-white/40">Homepage Hero</p>

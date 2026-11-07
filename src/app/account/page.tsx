@@ -18,6 +18,8 @@ import { AccountDataSection } from "./AccountDataSection";
 import { SubscriptionsSection } from "./SubscriptionsSection";
 import { listSubscriptionsForCustomer } from "@/lib/subscriptions/store";
 import { getContent } from "@/lib/site-content";
+import { isOrderingEnabled } from "@/lib/ordering";
+import { availabilityStatus } from "@/lib/products/availability";
 import { DEFAULT_SUBSCRIPTION_SETTINGS } from "@/lib/subscriptions/rules";
 
 export const dynamic = "force-dynamic";
@@ -49,12 +51,13 @@ export default async function AccountPage() {
   const customer = await getCurrentCustomer();
   if (!customer) redirect("/login?next=/account");
 
-  const [orders, affiliate, products, subscriptions, subscriptionSettings] = await Promise.all([
+  const [orders, affiliate, products, subscriptions, subscriptionSettings, orderingEnabled] = await Promise.all([
     getOrdersByCustomer(customer.id),
     getAffiliateByEmail(customer.email),
     listProducts({ includeInactive: true }),
     listSubscriptionsForCustomer(customer.id),
     getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS),
+    isOrderingEnabled(),
   ]);
   const subscriptionViews = subscriptions.map((s) => ({
     id: s.id,
@@ -78,7 +81,9 @@ export default async function AccountPage() {
     for (const item of order.items) {
       const product = products.find((p) => p.slug === item.slug);
       const size = product && pricedSizes(product).find((s) => s.label === item.sizeLabel);
-      if (!product || !size || product.active === false) {
+      // Only what can be ordered right now: visible, In Stock, and ordering on
+      // (lib/ordering.ts). Units are checked at checkout, as before.
+      if (!product || !size || product.active === false || availabilityStatus(product) !== "in_stock" || !orderingEnabled) {
         unavailable.push(item.name);
         continue;
       }

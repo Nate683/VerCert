@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { HEARD_ABOUT_VALUES } from "@/lib/marketing/heard-about";
 import { PASSWORD_MAX_LENGTH } from "@/lib/users/password-policy";
 import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
+import { AVAILABILITY_STATUSES } from "@/lib/products/availability";
 
 // Shared zod schemas for the highest-risk request bodies (auth + money
 // paths). Parse with `parseBody` to get a consistent 400 response shape.
@@ -190,6 +191,7 @@ export const productSchema = z.object({
   // stock (initialStock).
   sizeStock: z.record(z.string().trim().min(1).max(50), z.number().int().min(0).max(1000000).nullable()).optional(),
   active: z.boolean().optional(),
+  availabilityStatus: z.enum(AVAILABILITY_STATUSES).optional(),
   costUsd: z.number().min(0).max(1000000).optional(),
 });
 

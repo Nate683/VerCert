@@ -556,6 +556,18 @@ async function main() {
   await sql`ALTER TABLE products ALTER COLUMN category DROP NOT NULL`;
   // Other names a product is sold or searched under (JSON array of strings).
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS alternate_names TEXT`;
+  // Availability status, separate from visibility (active) and from inventory.
+  // Every existing row starts at Coming Soon (scripts/availability-status.mjs
+  // applies this to production with before/after counts).
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS availability_status TEXT NOT NULL DEFAULT 'coming_soon'`;
+  await sql`
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'products_availability_status_check') THEN
+        ALTER TABLE products ADD CONSTRAINT products_availability_status_check
+          CHECK (availability_status IN ('coming_soon', 'pending_testing', 'in_stock', 'out_of_stock'));
+      END IF;
+    END $$
+  `;
 
   // The research-use attestation ticked at checkout, recorded per order: the
   // exact wording shown, when, and from which IP. Null on orders placed

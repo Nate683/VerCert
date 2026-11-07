@@ -17,6 +17,8 @@ import { blendComponents } from "@/lib/products/blend-components";
 import { withStock } from "@/lib/inventory";
 import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { SCHEMA_AVAILABILITY } from "@/lib/products/stock";
+import { availabilityStatus } from "@/lib/products/availability";
+import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
 import { getContent } from "@/lib/site-content";
 import { DEFAULT_SUBSCRIPTION_SETTINGS, isSubscribable, subscriptionsEnabled } from "@/lib/subscriptions/rules";
 
@@ -61,7 +63,10 @@ export default async function ProductDetailPage({
   const [certifiedFound, ...catalog] = await withCertifiedPurity([found, ...fullCatalog]);
   const [product, ...allProducts] = await withStock([certifiedFound, ...catalog.filter(isOnSale)]);
   const components = blendComponents(product, catalog);
-  const subscriptionSettings = await getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS);
+  const [subscriptionSettings, orderingEnabled] = await Promise.all([
+    getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS),
+    isOrderingEnabled(),
+  ]);
 
   // Related = same category first, then anything else, so the rail is never
   // short on a thin category.
@@ -103,7 +108,11 @@ export default async function ProductDetailPage({
       lowPrice: Math.min(...prices),
       highPrice: Math.max(...prices),
       offerCount: prices.length,
-      availability: SCHEMA_AVAILABILITY[product.stock?.status ?? "out"],
+      // Only In Stock can be ordered; every other status is reported as out of stock.
+      availability:
+        availabilityStatus(product) === "in_stock"
+          ? SCHEMA_AVAILABILITY[product.stock?.status ?? "out"]
+          : SCHEMA_AVAILABILITY.out,
     },
   };
 
@@ -190,6 +199,8 @@ export default async function ProductDetailPage({
             <AddToCartPanel
               product={toStorefrontProduct(product)}
               components={components}
+              orderingEnabled={orderingEnabled}
+              orderingUnavailableLabel={ORDERING_UNAVAILABLE.heading}
               subscription={
                 subscriptionsEnabled(subscriptionSettings) && isSubscribable(product)
                   ? { discountPercent: subscriptionSettings.discountPercent, intervalDays: subscriptionSettings.intervalDays }

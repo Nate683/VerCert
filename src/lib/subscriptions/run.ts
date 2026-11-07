@@ -4,6 +4,8 @@ import { creditedAffiliateId, isSelfPurchase } from "@/lib/affiliates/referral";
 import { getUserById } from "@/lib/users/store";
 import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
 import { findInsufficientStock } from "@/lib/inventory";
+import { isOrderingEnabled } from "@/lib/ordering";
+import { availabilityStatus } from "@/lib/products/availability";
 import { sendOrderConfirmationEmail, sendTransactionalEmail, sendAdminNotification } from "@/lib/email";
 import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getSiteUrl } from "@/lib/site-url";
@@ -15,7 +17,7 @@ import { addDays, listDueSubscriptions, updateSubscription, type Subscription } 
 
 const ACTOR = "system:subscriptions";
 
-export type RunResult = { reference?: string; subscriptionId: string; outcome: "ordered" | "waiting_for_stock" | "paused" | "payment_unavailable" };
+export type RunResult = { reference?: string; subscriptionId: string; outcome: "ordered" | "waiting_for_stock" | "paused" | "payment_unavailable" | "ordering_unavailable" };
 
 // Places the order for every active subscription that's due. Payment is
 // manual, so each run creates an ordinary order awaiting payment and emails
@@ -27,12 +29,16 @@ export type RunResult = { reference?: string; subscriptionId: string; outcome: "
 //   next daily run tries again; the reason is shown to customer and staff.
 // - Product withdrawn (inactive, unpriced, or now a blend): paused, and the
 //   customer is told.
+// - Ordering switched off (lib/ordering.ts): nothing is ordered or changed, and
+//   the due date isn't moved, so the first run after it's back on places it.
+// - Product not In Stock (availability status): waits like out of stock.
 export async function runDueSubscriptions(now = new Date()): Promise<RunResult[]> {
   const due = await listDueSubscriptions(now.toISOString());
+  const orderingEnabled = due.length > 0 && (await isOrderingEnabled());
   const results: RunResult[] = [];
   for (const sub of due) {
     try {
-      results.push(await runOne(sub, now));
+      results.push(await runOne(sub, now, orderingEnabled));
     } catch (err) {
       console.error(`[subscriptions] run failed for ${sub.id}:`, err);
     }
@@ -40,7 +46,7 @@ export async function runDueSubscriptions(now = new Date()): Promise<RunResult[]
   return results;
 }
 
-async function runOne(sub: Subscription, now: Date): Promise<RunResult> {
+async function runOne(sub: Subscription, now: Date, orderingEnabled: boolean): Promise<RunResult> {
   const product = await getProductBySlug(sub.productSlug);
   const size = product && pricedSizes(product).find((s) => s.label === sub.sizeLabel);
 
@@ -62,6 +68,14 @@ async function runOne(sub: Subscription, now: Date): Promise<RunResult> {
     ).catch((err) => console.error("[subscriptions] pause email failed:", err));
     await logActivity(ACTOR, "subscription.paused", `${sub.id}: ${reason}`);
     return { subscriptionId: sub.id, outcome: "paused" };
+  }
+
+  if (!orderingEnabled) return { subscriptionId: sub.id, outcome: "ordering_unavailable" };
+
+  if (availabilityStatus(product) !== "in_stock") {
+    const reason = "Waiting for availability — the order is placed as soon as it's available.";
+    if (sub.statusReason !== reason) await updateSubscription(sub.id, { statusReason: reason });
+    return { subscriptionId: sub.id, outcome: "waiting_for_stock" };
   }
 
   const listPrice = resolveUnitPrice(size, sub.quantity);

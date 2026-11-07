@@ -24,7 +24,7 @@ export function ReorderButton({
   if (items.length === 0) {
     return (
       <span className="text-xs uppercase tracking-[0.12em] text-muted/70">
-        No longer available
+        Currently unavailable
       </span>
     );
   }
@@ -47,7 +47,7 @@ export function ReorderButton({
       </button>
       {unavailable.length > 0 && (
         <p className="mt-1 text-[11px] text-muted">
-          {unavailable.length} item(s) no longer stocked
+          {unavailable.length} item(s) currently unavailable
         </p>
       )}
     </div>

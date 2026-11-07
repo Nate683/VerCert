@@ -6,6 +6,13 @@ import { CATEGORIES } from "@/lib/products";
 import { ProductCardImage } from "./ProductCardImage";
 import { ProductGalleryEditor } from "./ProductGalleryEditor";
 import { formatPurity } from "@/lib/products/specs";
+import {
+  AVAILABILITY_LABELS,
+  AVAILABILITY_STATUSES,
+  DEFAULT_AVAILABILITY_STATUS,
+  availabilityStatus,
+  type AvailabilityStatus,
+} from "@/lib/products/availability";
 
 type StockLevel = { quantity: number; threshold: number };
 // stock is the shared count; sizeLevels holds sizes counted separately.
@@ -36,6 +43,7 @@ type FormState = {
   sizes: SizeForm[];
   initialStock: string;
   active: boolean;
+  availabilityStatus: AvailabilityStatus;
   costUsd: string;
 };
 
@@ -58,6 +66,7 @@ function emptyForm(): FormState {
     sizes: [{ ...EMPTY_SIZE }],
     initialStock: "0",
     active: true,
+    availabilityStatus: DEFAULT_AVAILABILITY_STATUS,
     costUsd: "",
   };
 }
@@ -86,6 +95,7 @@ function productToForm(p: ProductWithStock): FormState {
     })),
     initialStock: String(p.stock?.quantity ?? 0),
     active: p.active ?? true,
+    availabilityStatus: availabilityStatus(p),
     costUsd: p.costUsd !== undefined ? String(p.costUsd) : "",
   };
 }
@@ -142,6 +152,7 @@ function formToPayload(form: FormState) {
         .map((s) => [s.label.trim(), s.stock.trim() ? Number(s.stock) || 0 : null])
     ),
     active: form.active,
+    availabilityStatus: form.availabilityStatus,
     costUsd: form.costUsd.trim() ? Number(form.costUsd) : undefined,
   };
 }
@@ -391,6 +402,9 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                       </span>
                     </div>
                     <p className="mt-1 font-serif text-lg text-white">{p.name}</p>
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.15em] text-white/50">
+                      {AVAILABILITY_LABELS[availabilityStatus(p)]}
+                    </p>
                     {formatPurity(p.purityPercent) && (
                       <p className="mt-1 text-xs text-white/40">{formatPurity(p.purityPercent)} purity</p>
                     )}
@@ -505,6 +519,24 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                 </option>
               ))}
             </select>
+            {/* Availability status: what customers are told and whether it can
+                be bought. Visibility is the separate checkbox below; neither
+                changes the other, or the stock counts. */}
+            <label className="block">
+              <span className="text-[10px] uppercase tracking-[0.1em] text-white/40">Product Availability Status</span>
+              <select
+                value={form.availabilityStatus}
+                onChange={(e) => setForm((f) => ({ ...f, availabilityStatus: e.target.value as AvailabilityStatus }))}
+                aria-label="Product Availability Status"
+                className="input-field mt-1"
+              >
+                {AVAILABILITY_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {AVAILABILITY_LABELS[s]}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="input-field flex items-center gap-3">
               <input
                 type="checkbox"
@@ -513,7 +545,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                 className="h-4 w-4 accent-gold"
               />
               <span className="text-sm text-white/70">
-                {form.active ? "Active — visible in shop" : "Hidden — pulled from shop"}
+                {form.active ? "Visible in shop" : "Hidden — pulled from shop"}
               </span>
             </label>
             {/* Specs are optional: anything left blank stays off the storefront. */}

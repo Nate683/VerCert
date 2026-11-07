@@ -19,6 +19,7 @@ import {
   GUARD_EXEMPT_CONTENT_KEYS,
 } from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
+import { getOrderingSettings, ORDERING_CONTENT_KEY } from "@/lib/ordering";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export const GET = withApiErrorHandling(async () => {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const [homeHero, featuredProducts, aboutPage, faqItems, contactPage, policies, saleBanner, commissionStructure] =
+  const [homeHero, featuredProducts, aboutPage, faqItems, contactPage, policies, saleBanner, commissionStructure, ordering] =
     await Promise.all([
       getContent("home_hero", DEFAULT_HOME_HERO),
       getContent("featured_products", DEFAULT_FEATURED),
@@ -38,6 +39,7 @@ export const GET = withApiErrorHandling(async () => {
       getContent("policies", DEFAULT_POLICIES),
       getContent("sale_banner", DEFAULT_SALE_BANNER),
       getContent("commission_structure", DEFAULT_COMMISSION_STRUCTURE),
+      getOrderingSettings(),
     ]);
 
   return NextResponse.json({
@@ -49,6 +51,8 @@ export const GET = withApiErrorHandling(async () => {
     policies,
     saleBanner,
     commissionStructure,
+    // The online-ordering switch (lib/ordering.ts), saved under its own key.
+    ordering: { ...ordering, key: ORDERING_CONTENT_KEY },
   });
 });
 

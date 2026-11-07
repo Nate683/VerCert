@@ -57,12 +57,9 @@ export default async function OrderPage({
   // the bank-transfer instructions it used to fall through to.
   const cryptoNotSetUp = isPending && order.paymentMethod === "crypto" && !order.crypto;
 
+  // Status only: no payment is arranged outside checkout.
   const nextSteps = cryptoNotSetUp
-    ? [
-        "No crypto payment address was issued, so please don't send cryptocurrency for this order.",
-        "Email us with your reference and we'll help you complete payment another way.",
-        "Once payment is received, your order ships with tracking within 1–2 business days.",
-      ]
+    ? ["No crypto payment address was issued, so please don't send cryptocurrency for this order."]
     : isPending
     ? [
         "Complete payment using the panel on this page.",
@@ -120,14 +117,6 @@ export default async function OrderPage({
               <p className="mt-4 text-sm leading-relaxed text-muted">
                 Crypto payment couldn&apos;t be set up for this order, so no payment address or window was
                 issued. Please don&apos;t send cryptocurrency for it.
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-muted">
-                Email{" "}
-                <a href={`mailto:${supportEmail ?? "info@vericertpeptides.com"}`} className="text-gold-ink underline underline-offset-2">
-                  {supportEmail ?? "info@vericertpeptides.com"}
-                </a>{" "}
-                with your reference <span className="font-mono text-navy">{order.reference}</span> and
-                we&apos;ll help you complete payment another way.
               </p>
             </section>
           ) : isPending ? (
