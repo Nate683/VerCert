@@ -210,7 +210,9 @@ export default async function Home() {
             <p className="mt-8 text-center text-sm text-muted">
               Ordering is reserved for registered research customers. Certificates of Analysis will be
               available for public verification without requiring an account.{" "}
-              <Link href="/register" className="text-gold-ink underline underline-offset-4 hover:text-navy">
+              {/* A deeper gold than gold-ink (#82673B, 5.31:1 on white) so the link
+                  reads as clearly clickable at this size: #6E5530, 6.99:1. */}
+              <Link href="/register" className="text-[#6E5530] underline underline-offset-4 hover:text-navy">
                 Create a free account
               </Link>{" "}
               to order.
@@ -239,7 +241,10 @@ export default async function Home() {
             <div className="mt-16 grid grid-cols-1 gap-12 sm:grid-cols-3">
               {TRUST_POINTS.map((point, i) => (
                 <ScrollReveal key={point.title} delayMs={i * 100} className="flex flex-col items-center text-center">
-                  <VialGlyph className="h-14 w-14 text-gold-ink" />
+                  {/* 15% larger than h-14 (56px → 64.4px). The glyph's strokes
+                      scale with it, so they're divided by 1.15 (1.5 → 1.304,
+                      1 → 0.87) to keep the rendered line weight unchanged. */}
+                  <VialGlyph className="h-[64.4px] w-[64.4px] text-gold-ink [&_line]:[stroke-width:0.87] [&_path]:[stroke-width:1.304] [&_rect]:[stroke-width:1.304]" />
                   <h3 className="mt-6 font-serif text-xl text-navy">{point.title}</h3>
                   <p className="mt-3 text-sm leading-relaxed text-muted">{point.body}</p>
                 </ScrollReveal>

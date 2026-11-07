@@ -90,20 +90,21 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
         {/* Info block. Deliberately dark against the light shell so the tile
             reads as one object and the image sits on a matching ground. */}
         <div className="flex flex-1 flex-col border-t border-gold/15 bg-navy p-5">
-          {/* Wraps rather than truncating the category when the status is long
-              ("Pending Independent Testing"). */}
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-[10px] uppercase tracking-[0.16em]">
-            {product.category ? <span className="truncate text-gold">{product.category}</span> : <span />}
+          {/* Category, then the availability status on its own line beneath it,
+              on every card. Each line keeps its height even when empty, so the
+              name below starts at the same height on every tile. */}
+          <div className="mb-3 flex flex-col items-start gap-1 text-[10px] uppercase tracking-[0.16em]">
+            <span className="min-h-[1lh] max-w-full truncate text-gold">{product.category ?? ""}</span>
             {/* The availability status (lib/products/availability.ts). In Stock
                 defers to the inventory table (withStock): without stock data,
                 say nothing rather than claim "In Stock". */}
             {!active ? (
-              <span className="shrink-0 text-white/50">Unavailable</span>
+              <span className="min-h-[1lh] text-white/50">Unavailable</span>
             ) : availabilityStatus(product) !== "in_stock" ? (
-              <span className="shrink-0 text-white/55">{availabilityLabel(product, product.stock)}</span>
+              <span className="min-h-[1lh] text-white/55">{availabilityLabel(product, product.stock)}</span>
             ) : product.stock ? (
               <span
-                className={`shrink-0 ${
+                className={`min-h-[1lh] ${
                   product.stock.status === "out"
                     ? "text-white/55"
                     : product.stock.status === "low"
@@ -113,16 +114,25 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
               >
                 {availabilityLabel(product, product.stock)}
               </span>
-            ) : null}
+            ) : (
+              <span className="min-h-[1lh]" />
+            )}
           </div>
-          <h3 className="font-serif text-lg leading-snug text-white">{product.name}</h3>
+          {/* The name holds two lines' height, so one- and two-line names put
+              the price at the same height on every card; a longer name wraps
+              naturally. The button sits at the foot of the card (mt-auto, at
+              least 16px below the price), so buttons line up across a row even
+              when a price or name runs to an extra line. */}
+          <h3 className="min-h-[2lh] font-serif text-lg leading-snug text-white">{product.name}</h3>
           {price && <p className="mt-4 text-sm text-white">{price}</p>}
 
           {/* A span, not a button: the whole tile is already one link, and a
               nested interactive element would be invalid and unreachable. */}
-          <span className="mt-4 block border border-gold/50 px-4 py-2.5 text-center text-[11px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:bg-gold group-hover:text-black">
-            {pricingLocked ? "Verify Account to Order" : "Select options"}
-          </span>
+          <div className="mt-auto pt-4">
+            <span className="block border border-gold/50 px-4 py-2.5 text-center text-[11px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:bg-gold group-hover:text-black">
+              {pricingLocked ? "Verify Account to Order" : "Select options"}
+            </span>
+          </div>
         </div>
       </Link>
       {execMode && (

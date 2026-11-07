@@ -22,17 +22,18 @@ export function Footer({ contact }: { contact: ContactContent }) {
       <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
-            {/* The one-colour gold lockup, served as the vector file: 177px
-                wide (78px tall), 50% larger than the 52px-tall logo before it.
-                Where the column is narrower (around 1024px) it shrinks to fit,
-                keeping its proportions. */}
+            {/* The one-colour gold lockup, served as the vector file. This
+                tighter-cropped artwork (297 × 147, art 267 × 118) at 134px wide
+                shows ≈120.5 × 53.2 of logo, 12.5% larger than the old padded
+                file did at 177px (107.2 × 47.3). Where the column is narrower
+                (around 1024px) it shrinks to fit, keeping its proportions. */}
             <Image
               src="/VeriCert-Peptides-One-Color-Gold.svg"
               alt="VeriCert Peptides"
-              width={441}
-              height={194}
+              width={297}
+              height={147}
               unoptimized
-              className="h-auto w-[177px] max-w-full"
+              className="h-auto w-[134px] max-w-full"
             />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
               Research compounds for laboratory use, with third-party
