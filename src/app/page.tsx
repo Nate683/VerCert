@@ -172,11 +172,16 @@ export default async function Home() {
             this section (absolute; the section clips overflow), not the
             viewport. Original orientation, 6% opacity, behind the content.
             The circle is 275 × 276.6 of the file's 312 × 345 viewBox, from
-            (16.9, 42.6). From xl: 482px wide → ≈425px circle; right/bottom
-            offsets put 25% of the circle (≈106px) past each edge, allowing for
-            the file's own margin around the circle (31px right, 40px bottom).
-            lg to xl: 340px wide → ≈300px circle, 25% (≈75px) past each edge,
-            so it stays clear of the paragraph. Hidden below lg. Decorative. */}
+            (16.9, 42.6); the offsets allow for the file's own margin around it.
+            The hero clips it, so it never reaches the section below.
+            - From 1440px: 602px wide → ≈531px circle; 25% past the right edge,
+              12% past the bottom. (Written as 90rem: Tailwind orders rem
+              breakpoints after xl's 80rem; a px one would sort before it and
+              lose to the xl values.)
+            - xl to 1439px: same size; 37% right, 15% bottom, so the circle
+              keeps ~30px clear of the paragraph and the headline's second line.
+            - lg to xl: 425px wide → ≈375px circle; 37% right, 12% bottom.
+            Hidden below lg. Decorative. */}
         <Image
           src="/VeriCert-Emblem-Gray.svg"
           alt=""
@@ -184,7 +189,7 @@ export default async function Home() {
           width={312}
           height={345}
           unoptimized
-          className="pointer-events-none absolute right-[-97px] bottom-[-103px] -z-[1] hidden h-auto w-[340px] max-w-none select-none opacity-6 lg:block xl:right-[-137px] xl:bottom-[-146px] xl:w-[482px]"
+          className="pointer-events-none absolute right-[-166px] bottom-[-80px] -z-[1] hidden h-auto w-[425px] max-w-none select-none opacity-6 lg:block xl:right-[-235px] xl:bottom-[-130px] xl:w-[602px] min-[90rem]:right-[-171px] min-[90rem]:bottom-[-114px]"
         />
       </section>
 

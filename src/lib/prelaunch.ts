@@ -5,7 +5,14 @@
 // its own when this is switched off. All of the banner's wording lives here.
 export const PRELAUNCH_BANNER_ENABLED = true;
 
-// Signed-out wording. Signed-in visitors get no banner.
+// Signed-in wording: the same banner, with a members' announcement in place of
+// the sign-up invitation. Placeholder copy, not an offer.
+export const MEMBER_BANNER = {
+  label: "VeriCert Member Exclusive",
+  text: "Special research collection offers coming soon. Stay tuned.",
+} as const;
+
+// Signed-out wording.
 export const PRELAUNCH_BANNER = {
   label: "Ordering opens soon",
   // Rendered in order: text, link, text, link, text.
