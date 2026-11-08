@@ -107,7 +107,7 @@ export default async function Home() {
               the section, which excludes the scrollbar) so the crop is measured
               from the page edge: 45% off the edge from 1400px, 75% from lg to
               1399px; hidden below lg. Decorative only: behind the content, no
-              pointer events, hidden from assistive tech, 5% opacity on the
+              pointer events, hidden from assistive tech, 4% opacity on the
               emblem alone. */}
           <div
             aria-hidden="true"
@@ -119,7 +119,7 @@ export default async function Home() {
               width={312}
               height={345}
               unoptimized
-              className="absolute top-1/2 left-0 h-[87.5%] w-auto max-w-none -translate-x-[75%] -translate-y-1/2 opacity-5 min-[1400px]:-translate-x-[45%]"
+              className="absolute top-1/2 left-0 h-[87.5%] w-auto max-w-none -translate-x-[75%] -translate-y-1/2 opacity-4 min-[1400px]:-translate-x-[45%]"
             />
           </div>
           {/* Full-colour lockup, as a vector. The artwork fills 267 × 118 of
@@ -167,13 +167,16 @@ export default async function Home() {
             </Link>
           </div>
         </div>
-        {/* Lower-right emblem: the same gray emblem, small and complete, set in
-            the white space below and right of the content, a counterweight to
-            the large cropped one on the left. Original orientation, 5% opacity,
-            fully inside the hero. The circle fills 275 of the file's 312 units
-            of width, so 272px wide draws a ≈240px circle (from 1400px); 160px
-            (≈141px circle) from lg to 1399px, where a larger one would crowd
-            the paragraph; hidden below lg. Decorative only. */}
+        {/* Bottom-right corner emblem: the same gray emblem, larger, emerging
+            from the hero's bottom-right corner as on the packaging. Anchored to
+            this section (absolute; the section clips overflow), not the
+            viewport. Original orientation, 6% opacity, behind the content.
+            The circle is 275 × 276.6 of the file's 312 × 345 viewBox, from
+            (16.9, 42.6). From xl: 482px wide → ≈425px circle; right/bottom
+            offsets put 25% of the circle (≈106px) past each edge, allowing for
+            the file's own margin around the circle (31px right, 40px bottom).
+            lg to xl: 340px wide → ≈300px circle, 25% (≈75px) past each edge,
+            so it stays clear of the paragraph. Hidden below lg. Decorative. */}
         <Image
           src="/VeriCert-Emblem-Gray.svg"
           alt=""
@@ -181,7 +184,7 @@ export default async function Home() {
           width={312}
           height={345}
           unoptimized
-          className="pointer-events-none absolute right-8 bottom-8 -z-[1] hidden h-auto w-[160px] select-none opacity-5 lg:block min-[1400px]:right-20 min-[1400px]:w-[272px]"
+          className="pointer-events-none absolute right-[-97px] bottom-[-103px] -z-[1] hidden h-auto w-[340px] max-w-none select-none opacity-6 lg:block xl:right-[-137px] xl:bottom-[-146px] xl:w-[482px]"
         />
       </section>
 
