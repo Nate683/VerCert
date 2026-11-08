@@ -14,6 +14,7 @@ import { ResearchProfilePrompt } from "./ResearchProfilePrompt";
 import type { SaleBannerContent, ContactContent } from "@/lib/site-content";
 import { track } from "@/lib/track-client";
 import { useAuth } from "@/lib/auth-context";
+import type { MemberAnnouncement } from "@/lib/announcements/rules";
 
 // The executive terminals (/command, /office), their sign-in page
 // (/executive) and the /hq shared workspace render their own dedicated shell
@@ -22,12 +23,15 @@ export function SiteChrome({
   saleBanner,
   contact,
   signedInAtRender,
+  memberAnnouncement,
   children,
 }: {
   saleBanner: SaleBannerContent;
   contact: ContactContent;
   /** The session as the server read it for this render (root layout). */
   signedInAtRender: boolean;
+  /** The live signed-in announcement (root layout), or null for none. */
+  memberAnnouncement: MemberAnnouncement | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -76,7 +80,7 @@ export function SiteChrome({
         </div>
       )}
       <TickerBanner />
-      <PrelaunchBanner signedInAtRender={signedInAtRender} />
+      <PrelaunchBanner signedInAtRender={signedInAtRender} memberAnnouncement={memberAnnouncement} />
       <Header />
       <main className="flex-1">{children}</main>
       <Footer contact={contact} />

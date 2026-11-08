@@ -10,6 +10,7 @@ import { buildMetadata, SITE_NAME } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 import { getContent, DEFAULT_SALE_BANNER, DEFAULT_CONTACT } from "@/lib/site-content";
 import { getCurrentCustomer } from "@/lib/users/current-user";
+import { getMemberAnnouncement } from "@/lib/announcements/store";
 
 const displayFont = Playfair_Display({
   variable: "--font-display",
@@ -62,6 +63,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // The session as the server sees it (the same check as /api/auth/me), so
   // the announcement bar's first paint matches the visitor's signed-in state.
   const signedInAtRender = Boolean(await getCurrentCustomer());
+  // The signed-in announcement bar's content, read on every request at server
+  // time (this layout is dynamic), so a change in /command shows on the next
+  // page load with nothing to invalidate. Signed-out visitors don't need it.
+  const memberAnnouncement = signedInAtRender ? await getMemberAnnouncement() : null;
 
   // Page ground lives in globals.css: the unlayered `body` rule there
   // overrides bg-* / text-* utilities set on this element, so putting the
@@ -75,7 +80,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <AuthProvider>
           <ExecModeProvider>
             <CartProvider>
-              <SiteChrome saleBanner={saleBanner} contact={contact} signedInAtRender={signedInAtRender}>
+              <SiteChrome
+                saleBanner={saleBanner}
+                contact={contact}
+                signedInAtRender={signedInAtRender}
+                memberAnnouncement={memberAnnouncement}
+              >
                 {children}
               </SiteChrome>
             </CartProvider>

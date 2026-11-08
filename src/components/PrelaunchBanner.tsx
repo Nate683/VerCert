@@ -3,30 +3,39 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { MEMBER_BANNER, PRELAUNCH_BANNER, PRELAUNCH_BANNER_ENABLED } from "@/lib/prelaunch";
+import { PRELAUNCH_BANNER, PRELAUNCH_BANNER_ENABLED } from "@/lib/prelaunch";
+import type { MemberAnnouncement } from "@/lib/announcements/rules";
+import { MemberAnnouncementContent } from "./MemberAnnouncementContent";
 
 const SIGNUP_ID = "stay-informed";
 const BAR_CLASS = "border-b border-gold/20 bg-navy px-4 py-2.5 text-center text-xs leading-relaxed text-white/85";
 
 // The navy announcement bar between the ticker and the navigation. Signed-out
 // visitors get the pre-launch notice with the account and mailing-list links
-// (switched off and worded in lib/prelaunch.ts); signed-in customers get the
-// members' announcement in the same bar.
+// (switched off and worded in lib/prelaunch.ts). Signed-in customers get the
+// live announcement managed in /command → Announcement Banners
+// (memberAnnouncement, loaded by the root layout); with none live, no bar.
 //
 // Signed in or not: until the browser's session check (/api/auth/me) has
 // answered, the server's reading of the session cookie (signedInAtRender, from
 // the root layout) decides, so the first paint is already right and the wrong
 // message never flashes. After that the live session decides, so signing in
 // or out swaps the bar without a reload.
-export function PrelaunchBanner({ signedInAtRender }: { signedInAtRender: boolean }) {
+export function PrelaunchBanner({
+  signedInAtRender,
+  memberAnnouncement,
+}: {
+  signedInAtRender: boolean;
+  memberAnnouncement: MemberAnnouncement | null;
+}) {
   const { user, loading } = useAuth();
   const pathname = usePathname();
   const signedIn = loading ? signedInAtRender : Boolean(user);
   if (signedIn) {
+    if (!memberAnnouncement) return null;
     return (
       <div className={BAR_CLASS}>
-        <span className="font-medium uppercase tracking-[0.2em] text-gold">{MEMBER_BANNER.label}</span>{" "}
-        <span className="text-gold/60">—</span> {MEMBER_BANNER.text}
+        <MemberAnnouncementContent announcement={memberAnnouncement} />
       </div>
     );
   }

@@ -5,6 +5,7 @@ import { config } from "dotenv";
 config({ path: ".env.local", quiet: true });
 
 import { neon } from "@neondatabase/serverless";
+import { ensureAnnouncements } from "./announcements.mjs";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -679,6 +680,9 @@ async function main() {
      WHERE marketing_consent AND marketing_consent_source = 'newsletter_signup'
     ON CONFLICT (email) DO NOTHING
   `;
+
+  // Logged-in announcement banners (table + one-time default seed; see scripts/announcements.mjs).
+  await ensureAnnouncements(sql, { apply: true, log: () => {} });
 
   console.log("[db:migrate] Schema is up to date.");
 }
