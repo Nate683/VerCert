@@ -2,21 +2,25 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  ANNOUNCEMENT_AUDIENCES,
+  ANNOUNCEMENT_AUDIENCE_LABELS,
   ANNOUNCEMENT_STATE_LABELS,
   ANNOUNCEMENT_STATUSES,
   ANNOUNCEMENT_STATUS_LABELS,
   announcementState,
   type Announcement,
+  type AnnouncementAudience,
   type AnnouncementState,
   type AnnouncementStatus,
 } from "@/lib/announcements/rules";
 import { ADMIN_TIME_ZONE_LABEL, centralLocalToUtcIso, formatCentral, utcIsoToCentralLocal } from "@/lib/announcements/time";
-import { MemberAnnouncementContent } from "@/components/MemberAnnouncementContent";
+import { AnnouncementContent } from "@/components/AnnouncementContent";
 
-// /command-only tab: the announcement bar signed-in customers see under the ticker. Every save goes through
+// /command-only tab: the announcement bar under the ticker, for logged-in customers and for logged-out visitors. Every save goes through
 // /api/executive/announcements, which checks the command role and validates again on the server.
 
 type FormState = {
+  audience: AnnouncementAudience;
   title: string;
   highlight: string;
   body: string;
@@ -29,11 +33,12 @@ type FormState = {
 };
 
 function emptyForm(): FormState {
-  return { title: "", highlight: "", body: "", linkUrl: "", linkLabel: "", status: "draft", startsAt: "", endsAt: "", enabled: true };
+  return { audience: "member", title: "", highlight: "", body: "", linkUrl: "", linkLabel: "", status: "draft", startsAt: "", endsAt: "", enabled: true };
 }
 
 function toForm(a: Announcement): FormState {
   return {
+    audience: a.audience,
     title: a.title,
     highlight: a.highlight,
     body: a.body,
@@ -87,10 +92,11 @@ export function AnnouncementsPanel() {
     load();
   }, [load]);
 
-  const live = announcements.find((a) => announcementState(a, serverNow) === "live") ?? null;
+  const liveFor = (audience: AnnouncementAudience) =>
+    announcements.find((a) => a.audience === audience && announcementState(a, serverNow) === "live") ?? null;
 
-  function startNew() {
-    setForm(emptyForm());
+  function startNew(audience: AnnouncementAudience) {
+    setForm({ ...emptyForm(), audience });
     setEditing("new");
     setError(null);
     setNotice(null);
@@ -172,34 +178,48 @@ export function AnnouncementsPanel() {
           <div className="max-w-2xl">
             <p className="text-xs uppercase tracking-[0.2em] text-white/40">Announcement Banners</p>
             <p className="mt-3 text-sm leading-relaxed text-white/70">
-              The navy bar under the ticker, shown to <span className="text-gold">signed-in customers only</span>. The
-              signed-out &ldquo;Ordering opens soon&rdquo; notice is separate and isn&apos;t managed here.
+              The navy bar under the ticker. Each announcement targets one audience:{" "}
+              <span className="text-gold">logged-in customers</span> or{" "}
+              <span className="text-gold">logged-out visitors</span>.
             </p>
             <p className="mt-2 text-xs leading-relaxed text-white/50">
-              One announcement shows at a time. Saving one that overlaps another live or scheduled announcement is
-              refused. Drafts, disabled and expired announcements never show; scheduled ones go live by themselves at
-              their start time and stop at their end time. Times are {ADMIN_TIME_ZONE_LABEL}. Customers see a change on
+              One announcement per audience shows at a time. Saving one that overlaps another live or scheduled
+              announcement for the same audience is refused. Drafts, disabled and expired announcements never show;
+              scheduled ones go live by themselves at their start time and stop at their end time. With nothing live
+              for an audience, that audience sees no bar. Times are {ADMIN_TIME_ZONE_LABEL}. Visitors see a change on
               their next page load.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={startNew}
-            className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
-          >
-            + New Announcement
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {ANNOUNCEMENT_AUDIENCES.map((audience) => (
+              <button
+                key={audience}
+                type="button"
+                onClick={() => startNew(audience)}
+                className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+              >
+                + New — {ANNOUNCEMENT_AUDIENCE_LABELS[audience]}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-5">
-          <p className={LABEL}>Showing now to signed-in customers</p>
-          {live ? (
-            <div className="mt-2 border border-gold/20 bg-navy px-4 py-2.5 text-center text-xs leading-relaxed text-white/85">
-              <MemberAnnouncementContent announcement={live} />
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-white/50">Nothing — signed-in customers see no announcement bar.</p>
-          )}
+        <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {ANNOUNCEMENT_AUDIENCES.map((audience) => {
+            const live = liveFor(audience);
+            return (
+              <div key={audience} data-showing={audience}>
+                <p className={LABEL}>Showing now to {ANNOUNCEMENT_AUDIENCE_LABELS[audience].toLowerCase()}</p>
+                {live ? (
+                  <div className="mt-2 border border-gold/20 bg-navy px-4 py-2.5 text-center text-xs leading-relaxed text-white/85">
+                    <AnnouncementContent announcement={live} />
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-white/50">Nothing — {ANNOUNCEMENT_AUDIENCE_LABELS[audience].toLowerCase()} see no announcement bar.</p>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {notice && <p role="status" className="mt-4 border border-gold/40 bg-gold/10 p-3 text-xs text-gold">{notice}</p>}
@@ -211,9 +231,10 @@ export function AnnouncementsPanel() {
           ) : announcements.length === 0 ? (
             <p className="text-sm text-white/30">No announcements yet.</p>
           ) : (
-            <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+            <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-white/15 text-xs uppercase tracking-[0.1em] text-white/40">
+                  <th className="pb-3 pr-4 font-normal">Audience</th>
                   <th className="pb-3 pr-4 font-normal">Title</th>
                   <th className="pb-3 pr-4 font-normal">Preview</th>
                   <th className="pb-3 pr-4 font-normal">Status</th>
@@ -228,9 +249,18 @@ export function AnnouncementsPanel() {
                   const state = announcementState(a, serverNow);
                   return (
                     <tr key={a.id} data-announcement={a.id} className="border-b border-white/5 align-top text-white/80">
+                      <td className="py-3 pr-4">
+                        <span
+                          className={`inline-block whitespace-nowrap border px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] ${
+                            a.audience === "member" ? "border-gold/40 text-gold/90" : "border-sky-300/40 text-sky-200/90"
+                          }`}
+                        >
+                          {ANNOUNCEMENT_AUDIENCE_LABELS[a.audience]}
+                        </span>
+                      </td>
                       <td className="py-3 pr-4">{a.title}</td>
                       <td className="max-w-[340px] py-3 pr-4 text-xs leading-relaxed text-white/80">
-                        <MemberAnnouncementContent announcement={a} />
+                        <AnnouncementContent announcement={a} />
                       </td>
                       <td className="py-3 pr-4">
                         <span className={`inline-block border px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] ${STATE_CLASS[state]}`}>
@@ -273,9 +303,20 @@ export function AnnouncementsPanel() {
           <p className="text-xs uppercase tracking-[0.2em] text-gold">
             {editing === "new" ? "New Announcement" : `Edit — ${announcements.find((a) => a.id === editing)?.title ?? ""}`}
           </p>
-          <p className="mt-2 text-xs text-white/50">Shown to signed-in customers only. Plain text: no formatting.</p>
+          <p className="mt-2 text-xs text-white/50">
+            Shown to {ANNOUNCEMENT_AUDIENCE_LABELS[form.audience].toLowerCase()} only. Plain text, no formatting; to
+            put a link inside the main text, write [link text](/page) — for example [Create a free account](/register).
+          </p>
 
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label className="block sm:col-span-2">
+              <span className={LABEL}>Audience — who sees it</span>
+              <select value={form.audience} onChange={(e) => setForm((f) => ({ ...f, audience: e.target.value as AnnouncementAudience }))} className="input-field mt-1" aria-label="Audience">
+                {ANNOUNCEMENT_AUDIENCES.map((a) => (
+                  <option key={a} value={a}>{ANNOUNCEMENT_AUDIENCE_LABELS[a]}</option>
+                ))}
+              </select>
+            </label>
             <label className="block sm:col-span-2">
               <span className={LABEL}>Internal title (admin list only)</span>
               <input value={form.title} maxLength={120} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="input-field mt-1" aria-label="Internal title" />
@@ -319,9 +360,9 @@ export function AnnouncementsPanel() {
           </div>
 
           <div className="mt-5">
-            <p className={LABEL}>Preview</p>
+            <p className={LABEL}>Preview — as {ANNOUNCEMENT_AUDIENCE_LABELS[form.audience].toLowerCase()} will see it</p>
             <div className="mt-2 border border-gold/20 bg-navy px-4 py-2.5 text-center text-xs leading-relaxed text-white/85">
-              {preview ? <MemberAnnouncementContent announcement={preview} /> : <span className="text-white/40">Fill in the text to preview the bar.</span>}
+              {preview ? <AnnouncementContent announcement={preview} /> : <span className="text-white/40">Fill in the text to preview the bar.</span>}
             </div>
           </div>
 

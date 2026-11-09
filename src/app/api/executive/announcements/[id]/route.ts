@@ -40,7 +40,7 @@ export const PATCH = withApiErrorHandling(async (request: Request, { params }: P
   const conflict = await findConflictingAnnouncement(result.value, id, new Date().toISOString());
   if (conflict) {
     return NextResponse.json(
-      { error: `This overlaps "${conflict.title}", which is already live or scheduled for that period. Only one announcement can show at a time: change the dates, disable one, or save this as a draft.` },
+      { error: `This overlaps "${conflict.title}", which is already live or scheduled for the same audience in that period. Only one announcement per audience can show at a time: change the dates, disable one, or save this as a draft.` },
       { status: 409 }
     );
   }

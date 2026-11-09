@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { findBlockedTerm, blockedTermMessage } from "@/lib/content-guard";
-import { ANNOUNCEMENT_STATUSES, isSafeAnnouncementLink, type Announcement } from "./rules";
+import {
+  ANNOUNCEMENT_AUDIENCES,
+  ANNOUNCEMENT_STATUSES,
+  announcementPlainText,
+  isSafeAnnouncementLink,
+  parseAnnouncementText,
+  type Announcement,
+} from "./rules";
 import { centralLocalToUtcIso, utcIsoToCentralLocal } from "./time";
 import type { AnnouncementInput } from "./store";
 
@@ -29,6 +36,7 @@ const centralLocal = z
   .transform((s) => (typeof s === "string" && s.trim() ? s.trim() : null));
 
 export const announcementFieldsSchema = z.object({
+  audience: z.enum(ANNOUNCEMENT_AUDIENCES, { error: "Choose who sees it: logged-in customers or logged-out visitors." }),
   title: text(120, "Internal title"),
   highlight: text(60, "Gold-highlighted text"),
   body: text(240, "Main announcement text"),
@@ -43,6 +51,7 @@ export const announcementFieldsSchema = z.object({
 // The editor's view of a stored record: dates back in Central wall time.
 export function toEditorFields(a: Announcement) {
   return {
+    audience: a.audience,
     title: a.title,
     highlight: a.highlight,
     body: a.body,
@@ -69,6 +78,17 @@ export function validateAnnouncement(raw: unknown): ValidationResult {
   if (f.linkUrl && !f.linkLabel) return { ok: false, error: "Add a link label (for example SHOP NOW) for the link." };
   if (f.linkLabel && !f.linkUrl) return { ok: false, error: "A link label needs a link URL." };
 
+  // Inline [label](url) links in the main text follow the same rules as the end link.
+  for (const piece of parseAnnouncementText(f.body)) {
+    if (!("url" in piece)) continue;
+    if (!isSafeAnnouncementLink(piece.url)) {
+      return { ok: false, error: `The link "${piece.label}" in the main text must point to https://, http://, or / for a page on this site.` };
+    }
+    if (piece.label.trim().length === 0 || piece.label.length > 40) {
+      return { ok: false, error: "Each link in the main text needs a label of 40 characters or fewer." };
+    }
+  }
+
   const startsAt = f.startsAt ? centralLocalToUtcIso(f.startsAt) : null;
   const endsAt = f.endsAt ? centralLocalToUtcIso(f.endsAt) : null;
   if (f.startsAt && !startsAt) return { ok: false, error: "Start date/time isn't a valid date." };
@@ -76,12 +96,13 @@ export function validateAnnouncement(raw: unknown): ValidationResult {
   if (startsAt && endsAt && endsAt <= startsAt) return { ok: false, error: "End date/time must be after the start date/time." };
   if (f.status === "scheduled" && !startsAt) return { ok: false, error: "A scheduled announcement needs a start date/time." };
 
-  const blocked = findBlockedTerm({ highlight: f.highlight, body: f.body, linkLabel: f.linkLabel ?? "" });
+  const blocked = findBlockedTerm({ highlight: f.highlight, body: announcementPlainText(f.body), linkLabel: f.linkLabel ?? "" });
   if (blocked) return { ok: false, error: blockedTermMessage(blocked) };
 
   return {
     ok: true,
     value: {
+      audience: f.audience,
       title: f.title,
       highlight: f.highlight,
       body: f.body,

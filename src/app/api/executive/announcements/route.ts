@@ -13,7 +13,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// Logged-in announcement banners. /command only: every handler checks the session's role on the server, so a
+// Announcement banners (logged-in and logged-out). /command only: every handler checks the session's role on the server, so a
 // direct call from any other account (customer, /office, signed out) is refused, whatever the UI shows.
 
 export const GET = withApiErrorHandling(async () => {
@@ -35,7 +35,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const conflict = await findConflictingAnnouncement(result.value, null, new Date().toISOString());
   if (conflict) {
     return NextResponse.json(
-      { error: `This overlaps "${conflict.title}", which is already live or scheduled for that period. Only one announcement can show at a time: change the dates, disable one, or save this as a draft.` },
+      { error: `This overlaps "${conflict.title}", which is already live or scheduled for the same audience in that period. Only one announcement per audience can show at a time: change the dates, disable one, or save this as a draft.` },
       { status: 409 }
     );
   }

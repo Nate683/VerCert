@@ -1,8 +1,16 @@
-// Logged-in announcement banner: the record shape and the display rules. Client-safe (no database access), so the
+// Announcement banners: the record shape and the display rules. Client-safe (no database access), so the
 // /command panel and the server agree exactly on what is live.
 //
-// These announcements are shown to signed-in customers only, in the navy bar under the ticker. The signed-out
-// "Ordering opens soon" notice is separate (lib/prelaunch.ts) and is not managed here.
+// Each announcement targets one audience and shows in the navy bar under the ticker: "member" records to signed-in
+// customers, "public" records to signed-out visitors. Each audience has its own single live slot.
+
+export const ANNOUNCEMENT_AUDIENCES = ["member", "public"] as const;
+export type AnnouncementAudience = (typeof ANNOUNCEMENT_AUDIENCES)[number];
+
+export const ANNOUNCEMENT_AUDIENCE_LABELS: Record<AnnouncementAudience, string> = {
+  member: "Logged-in customers",
+  public: "Logged-out visitors",
+};
 
 export const ANNOUNCEMENT_STATUSES = ["draft", "active", "scheduled", "expired"] as const;
 export type AnnouncementStatus = (typeof ANNOUNCEMENT_STATUSES)[number];
@@ -16,6 +24,7 @@ export const ANNOUNCEMENT_STATUS_LABELS: Record<AnnouncementStatus, string> = {
 
 export type Announcement = {
   id: string;
+  audience: AnnouncementAudience;
   title: string; // internal only, never shown to customers
   highlight: string; // the gold leading phrase
   body: string;
@@ -30,8 +39,32 @@ export type Announcement = {
   updatedBy: string | null;
 };
 
-// What a signed-in customer's banner shows. Rendered as text (React escapes it); never as HTML.
-export type MemberAnnouncement = Pick<Announcement, "highlight" | "body" | "linkUrl" | "linkLabel">;
+// What a banner shows. Rendered as text (React escapes it); never as HTML.
+export type BannerAnnouncement = Pick<Announcement, "highlight" | "body" | "linkUrl" | "linkLabel">;
+
+// Inline links in the main text: [label](url), anywhere in the sentence — e.g.
+// "[Create a free account](/register) to browse the full catalog". The text is split into plain-text and link
+// pieces; nothing is ever interpreted as HTML. Brackets that don't form a complete [label](url) stay literal text.
+export type AnnouncementTextPiece = { text: string } | { label: string; url: string };
+
+const INLINE_LINK = /\[([^\[\]]+)\]\(([^()\s]+)\)/g;
+
+export function parseAnnouncementText(body: string): AnnouncementTextPiece[] {
+  const pieces: AnnouncementTextPiece[] = [];
+  let last = 0;
+  for (const m of body.matchAll(INLINE_LINK)) {
+    if (m.index > last) pieces.push({ text: body.slice(last, m.index) });
+    pieces.push({ label: m[1], url: m[2] });
+    last = m.index + m[0].length;
+  }
+  if (last < body.length) pieces.push({ text: body.slice(last) });
+  return pieces;
+}
+
+// The text as visitors read it (inline links reduced to their labels), for checks on wording.
+export function announcementPlainText(body: string): string {
+  return parseAnnouncementText(body).map((p) => ("text" in p ? p.text : p.label)).join("");
+}
 
 // Where a record stands right now, by server time.
 export type AnnouncementState = "draft" | "disabled" | "expired" | "scheduled" | "live";
@@ -55,8 +88,8 @@ export function announcementState(a: Announcement, nowIso: string): Announcement
   return "live";
 }
 
-// Records that hold a claim on the banner, now or later: enabled, active or scheduled, not yet ended.
-// No two of these may overlap in time (enforced on save).
+// Records that hold a claim on their audience's banner, now or later: enabled, active or scheduled, not yet ended.
+// No two of these for the same audience may overlap in time (enforced on save).
 export function claimsBanner(a: Pick<Announcement, "status" | "enabled" | "endsAt">, nowIso: string): boolean {
   return a.enabled && (a.status === "active" || a.status === "scheduled") && !(a.endsAt !== null && a.endsAt <= nowIso);
 }
