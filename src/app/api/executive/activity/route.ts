@@ -5,6 +5,7 @@ import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
+// NOTE: both executive realms since 2026-11-08 (owner gave /office full parity) — see lib/executive/require-auth.ts.
 // Activity log is /command-only, even though entries can originate from
 // either realm's actions.
 export const GET = withApiErrorHandling(async () => {

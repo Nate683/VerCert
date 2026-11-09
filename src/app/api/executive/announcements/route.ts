@@ -13,6 +13,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
+// NOTE: both executive realms since 2026-11-08 (owner gave /office full parity) — see lib/executive/require-auth.ts.
 // Announcement banners (logged-in and logged-out). /command only: every handler checks the session's role on the server, so a
 // direct call from any other account (customer, /office, signed out) is refused, whatever the UI shows.
 

@@ -249,7 +249,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as OrderStatus | "all")}
-          className="border border-white/15 bg-black px-3 py-2 text-xs uppercase tracking-[0.1em] text-white/70 focus:border-gold focus:outline-none"
+          className="border border-white/15 bg-[var(--x-base)] px-3 py-2 text-xs uppercase tracking-[0.1em] text-white/70 focus:border-[var(--x-muted)] focus:outline-none"
         >
           {STATUS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -260,7 +260,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
         <select
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod | "all")}
-          className="border border-white/15 bg-black px-3 py-2 text-xs uppercase tracking-[0.1em] text-white/70 focus:border-gold focus:outline-none"
+          className="border border-white/15 bg-[var(--x-base)] px-3 py-2 text-xs uppercase tracking-[0.1em] text-white/70 focus:border-[var(--x-muted)] focus:outline-none"
         >
           {PAYMENT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -273,7 +273,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search reference or customer..."
-          className="min-w-[220px] flex-1 border border-white/15 bg-black px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-gold focus:outline-none"
+          className="min-w-[220px] flex-1 border border-white/15 bg-[var(--x-base)] px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-[var(--x-muted)] focus:outline-none"
         />
         <div className="flex gap-1">
           <button
@@ -294,13 +294,13 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
       </div>
 
       {selected.size > 0 && view === "table" && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 border border-gold/30 bg-gold/5 p-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3 border border-[var(--x-border-strong)] bg-[var(--x-text)]/[0.03] p-3">
           <span className="text-xs text-white/70">{selected.size} selected</span>
           <button
             type="button"
             onClick={handleBulkMarkPaid}
             disabled={bulkRunning}
-            className="border border-gold px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-gold hover:bg-gold hover:text-black disabled:opacity-40"
+            className="border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text)] hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
           >
             Bulk Mark Paid
           </button>
@@ -308,7 +308,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
             type="button"
             onClick={handleBulkCancel}
             disabled={bulkRunning}
-            className="border border-red-500/30 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400 disabled:opacity-40"
+            className="border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] disabled:opacity-40 hover:text-[var(--x-negative)]"
           >
             Bulk Cancel
           </button>
@@ -333,18 +333,18 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
           {BOARD_COLUMNS.map((col) => {
             const columnOrders = orders.filter((o) => o.status === col);
             return (
-              <div key={col} className="min-w-[220px] border border-white/10 bg-black/30 p-3">
+              <div key={col} className="min-w-[220px] border border-white/10 bg-[var(--x-base)]/30 p-3">
                 <p className="text-[10px] uppercase tracking-[0.1em] text-white/40">
                   {col.replace("_", " ")} ({columnOrders.length})
                 </p>
                 <div className="mt-3 space-y-2">
                   {columnOrders.map((order) => (
-                    <div key={order.id} className="border border-white/10 bg-black/60 p-2.5 text-xs">
+                    <div key={order.id} className="border border-white/10 bg-[var(--x-base)]/60 p-2.5 text-xs">
                       <p className={isCommand ? "font-mono text-white" : "text-white"}>{order.reference}</p>
                       <p className="mt-1 text-white/50">
                         {order.customer.firstName} {order.customer.lastName}
                       </p>
-                      <p className={isCommand ? "mt-1 font-mono text-gold" : "mt-1 text-gold"}>
+                      <p className={"mt-1 font-mono text-[var(--x-text)]"}>
                         ${order.total.toFixed(2)}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1">
@@ -353,7 +353,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                             type="button"
                             onClick={() => handleMarkPaid(order.id)}
                             disabled={busyId === order.id}
-                            className="border border-gold px-2 py-1 text-[9px] uppercase text-gold hover:bg-gold hover:text-black disabled:opacity-40"
+                            className="border border-[var(--x-border-strong)] px-2 py-1 text-[9px] uppercase text-[var(--x-text)] hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
                           >
                             Mark Paid
                           </button>
@@ -363,7 +363,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                             type="button"
                             onClick={() => handleAdvance(order)}
                             disabled={busyId === order.id}
-                            className="border border-white/20 px-2 py-1 text-[9px] uppercase text-white/70 hover:border-gold hover:text-gold disabled:opacity-40"
+                            className="border border-white/20 px-2 py-1 text-[9px] uppercase text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)] disabled:opacity-40"
                           >
                             → {NEXT_STATUS[order.status]}
                           </button>
@@ -456,7 +456,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                       <p key={`${item.slug}-${item.sizeLabel}-${item.subscription?.intervalDays ?? 0}`}>
                         {item.name} {item.sizeLabel} × {item.quantity}
                         {item.lotNumber && <span className="text-white/40"> · Lot {item.lotNumber}</span>}
-                        {item.subscription && <span className="text-gold/70"> · Subscription</span>}
+                        {item.subscription && <span className="text-[var(--x-text)]"> · Subscription</span>}
                       </p>
                     ))}
                   </td>
@@ -470,9 +470,9 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                     <span
                       className={`border px-2 py-1 text-[10px] uppercase tracking-[0.1em] ${
                         order.status === "delivered" || order.status === "paid"
-                          ? "border-gold text-gold"
+                          ? "border-[var(--x-positive)]/50 text-[var(--x-positive)]"
                           : order.status === "cancelled" || order.status === "expired"
-                          ? "border-red-500/40 text-red-300"
+                          ? "border-white/15 text-white/40"
                           : "border-white/25 text-white/60"
                       }`}
                     >
@@ -492,7 +492,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                           type="button"
                           onClick={() => handleMarkPaid(order.id)}
                           disabled={busyId === order.id}
-                          className="border border-gold px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-gold transition-colors hover:bg-gold hover:text-black disabled:opacity-40"
+                          className="border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
                         >
                           {busyId === order.id ? "Marking..." : "Mark Paid"}
                         </button>
@@ -502,7 +502,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                           type="button"
                           onClick={() => handleAdvance(order)}
                           disabled={busyId === order.id}
-                          className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
+                          className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)] disabled:opacity-40"
                         >
                           Mark {NEXT_STATUS[order.status]}
                         </button>
@@ -512,7 +512,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                           type="button"
                           onClick={() => handleCancel(order.id)}
                           disabled={busyId === order.id}
-                          className="border border-red-500/30 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-red-300/80 transition-colors hover:border-red-400 hover:text-red-300 disabled:opacity-40"
+                          className="border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] transition-colors hover:border-[var(--x-negative)] hover:text-red-300 disabled:opacity-40 hover:text-[var(--x-negative)]"
                         >
                           Cancel
                         </button>
@@ -522,7 +522,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                           type="button"
                           onClick={() => setRefundFormId(refundFormId === order.id ? null : order.id)}
                           disabled={busyId === order.id}
-                          className="border border-red-500/30 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-red-300/80 transition-colors hover:border-red-400 hover:text-red-300 disabled:opacity-40"
+                          className="border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] transition-colors hover:border-[var(--x-negative)] hover:text-red-300 disabled:opacity-40 hover:text-[var(--x-negative)]"
                         >
                           Refund
                         </button>
@@ -535,11 +535,11 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                     </div>
 
                     {refundFormId === order.id && (
-                      <div className="mt-3 space-y-2 border border-white/15 bg-black p-3">
+                      <div className="mt-3 space-y-2 border border-white/15 bg-[var(--x-base)] p-3">
                         <select
                           value={refundReason}
                           onChange={(e) => setRefundReason(e.target.value as RefundReasonCode)}
-                          className="w-full border border-white/15 bg-black px-2 py-1.5 text-xs text-white focus:border-gold focus:outline-none"
+                          className="w-full border border-white/15 bg-[var(--x-base)] px-2 py-1.5 text-xs text-white focus:border-[var(--x-muted)] focus:outline-none"
                         >
                           {REFUND_REASONS.map((r) => (
                             <option key={r.value} value={r.value}>
@@ -568,18 +568,18 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                     )}
 
                     {shippingFormId === order.id && (
-                      <div className="mt-3 space-y-2 border border-white/15 bg-black p-3">
+                      <div className="mt-3 space-y-2 border border-white/15 bg-[var(--x-base)] p-3">
                         <input
                           value={carrier}
                           onChange={(e) => setCarrier(e.target.value)}
                           placeholder="Carrier (e.g. USPS, UPS)"
-                          className="w-full border border-white/15 bg-black px-2 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-gold focus:outline-none"
+                          className="w-full border border-white/15 bg-[var(--x-base)] px-2 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-[var(--x-muted)] focus:outline-none"
                         />
                         <input
                           value={trackingNumber}
                           onChange={(e) => setTrackingNumber(e.target.value)}
                           placeholder="Tracking number"
-                          className="w-full border border-white/15 bg-black px-2 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-gold focus:outline-none"
+                          className="w-full border border-white/15 bg-[var(--x-base)] px-2 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-[var(--x-muted)] focus:outline-none"
                         />
                         <div className="flex gap-2">
                           <button
@@ -588,7 +588,7 @@ export function OrderTable({ variant }: { variant: "command" | "office" }) {
                               submitStatusUpdate(order.id, "shipped", { carrier, trackingNumber })
                             }
                             disabled={busyId === order.id || !trackingNumber.trim()}
-                            className="border border-gold px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-gold transition-colors hover:bg-gold hover:text-black disabled:opacity-40"
+                            className="border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
                           >
                             Confirm Shipped
                           </button>

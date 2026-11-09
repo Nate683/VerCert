@@ -111,7 +111,7 @@ export function ProductCardImage({
 
   const pct = stage.kind === "uploading" && stage.total ? Math.round((stage.loaded / stage.total) * 100) : 0;
   const barButton =
-    "pointer-events-auto border bg-black/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] transition-colors";
+    "pointer-events-auto border bg-[var(--x-base)]/80 px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] transition-colors";
 
   return (
     <div>
@@ -139,7 +139,7 @@ export function ProductCardImage({
           disabled={busy}
           aria-label={hasImage ? `Replace photo of ${name}` : `Upload a photo of ${name}`}
           title={hasImage ? "Click to replace the photo, or drop a file here" : "Click to upload a photo, or drop a file here"}
-          className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-gold disabled:cursor-progress"
+          className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--x-muted)] disabled:cursor-progress"
         >
           {/* Keyed on the URL so a new photo starts a fresh load. */}
           <ProductImage key={sources.join("|")} sources={sources} name={name} alt={productImageAlt(product)} sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw" />
@@ -160,19 +160,19 @@ export function ProductCardImage({
 
         {stage.kind === "idle" && !hasImage && !dragging && (
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2">
-            <span className="border border-gold bg-black/85 px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-gold transition-colors group-hover/photo:bg-gold group-hover/photo:text-black">
+            <span className="border border-[var(--x-border-strong)] bg-[var(--x-base)]/85 px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors group-hover/photo:border-[var(--x-text)]">
               + Add photo
             </span>
-            <span className="bg-black/70 px-2 py-0.5 text-[10px] text-white/60">Click or drop a {PRODUCT_IMAGE_ALLOWED_LABEL}</span>
+            <span className="bg-[var(--x-base)]/70 px-2 py-0.5 text-[10px] text-white/60">Click or drop a {PRODUCT_IMAGE_ALLOWED_LABEL}</span>
           </div>
         )}
 
         {stage.kind === "idle" && hasImage && !dragging && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center gap-2 bg-gradient-to-t from-black/70 to-transparent px-2 pb-3 pt-8 opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-within/photo:opacity-100 [@media(hover:none)]:opacity-100">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center gap-2 bg-[var(--x-base)]/80 px-2 py-3 opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-within/photo:opacity-100 [@media(hover:none)]:opacity-100">
             <button
               type="button"
               onClick={choose}
-              className={`${barButton} border-gold text-gold hover:bg-gold hover:text-black`}
+              className={`${barButton} border-[var(--x-border-strong)] text-[var(--x-text)] hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]`}
             >
               Replace
             </button>
@@ -190,7 +190,7 @@ export function ProductCardImage({
         )}
 
         {stage.kind === "confirm-remove" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 p-4 text-center">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[var(--x-base)]/80 p-4 text-center">
             <p className="text-xs text-white/80">Remove this photo? The shop shows the placeholder instead.</p>
             <div className="flex gap-2">
               <button type="button" onClick={remove} className={`${barButton} border-red-400/70 text-red-300 hover:bg-red-500/30`}>
@@ -211,7 +211,7 @@ export function ProductCardImage({
           <div
             role="status"
             aria-live="polite"
-            className="absolute inset-0 flex flex-col items-center justify-end gap-2 bg-black/45 p-4"
+            className="absolute inset-0 flex flex-col items-center justify-end gap-2 bg-[var(--x-base)]/45 p-4"
           >
             {stage.kind !== "removing" && (
               <div
@@ -228,12 +228,12 @@ export function ProductCardImage({
                     style={{ width: `${Math.max(pct, 2)}%` }}
                   />
                 ) : (
-                  <div className="h-full w-full animate-pulse bg-gold" />
+                  <div className="h-full w-full animate-pulse bg-[var(--x-raised)]" />
                 )}
               </div>
             )}
             <div className="flex w-full items-center justify-between gap-2">
-              <span className="bg-black/80 px-2 py-1 font-mono text-[11px] text-white">
+              <span className="bg-[var(--x-base)]/80 px-2 py-1 font-mono text-[11px] text-white">
                 {stage.kind === "uploading"
                   ? `Uploading ${pct}%`
                   : stage.kind === "processing"
@@ -254,8 +254,8 @@ export function ProductCardImage({
         )}
 
         {dragging && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/70 ring-2 ring-inset ring-gold">
-            <span className="text-xs uppercase tracking-[0.15em] text-gold">Drop to upload</span>
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[var(--x-base)]/70 ring-2 ring-inset ring-gold">
+            <span className="text-xs uppercase tracking-[0.15em] text-[var(--x-muted)]">Drop to upload</span>
           </div>
         )}
 

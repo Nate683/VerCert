@@ -52,14 +52,14 @@ function toForm(a: Announcement): FormState {
 }
 
 const STATE_CLASS: Record<AnnouncementState, string> = {
-  live: "border-gold/60 text-gold",
+  live: "border-[var(--x-border-strong)] text-[var(--x-text)]",
   scheduled: "border-white/40 text-white/80",
   draft: "border-white/20 text-white/50",
   disabled: "border-white/20 text-white/40",
   expired: "border-white/15 text-white/35",
 };
 
-const BUTTON = "border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold";
+const BUTTON = "border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]";
 const LABEL = "text-[10px] uppercase tracking-[0.1em] text-white/40";
 
 export function AnnouncementsPanel() {
@@ -179,8 +179,8 @@ export function AnnouncementsPanel() {
             <p className="text-xs uppercase tracking-[0.2em] text-white/40">Announcement Banners</p>
             <p className="mt-3 text-sm leading-relaxed text-white/70">
               The navy bar under the ticker. Each announcement targets one audience:{" "}
-              <span className="text-gold">logged-in customers</span> or{" "}
-              <span className="text-gold">logged-out visitors</span>.
+              <span className="text-[var(--x-text)]">logged-in customers</span> or{" "}
+              <span className="text-[var(--x-text)]">logged-out visitors</span>.
             </p>
             <p className="mt-2 text-xs leading-relaxed text-white/50">
               One announcement per audience shows at a time. Saving one that overlaps another live or scheduled
@@ -196,7 +196,7 @@ export function AnnouncementsPanel() {
                 key={audience}
                 type="button"
                 onClick={() => startNew(audience)}
-                className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+                className="border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]"
               >
                 + New — {ANNOUNCEMENT_AUDIENCE_LABELS[audience]}
               </button>
@@ -222,7 +222,7 @@ export function AnnouncementsPanel() {
           })}
         </div>
 
-        {notice && <p role="status" className="mt-4 border border-gold/40 bg-gold/10 p-3 text-xs text-gold">{notice}</p>}
+        {notice && <p role="status" className="mt-4 border border-[var(--x-positive)]/40 bg-transparent p-3 text-xs text-[var(--x-positive)]">{notice}</p>}
         {error && <p role="alert" className="mt-4 border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">{error}</p>}
 
         <div className="mt-6 overflow-x-auto">
@@ -252,7 +252,7 @@ export function AnnouncementsPanel() {
                       <td className="py-3 pr-4">
                         <span
                           className={`inline-block whitespace-nowrap border px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] ${
-                            a.audience === "member" ? "border-gold/40 text-gold/90" : "border-sky-300/40 text-sky-200/90"
+                            a.audience === "member" ? "border-[var(--x-border-strong)] text-[var(--x-text)]" : "border-[var(--x-border-strong)] text-[var(--x-muted)]"
                           }`}
                         >
                           {ANNOUNCEMENT_AUDIENCE_LABELS[a.audience]}
@@ -283,7 +283,7 @@ export function AnnouncementsPanel() {
                           <button
                             type="button"
                             onClick={() => handleDelete(a)}
-                            className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
+                            className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]"
                           >
                             Delete
                           </button>
@@ -300,7 +300,7 @@ export function AnnouncementsPanel() {
 
       {editing && (
         <form onSubmit={handleSave} className="command-panel p-6" noValidate>
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">
             {editing === "new" ? "New Announcement" : `Edit — ${announcements.find((a) => a.id === editing)?.title ?? ""}`}
           </p>
           <p className="mt-2 text-xs text-white/50">
@@ -367,10 +367,10 @@ export function AnnouncementsPanel() {
           </div>
 
           <div className="mt-5 flex flex-wrap gap-3">
-            <button type="submit" disabled={saving} className="border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40">
+            <button type="submit" disabled={saving} className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40">
               {saving ? "Saving..." : editing === "new" ? "Create Announcement" : "Save Announcement"}
             </button>
-            <button type="button" onClick={() => setEditing(null)} className="border border-white/20 px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-white/70 hover:border-gold hover:text-gold">
+            <button type="button" onClick={() => setEditing(null)} className="border border-white/20 px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]">
               Cancel
             </button>
           </div>

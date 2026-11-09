@@ -85,7 +85,7 @@ export function InviteCodesPanel() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleCreate} className={cardClass}>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">New Invite Code</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">New Invite Code</p>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <input
             required
@@ -125,7 +125,7 @@ export function InviteCodesPanel() {
         <button
           type="submit"
           disabled={saving || !code.trim()}
-          className="mt-4 border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+          className="mt-4 border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40"
         >
           {saving ? "Creating..." : "Create Code"}
         </button>
@@ -155,7 +155,7 @@ export function InviteCodesPanel() {
               <tbody>
                 {codes.map((c) => (
                   <tr key={c.id} className="border-b border-white/5 align-top text-white/80">
-                    <td className="py-3 pr-4 font-mono text-xs text-gold">{c.code}</td>
+                    <td className="py-3 pr-4 font-mono text-xs text-[var(--x-text)]">{c.code}</td>
                     <td className="py-3 pr-4 text-xs">{c.boundEmail ?? "Any email"}</td>
                     <td className="py-3 pr-4 text-xs">
                       {TIER_OPTIONS.find((t) => t.id === c.tier)?.label ?? c.tier}
@@ -172,7 +172,7 @@ export function InviteCodesPanel() {
                               type="button"
                               onClick={() => handleResend(c.id)}
                               disabled={resendingId === c.id}
-                              className="border border-gold/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-gold/80 hover:border-gold disabled:opacity-40"
+                              className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text)] hover:border-[var(--x-muted)] disabled:opacity-40"
                             >
                               {resendingId === c.id ? "Sending..." : "Resend"}
                             </button>
@@ -180,7 +180,7 @@ export function InviteCodesPanel() {
                           <button
                             type="button"
                             onClick={() => handleRevoke(c.id)}
-                            className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
+                            className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]"
                           >
                             Revoke
                           </button>

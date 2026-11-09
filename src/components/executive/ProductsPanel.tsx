@@ -367,7 +367,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
           <button
             type="button"
             onClick={startNew}
-            className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+            className="border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]"
           >
             + New Product
           </button>
@@ -388,14 +388,14 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             products.map((p) => {
               const active = p.active ?? true;
               return (
-                <div key={p.slug} data-product-card={p.slug} className={`border bg-black/40 ${active ? "border-white/10" : "border-white/5 opacity-60"}`}>
+                <div key={p.slug} data-product-card={p.slug} className={`border bg-[var(--x-base)]/40 ${active ? "border-white/10" : "border-white/5 opacity-60"}`}>
                   <ProductCardImage product={p} onChange={handlePhotoChange} />
                   <div className="p-4">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-[10px] uppercase tracking-[0.15em] text-gold/70">{p.category ?? "Uncategorized"}</p>
+                      <p className="truncate text-[10px] uppercase tracking-[0.15em] text-[var(--x-muted)]">{p.category ?? "Uncategorized"}</p>
                       <span
                         className={`shrink-0 border px-2 py-0.5 text-[9px] uppercase tracking-[0.15em] ${
-                          active ? "border-gold/50 text-gold" : "border-white/30 text-white/50"
+                          active ? "border-[var(--x-border-strong)] text-[var(--x-text-2)]" : "border-white/15 text-white/40"
                         }`}
                       >
                         {active ? "Active" : "Hidden"}
@@ -453,21 +453,21 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                         type="button"
                         onClick={() => startEdit(p)}
                         data-edit-button
-                        className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+                        className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => handleToggleActive(p)}
-                        className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+                        className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
                       >
                         {active ? "Hide" : "Unhide"}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDelete(p.slug)}
-                        className="border border-red-500/30 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400 hover:text-red-300"
+                        className="border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-red-300 hover:text-[var(--x-negative)]"
                       >
                         Delete
                       </button>
@@ -482,7 +482,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
       {editing && (
         <form ref={formRef} onSubmit={handleSave} className={`${cardClass} scroll-mt-6`}>
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">
             {editing === "new" ? "New Product" : `Edit — ${form.name}`}
           </p>
           {editing === "new" && (
@@ -637,7 +637,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
           {editingProduct && editingProduct.batchNumbers.length > 0 && (
             <div className="mt-6">
-              <p className="text-xs uppercase tracking-[0.2em] text-gold">Certificates of Analysis</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Certificates of Analysis</p>
               <div className="mt-3 space-y-2">
                 {editingProduct.batchNumbers.map((batch) => {
                   const doc = coaDocuments[batch];
@@ -653,12 +653,12 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                             href={doc.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[10px] uppercase tracking-[0.1em] text-gold hover:text-white"
+                            className="text-[10px] uppercase tracking-[0.1em] text-[var(--x-muted)] hover:text-white"
                           >
                             View File
                           </a>
                         )}
-                        <label className="cursor-pointer border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold">
+                        <label className="cursor-pointer border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]">
                           {uploadingCoaFor === batch ? "Uploading..." : doc ? "Replace" : "Upload"}
                           <input
                             type="file"
@@ -674,7 +674,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                           <button
                             type="button"
                             onClick={() => handleRemoveCoa(batch)}
-                            className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
+                            className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]"
                           >
                             Remove
                           </button>
@@ -688,7 +688,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
           )}
 
           <div className="mt-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">Sizes & Pricing</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Sizes & Pricing</p>
             <div className="mt-3 space-y-3">
               {form.sizes.map((size, i) => (
                 <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-6">
@@ -739,7 +739,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               <button
                 type="button"
                 onClick={() => setForm((f) => ({ ...f, sizes: [...f.sizes, { ...EMPTY_SIZE }] }))}
-                className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+                className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
               >
                 + Add Size
               </button>
@@ -759,7 +759,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
           {editingProduct && (
             <div className="mt-6">
-              <p className="text-xs uppercase tracking-[0.2em] text-gold">Images</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Images</p>
               <p className="mt-1 text-[10px] text-white/30">
                 The main photo is set from the product&apos;s card above: click its image, or drop a file on it.
               </p>
@@ -774,7 +774,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             <button
               type="submit"
               disabled={saving}
-              className="border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+              className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40"
             >
               {saving ? "Saving..." : "Save Product"}
             </button>

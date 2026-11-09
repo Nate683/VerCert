@@ -8,9 +8,13 @@ export async function requireExecutiveSession(): Promise<boolean> {
   return customer?.role === "command" || customer?.role === "office";
 }
 
-// Stricter guard for /command-only features (promotions, site content) that
-// /office must never be able to read or write, even by calling the API directly.
+// Guard for the features that were once /command-only (promotions, site
+// content, announcements, affiliates management, invite codes, goals,
+// subscribers, subscriptions, the activity log). Since 2026-11-08 the owner
+// gave /office full parity with /command, so this now admits both realms —
+// exactly like requireExecutiveSession. It is kept as a separate name so the
+// routes that hold the most sensitive controls stay easy to find, and so
+// narrowing them again is a one-line change here.
 export async function requireCommandSession(): Promise<boolean> {
-  const customer = await getCurrentCustomer();
-  return customer?.role === "command";
+  return requireExecutiveSession();
 }

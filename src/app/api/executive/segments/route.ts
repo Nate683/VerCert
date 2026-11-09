@@ -16,12 +16,12 @@ import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
-// Customer segments for /command. Command-only: an export is a list of real
-// people's contact details, so /office can't pull one even via the API, and
-// every export is written to the activity log.
+// Customer segments for the executive portal (both realms since the owner gave
+// /office full parity on 2026-11-08). An export is a list of real people's contact
+// details, so every export is written to the activity log.
 export const GET = withApiErrorHandling(async (request: Request) => {
   const viewer = await getCurrentCustomer();
-  if (viewer?.role !== "command") {
+  if (viewer?.role !== "command" && viewer?.role !== "office") {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 

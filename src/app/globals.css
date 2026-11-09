@@ -919,6 +919,345 @@ input[type="search"]::-webkit-search-cancel-button {
   color: var(--office-fg);
 }
 
+/* ==========================================================================
+   EXECUTIVE PORTAL — graphite. One look for /command and /office: an
+   operating dashboard, not a room. Authority comes from type and spacing.
+   Everything is scoped to .exec-shell (the ExecutiveTerminal root), so the
+   older .command-* / .office-* rules above still serve the sign-in page and
+   HQ, and every panel inside the portal is re-dressed here without per-file
+   edits.
+
+   Gold (#b08c50) is reserved for meaning: the selected tab, the live mark,
+   a positive change. Labels and chrome are gray.
+   ========================================================================== */
+
+.exec-shell {
+  --x-base: #111316;      /* page ground */
+  --x-panel: #16191c;     /* lifted section */
+  --x-raised: #1d2125;    /* hover / inset rows */
+  --x-border: #272b30;    /* hairlines */
+  --x-border-strong: #353a40;
+  --x-text: #eceef0;      /* primary values */
+  --x-text-2: #b9bec4;    /* body copy */
+  --x-muted: #878d95;     /* labels, secondary (5.6:1 on base) */
+  --x-faint: #60666d;     /* tertiary, rules of thumb */
+  --x-gold: #b08c50;
+  --x-negative: #c08c86;  /* desaturated: errors, negative figures */
+  --x-positive: #8fa898;  /* desaturated: success states */
+  --x-warning: #bba27a;   /* desaturated: warnings */
+
+  /* Re-point every token the portal's components resolve through, so the
+     scattered utilities (text-white/60, border-white/10, text-gold,
+     var(--cmd-*), var(--office-*)) all land on the graphite scale. */
+  --foreground: var(--x-text);
+  --gold: var(--x-gold);
+  --cmd-base: var(--x-base);
+  --cmd-base-deep: var(--x-base);
+  --cmd-base-raised: var(--x-panel);
+  --cmd-oxblood: var(--x-raised);
+  --cmd-oxblood-deep: var(--x-raised);
+  --cmd-brass: var(--x-border-strong);
+  --cmd-brass-bright: var(--x-text);
+  --cmd-brass-dim: var(--x-faint);
+  --cmd-forest: var(--x-panel);
+  --cmd-forest-deep: var(--x-panel);
+  --cmd-bone: var(--x-text);
+  --cmd-bone-dim: var(--x-muted);
+  --cmd-bone-faint: var(--x-faint);
+  --command-accent-2: var(--x-negative);
+  --office-bg: var(--x-base);
+  --office-bg-2: var(--x-base);
+  --office-panel: var(--x-panel);
+  --office-panel-raised: var(--x-panel);
+  --office-border: var(--x-border);
+  --office-fg: var(--x-text);
+  --office-gold: var(--x-text);
+  --office-platinum: var(--x-text-2);
+  --office-platinum-dim: var(--x-muted);
+
+  /* State colours, desaturated into the same family. */
+  --color-red-200: #d9b3ae;
+  --color-red-300: var(--x-negative);
+  --color-red-400: var(--x-negative);
+  --color-red-500: #a8706a;
+  --color-green-300: var(--x-positive);
+  --color-green-400: var(--x-positive);
+  --color-emerald-300: var(--x-positive);
+  --color-emerald-400: var(--x-positive);
+  --color-amber-300: var(--x-warning);
+  --color-amber-400: var(--x-warning);
+  --color-yellow-300: var(--x-warning);
+  --color-yellow-400: var(--x-warning);
+
+  /* One family. Every display, ledger and reading face becomes Inter. */
+  --font-display: var(--font-body);
+  --font-ledger: var(--font-body);
+  --font-read: var(--font-body);
+  --font-mono: var(--font-body);
+
+  min-height: 100vh;
+  color: var(--x-text);
+  background: var(--x-base);
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+  /* Tabular figures go on figures and tables only (.exec-figure, table,
+     tabular-nums): on running text Inter's tabular set also widens the
+     hyphen, so names like "VC-1S" read "VC - 1S". */
+}
+
+.exec-shell ::selection {
+  background: var(--x-gold);
+  color: var(--x-base);
+}
+
+/* --- Sections ------------------------------------------------------------ */
+
+.exec-shell :is(.command-panel, .office-card) {
+  border: 1px solid var(--x-border);
+  border-radius: 2px;
+  background: var(--x-panel);
+  box-shadow: none;
+  transition: border-color 0.15s ease;
+}
+
+.exec-shell :is(.command-panel, .office-card):hover {
+  border-color: var(--x-border);
+  box-shadow: none;
+}
+
+.exec-shell :is(.command-panel, .command-engraved)::before,
+.exec-shell .command-panel::after {
+  content: none;
+}
+
+.exec-panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--x-border);
+}
+
+/* --- Type ---------------------------------------------------------------- */
+
+.exec-label,
+.exec-shell :is(.command-label, .office-label, .command-plaque__text) {
+  font-family: var(--font-body), Arial, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-variant-caps: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--x-muted);
+  text-shadow: none;
+}
+
+.exec-meta,
+.exec-shell .command-plaque__meta {
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--x-faint);
+  text-shadow: none;
+}
+
+.exec-figure,
+.exec-shell :is(.command-figure, .command-hero-figure) {
+  font-family: var(--font-body), Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--x-text);
+  text-shadow: none;
+}
+
+.exec-shell .command-heading {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--x-text);
+}
+
+.exec-shell .command-body {
+  line-height: 1.5;
+  color: var(--x-text-2);
+}
+
+.exec-shell .office-gold {
+  color: var(--x-text);
+}
+
+.exec-shell .office-platinum {
+  color: var(--x-muted);
+}
+
+/* The old ornament pieces collapse to plain structure. */
+.exec-shell .command-plaque {
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.exec-shell .command-marble {
+  background: none;
+}
+
+.exec-shell .command-marble::before,
+.exec-shell .command-rule--crest::after {
+  content: none;
+}
+
+.exec-shell .command-rule {
+  height: 1px;
+  background: var(--x-border);
+}
+
+/* --- Tabs: text, with a gold rule under the selected one ------------------ */
+
+.exec-shell :is(.command-tab, .office-tab) {
+  position: relative;
+  margin-bottom: -1px;
+  padding: 0.625rem 0.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font-family: var(--font-body), Arial, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-caps: normal;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: var(--x-muted);
+  text-shadow: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.exec-shell :is(.command-tab, .office-tab):hover {
+  color: var(--x-text);
+  background: none;
+  border-color: transparent;
+}
+
+.exec-shell :is(.command-tab, .office-tab)[aria-selected="true"] {
+  color: var(--x-text);
+  background: none;
+  border-color: transparent;
+  border-bottom-color: var(--x-gold);
+}
+
+/* --- Tables -------------------------------------------------------------- */
+
+.exec-shell table {
+  font-variant-numeric: tabular-nums;
+}
+
+.exec-shell thead th {
+  font-family: var(--font-body), Arial, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-variant-caps: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--x-muted);
+  border-bottom: 1px solid var(--x-border-strong);
+}
+
+.exec-shell tbody tr {
+  border-bottom: 1px solid var(--x-border);
+  transition: background-color 0.15s ease;
+}
+
+.exec-shell tbody tr:hover {
+  background-color: var(--x-raised);
+}
+
+/* --- Fields -------------------------------------------------------------- */
+
+.exec-shell :is(input, select, textarea) {
+  color: var(--x-text);
+  background-color: var(--x-base);
+  border-color: var(--x-border-strong);
+  border-radius: 2px;
+  box-shadow: none;
+  transition: border-color 0.15s ease;
+}
+
+.exec-shell :is(input, textarea)::placeholder {
+  color: var(--x-faint);
+}
+
+.exec-shell :is(input, select, textarea):focus {
+  outline: none;
+  border-color: var(--x-muted);
+  box-shadow: none;
+}
+
+.exec-shell option {
+  background-color: var(--x-panel);
+  color: var(--x-text);
+}
+
+.exec-shell *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.exec-shell *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.exec-shell *::-webkit-scrollbar-thumb {
+  background: var(--x-border-strong);
+  border: 0;
+}
+
+/* --- Messages tab --------------------------------------------------------
+   The chat (components/hq/ChatPanel.tsx) is shared with /hq, which keeps its
+   own look, so it isn't edited; inside the portal it is wrapped in .exec-chat
+   and re-toned here. Gold stays only on the selected thread. */
+
+.exec-chat p.text-gold,
+.exec-chat span.text-gold {
+  color: var(--x-muted);
+}
+
+.exec-chat .bg-gold {
+  border-color: var(--x-muted);
+  background-color: var(--x-raised);
+  color: var(--x-text);
+}
+
+.exec-chat .bg-gold:hover {
+  border-color: var(--x-text);
+  background-color: var(--x-raised);
+  color: var(--x-text);
+}
+
+.exec-chat .bg-gold\/5 {
+  border-color: var(--x-border-strong);
+  background-color: var(--x-raised);
+}
+
+.exec-chat .border-l-gold {
+  border-left-color: var(--x-border-strong);
+}
+
+.exec-chat :is(.hover\:text-gold, .hover\:border-gold):hover {
+  border-color: var(--x-muted);
+  color: var(--x-text);
+}
+
+/* --- Motion: none beyond quiet state transitions -------------------------- */
+
+.exec-shell :is(.command-fade-in, .command-reveal, .animate-pulse) {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
 /* Age gate copyright line (components/AgeGate.tsx): pinned to the bottom of
    the viewport only on a desktop tall enough to keep it clear of the panel.
    Everywhere else it stays in flow, stacked below the panel. */

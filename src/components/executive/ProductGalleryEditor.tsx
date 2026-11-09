@@ -107,17 +107,17 @@ export function ProductGalleryEditor({
               disabled={busy}
               onClick={() => act(url, () => send("DELETE", undefined, url))}
               aria-label={`Remove gallery photo ${i + 1}`}
-              className="absolute -right-1 -top-1 h-6 w-6 border border-red-500/40 bg-black text-xs text-red-300 hover:bg-red-500/20 disabled:opacity-30"
+              className="absolute -right-1 -top-1 h-6 w-6 border border-red-500/40 bg-[var(--x-base)] text-xs text-red-300 hover:bg-red-500/20 disabled:opacity-30"
             >
               ×
             </button>
-            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/80">
+            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-[var(--x-base)]/80">
               <button
                 type="button"
                 onClick={() => move(i, -1)}
                 disabled={busy || i === 0}
                 aria-label={`Move photo ${i + 1} earlier`}
-                className="px-2 py-1 text-xs text-white/70 hover:text-gold disabled:opacity-20"
+                className="px-2 py-1 text-xs text-white/70 hover:text-[var(--x-text)] disabled:opacity-20"
               >
                 ←
               </button>
@@ -127,7 +127,7 @@ export function ProductGalleryEditor({
                 onClick={() => move(i, 1)}
                 disabled={busy || i === gallery.length - 1}
                 aria-label={`Move photo ${i + 1} later`}
-                className="px-2 py-1 text-xs text-white/70 hover:text-gold disabled:opacity-20"
+                className="px-2 py-1 text-xs text-white/70 hover:text-[var(--x-text)] disabled:opacity-20"
               >
                 →
               </button>
@@ -151,7 +151,7 @@ export function ProductGalleryEditor({
               setDragging(false);
               add(Array.from(e.dataTransfer.files ?? []));
             }}
-            className={`flex h-24 w-24 flex-col items-center justify-center gap-1 border border-dashed px-1 text-center text-[10px] uppercase tracking-[0.1em] transition-colors hover:border-gold hover:text-gold disabled:cursor-wait ${
+            className={`flex h-24 w-24 flex-col items-center justify-center gap-1 border border-dashed px-1 text-center text-[10px] uppercase tracking-[0.1em] transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)] disabled:cursor-wait ${
               dragging ? "border-gold text-gold" : "border-white/20 text-white/40"
             }`}
           >

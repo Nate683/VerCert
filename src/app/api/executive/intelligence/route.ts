@@ -31,7 +31,7 @@ export const GET = withApiErrorHandling(async (request: Request) => {
   const funnel = await computeFunnel(days);
   const topCustomers = computeCustomerSummaries(users, orders).slice(0, 10);
 
-  // Affiliate leaderboard is command-only data, but harmless to omit for office.
+  // Affiliate leaderboard (both realms since 2026-11-08 — requireCommandSession admits office).
   let topAffiliates: { name: string; grossRevenue: number; ordersDriven: number }[] = [];
   if (isCommand) {
     const affiliates = await listAffiliates();

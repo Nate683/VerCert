@@ -47,7 +47,7 @@ export function ForecastingPanel({ variant }: { variant: "command" | "office" })
 
       <div className={cardClass}>
         <p className="text-xs uppercase tracking-[0.2em] text-white/40">Current Run Rate</p>
-        <p className={`mt-2 text-3xl text-gold ${figureClass}`}>${dailyRunRate.toFixed(2)}/day</p>
+        <p className={`mt-2 text-3xl text-[var(--x-text)] ${figureClass}`}>${dailyRunRate.toFixed(2)}/day</p>
         <p className="mt-1 text-sm text-white/50">Based on the trailing 14 days of paid revenue.</p>
       </div>
 

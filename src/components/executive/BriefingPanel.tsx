@@ -47,7 +47,7 @@ export function BriefingPanel({ variant }: { variant: "command" | "office" }) {
       <LiveIndicator variant={variant} asOf={overview.computedAt} />
 
       <div className={cardClass}>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">Overnight / Today</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Overnight / Today</p>
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.15em] text-white/40">Revenue Today</p>
@@ -69,7 +69,7 @@ export function BriefingPanel({ variant }: { variant: "command" | "office" }) {
       </div>
 
       <div className={cardClass}>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">Decisions Needed ({critical.length})</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Decisions Needed ({critical.length})</p>
         {critical.length === 0 ? (
           <p className="mt-3 text-sm text-white/40">Nothing urgent — all clear.</p>
         ) : (
@@ -84,7 +84,7 @@ export function BriefingPanel({ variant }: { variant: "command" | "office" }) {
       </div>
 
       <div className={cardClass}>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">Coming Up</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Coming Up</p>
         {upcoming.length === 0 ? (
           <p className="mt-3 text-sm text-white/40">Nothing on the calendar.</p>
         ) : (

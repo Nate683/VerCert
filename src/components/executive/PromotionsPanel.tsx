@@ -211,7 +211,7 @@ export function PromotionsPanel() {
           type="button"
           onClick={handleSaveBanner}
           disabled={bannerSaving}
-          className="mt-4 border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black disabled:opacity-40"
+          className="mt-4 border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
         >
           {bannerSaving ? "Saving..." : "Save Banner"}
         </button>
@@ -223,7 +223,7 @@ export function PromotionsPanel() {
           <button
             type="button"
             onClick={startNew}
-            className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+            className="border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]"
           >
             + New Code
           </button>
@@ -270,21 +270,21 @@ export function PromotionsPanel() {
                         <button
                           type="button"
                           onClick={() => startEdit(p)}
-                          className="border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+                          className="border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => handleToggleActive(p)}
-                          className="border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+                          className="border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
                         >
                           {p.active ? "Deactivate" : "Activate"}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(p.id)}
-                          className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
+                          className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]"
                         >
                           Delete
                         </button>
@@ -300,7 +300,7 @@ export function PromotionsPanel() {
 
       {editing && (
         <form onSubmit={handleSave} className={cardClass}>
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">
             {editing === "new" ? "New Promo Code" : `Edit — ${form.code}`}
           </p>
 
@@ -388,7 +388,7 @@ export function PromotionsPanel() {
           </div>
 
           <div className="mt-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">
               Restrict to Categories (optional — leave empty to apply to whole order)
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -412,7 +412,7 @@ export function PromotionsPanel() {
           </div>
 
           <div className="mt-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-gold">
+            <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">
               Restrict to Specific Products (optional)
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
@@ -442,7 +442,7 @@ export function PromotionsPanel() {
             <button
               type="submit"
               disabled={saving}
-              className="border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+              className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40"
             >
               {saving ? "Saving..." : "Save Code"}
             </button>

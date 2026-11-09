@@ -15,12 +15,12 @@ export function AdminPanel({ variant }: { variant: "command" | "office" }) {
   const load = useCallback(async () => {
     setLoading(true);
     const requests: Promise<Response>[] = [fetch("/api/executive/notifications", { cache: "no-store" })];
-    if (isCommand) requests.push(fetch("/api/executive/activity", { cache: "no-store" }));
+    requests.push(fetch("/api/executive/activity", { cache: "no-store" }));
     const [settingsRes, activityRes] = await Promise.all(requests);
     if (settingsRes.ok) setSettings((await settingsRes.json()).settings);
     if (activityRes?.ok) setEntries((await activityRes.json()).entries ?? []);
     setLoading(false);
-  }, [isCommand]);
+  }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount-time fetch
@@ -84,25 +84,25 @@ export function AdminPanel({ variant }: { variant: "command" | "office" }) {
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="mt-4 border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black disabled:opacity-40"
+          className="mt-4 border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
         >
           {saving ? "Saving..." : "Save"}
         </button>
-        {saved && <span className="ml-3 text-xs text-gold">Saved.</span>}
+        {saved && <span className="ml-3 text-xs text-[var(--x-text)]">Saved.</span>}
       </div>
 
-      {isCommand && (
+      {(
         <div className={cardClass}>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">Activity Log</p>
-          <p className="mt-1 text-[10px] text-white/30">Visible on /command only.</p>
+          <p className="mt-1 text-[10px] text-white/30">Visible to both executive accounts.</p>
           {entries.length === 0 ? (
             <p className="mt-4 text-sm text-white/40">No activity recorded yet.</p>
           ) : (
             <ul className="mt-4 max-h-96 space-y-2 overflow-y-auto pr-1 text-sm">
               {entries.map((entry) => (
-                <li key={entry.id} className="border-l border-gold/30 pl-3">
+                <li key={entry.id} className="border-l border-[var(--x-border-strong)] pl-3">
                   <p className="text-white/80">
-                    <span className="text-gold">{entry.actorEmail}</span> — {entry.action}
+                    <span className="text-[var(--x-text)]">{entry.actorEmail}</span> — {entry.action}
                     {entry.details ? ` (${entry.details})` : ""}
                   </p>
                   <p className="font-mono text-[10px] text-white/30">

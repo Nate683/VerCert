@@ -64,7 +64,7 @@ export function CalendarPanel({ variant }: { variant: "command" | "office" }) {
   return (
     <div className="space-y-6">
       <form onSubmit={handleCreate} className={cardClass}>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">New Event</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">New Event</p>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <input
             required
@@ -86,7 +86,7 @@ export function CalendarPanel({ variant }: { variant: "command" | "office" }) {
         <button
           type="submit"
           disabled={saving}
-          className="mt-4 border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+          className="mt-4 border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40"
         >
           {saving ? "Saving..." : "Add Event"}
         </button>
@@ -105,7 +105,7 @@ export function CalendarPanel({ variant }: { variant: "command" | "office" }) {
                   {e.notes && <span className="ml-2 text-white/40">— {e.notes}</span>}
                 </span>
                 <span className="flex items-center gap-3 text-xs text-white/40">
-                  <span className="uppercase tracking-[0.1em] text-gold">{TYPE_LABEL[e.type]}</span>
+                  <span className="uppercase tracking-[0.1em] text-[var(--x-muted)]">{TYPE_LABEL[e.type]}</span>
                   <span>{new Date(e.date).toLocaleDateString()}</span>
                   <button type="button" onClick={() => handleDelete(e.id)} className="text-white/30 hover:text-red-300">
                     ×

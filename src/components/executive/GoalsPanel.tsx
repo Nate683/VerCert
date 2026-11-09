@@ -83,7 +83,7 @@ export function GoalsPanel({ variant }: { variant: "command" | "office" }) {
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">This Month</p>
           {monthlyGoal ? (
             <>
-              <p className={`mt-2 text-3xl text-gold ${figureClass}`}>${revenueMtd.toFixed(2)}</p>
+              <p className={`mt-2 text-3xl text-[var(--x-text)] ${figureClass}`}>${revenueMtd.toFixed(2)}</p>
               <p className="mt-1 text-sm text-white/50">of ${monthlyGoal.targetUsd.toFixed(2)} target</p>
               <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/10">
                 <div
@@ -106,7 +106,7 @@ export function GoalsPanel({ variant }: { variant: "command" | "office" }) {
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">This Quarter</p>
           {quarterlyGoal ? (
             <>
-              <p className={`mt-2 text-3xl text-gold ${figureClass}`}>
+              <p className={`mt-2 text-3xl text-[var(--x-text)] ${figureClass}`}>
                 ${(overview?.revenueMtd ?? 0).toFixed(2)}
               </p>
               <p className="mt-1 text-sm text-white/50">of ${quarterlyGoal.targetUsd.toFixed(2)} target</p>
@@ -123,9 +123,9 @@ export function GoalsPanel({ variant }: { variant: "command" | "office" }) {
         </div>
       </div>
 
-      {isCommand && (
+      {(
         <form onSubmit={handleSetGoal} className={cardClass}>
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">Set a Target</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Set a Target</p>
           <div className="mt-4 flex flex-wrap gap-4">
             <select
               value={periodType}
@@ -148,7 +148,7 @@ export function GoalsPanel({ variant }: { variant: "command" | "office" }) {
             <button
               type="submit"
               disabled={saving}
-              className="border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+              className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40"
             >
               {saving ? "Saving..." : "Set Target"}
             </button>
@@ -169,7 +169,7 @@ export function GoalsPanel({ variant }: { variant: "command" | "office" }) {
                 </span>
                 <span className="flex items-center gap-3">
                   <span className={figureClass}>${g.targetUsd.toFixed(2)}</span>
-                  {isCommand && (
+                  {(
                     <button type="button" onClick={() => handleDelete(g.id)} className="text-white/30 hover:text-red-300">
                       ×
                     </button>

@@ -284,7 +284,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route */}
           <a
             href={`/api/executive/ledger/reports?start=${range.start}&end=${range.end}&format=csv`}
-            className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+            className="border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]"
           >
             Export Full Ledger CSV
           </a>
@@ -317,23 +317,23 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
           <div className="flex justify-between border-b border-white/10 pb-2"><dt className="text-white/60">Revenue</dt><dd className="text-white">{fmt(reports.revenue)}</dd></div>
           <div className="flex justify-between border-b border-white/10 pb-2">
             <dt className="text-white/60">
-              <button type="button" onClick={() => setDrillOpen(drillOpen === "cogs" ? null : "cogs")} className="hover:text-gold">
+              <button type="button" onClick={() => setDrillOpen(drillOpen === "cogs" ? null : "cogs")} className="hover:text-[var(--x-text)]">
                 Cost of Goods Sold
               </button>
             </dt>
             <dd className="text-white">{fmt(reports.cogs)}</dd>
           </div>
-          <div className="flex justify-between border-b border-white/10 pb-2"><dt className="text-white">Gross Profit</dt><dd className="text-gold">{fmt(reports.grossProfit)}</dd></div>
+          <div className="flex justify-between border-b border-white/10 pb-2"><dt className="text-white">Gross Profit</dt><dd className="text-[var(--x-text)]">{fmt(reports.grossProfit)}</dd></div>
           <div className="flex justify-between border-b border-white/10 pb-2">
             <dt className="text-white/60">
-              <button type="button" onClick={() => setDrillOpen(drillOpen === "opex" ? null : "opex")} className="hover:text-gold">
+              <button type="button" onClick={() => setDrillOpen(drillOpen === "opex" ? null : "opex")} className="hover:text-[var(--x-text)]">
                 Operating Expenses
               </button>
             </dt>
             <dd className="text-white">{fmt(reports.operatingExpenses)}</dd>
           </div>
           <div className="flex justify-between border-b border-white/10 pb-2"><dt className="text-white/60">Commissions Owed</dt><dd className="text-white">{fmt(reports.commissionsOwed)}</dd></div>
-          <div className="flex justify-between border-b border-white/10 pb-2"><dt className="text-white">Net Income</dt><dd className="text-gold">{fmt(reports.netIncome)}</dd></div>
+          <div className="flex justify-between border-b border-white/10 pb-2"><dt className="text-white">Net Income</dt><dd className="text-[var(--x-text)]">{fmt(reports.netIncome)}</dd></div>
           <div className="flex justify-between"><dt className="text-white/60">Blended Margin</dt><dd className="text-white">{reports.blendedMarginPercent !== null ? `${reports.blendedMarginPercent.toFixed(1)}%` : "Add product costs"}</dd></div>
         </dl>
 
@@ -381,7 +381,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
               <p className="text-[10px] uppercase tracking-[0.1em] text-white/40">Assets</p>
               {reports.balanceSheet.assetsByType.map((a) => (
                 <div key={a.type} className="flex justify-between text-white/70">
-                  <button type="button" onClick={() => setDrillOpen(drillOpen === `asset-${a.type}` ? null : `asset-${a.type}`)} className="capitalize hover:text-gold">
+                  <button type="button" onClick={() => setDrillOpen(drillOpen === `asset-${a.type}` ? null : `asset-${a.type}`)} className="capitalize hover:text-[var(--x-text)]">
                     {a.type}
                   </button>
                   <span>{fmt(a.total)}</span>
@@ -395,7 +395,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
               <p className="text-[10px] uppercase tracking-[0.1em] text-white/40">Liabilities</p>
               {reports.balanceSheet.liabilitiesByType.map((l) => (
                 <div key={l.type} className="flex justify-between text-white/70">
-                  <button type="button" onClick={() => setDrillOpen(drillOpen === `liability-${l.type}` ? null : `liability-${l.type}`)} className="capitalize hover:text-gold">
+                  <button type="button" onClick={() => setDrillOpen(drillOpen === `liability-${l.type}` ? null : `liability-${l.type}`)} className="capitalize hover:text-[var(--x-text)]">
                     {l.type.replace("_", " ")}
                   </button>
                   <span>{fmt(l.total)}</span>
@@ -405,8 +405,8 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
                 <span>Total Liabilities</span><span>{fmt(reports.balanceSheet.liabilitiesTotal)}</span>
               </div>
             </div>
-            <div className="flex justify-between border-t border-gold/30 pt-2 font-serif text-lg">
-              <span className="text-white">Equity</span><span className="text-gold">{fmt(reports.balanceSheet.equity)}</span>
+            <div className="flex justify-between border-t border-[var(--x-border-strong)] pt-2 font-serif text-lg">
+              <span className="text-white">Equity</span><span className="text-[var(--x-text)]">{fmt(reports.balanceSheet.equity)}</span>
             </div>
           </div>
           {assets.filter((a) => drillOpen === `asset-${a.type}`).length > 0 && (
@@ -454,7 +454,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
                   <td className="py-2 pr-4">{m.month}</td>
                   <td className="py-2 pr-4">{fmt(m.inflow)}</td>
                   <td className="py-2 pr-4">{fmt(m.outflow)}</td>
-                  <td className={m.net >= 0 ? "py-2 text-emerald-400" : "py-2 text-red-300"}>{fmt(m.net)}</td>
+                  <td className={m.net >= 0 ? "py-2 text-[var(--x-text)]" : "py-2 text-red-300"}>{fmt(m.net)}</td>
                 </tr>
               ))}
             </tbody>
@@ -485,11 +485,11 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
               <option value="yearly">Yearly</option>
             </select>
           )}
-          <label className="cursor-pointer border border-white/20 px-3 py-2 text-center text-xs uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold">
+          <label className="cursor-pointer border border-white/20 px-3 py-2 text-center text-xs uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]">
             {uploadingReceipt ? "Uploading..." : expenseForm.receiptUrl ? "Receipt Attached" : "Upload Receipt"}
             <input type="file" accept="application/pdf,image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUploadReceipt(f); }} />
           </label>
-          <button type="submit" className="border border-gold bg-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-black hover:bg-transparent hover:text-gold">
+          <button type="submit" className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] hover:border-[var(--x-text)]">
             Add Expense
           </button>
         </form>
@@ -514,16 +514,16 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
                   <td className="py-2 pr-4 text-xs text-white/50">{e.vendor ?? "—"}</td>
                   <td className="py-2 pr-4">{fmt(e.amount)}</td>
                   <td className="py-2 pr-4 text-xs">
-                    {e.receiptUrl ? <a href={e.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">View</a> : "—"}
+                    {e.receiptUrl ? <a href={e.receiptUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--x-text)] hover:underline">View</a> : "—"}
                   </td>
                   <td className="py-2">
                     <div className="flex gap-2">
                       {e.recurring && (
-                        <button type="button" onClick={() => handleDuplicateRecurring(e)} className="border border-white/20 px-2 py-1 text-[10px] uppercase text-white/70 hover:border-gold hover:text-gold">
+                        <button type="button" onClick={() => handleDuplicateRecurring(e)} className="border border-white/20 px-2 py-1 text-[10px] uppercase text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]">
                           Duplicate Next Period
                         </button>
                       )}
-                      <button type="button" onClick={() => handleDeleteExpense(e.id)} className="border border-red-500/30 px-2 py-1 text-[10px] uppercase text-red-300/80 hover:border-red-400">
+                      <button type="button" onClick={() => handleDeleteExpense(e.id)} className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]">
                         Delete
                       </button>
                     </div>
@@ -547,7 +547,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
           <input required type="number" step="0.01" min="0" value={cogsForm.purchasePriceUsd} onChange={(e) => setCogsForm({ ...cogsForm, purchasePriceUsd: e.target.value })} placeholder="Purchase price (per unit)" className="input-field" />
           <input type="date" required value={cogsForm.dateReceived} onChange={(e) => setCogsForm({ ...cogsForm, dateReceived: e.target.value })} className="input-field" />
           <input value={cogsForm.notes} onChange={(e) => setCogsForm({ ...cogsForm, notes: e.target.value })} placeholder="Notes" className="input-field sm:col-span-2" />
-          <button type="submit" className="border border-gold bg-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-black hover:bg-transparent hover:text-gold">
+          <button type="submit" className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] hover:border-[var(--x-text)]">
             Add Purchase
           </button>
         </form>
@@ -572,7 +572,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
                   <td className="py-2 pr-4">{c.quantity}</td>
                   <td className="py-2 pr-4">{fmt(c.purchasePriceUsd)}</td>
                   <td className="py-2">
-                    <button type="button" onClick={() => handleDeleteCogs(c.id)} className="border border-red-500/30 px-2 py-1 text-[10px] uppercase text-red-300/80 hover:border-red-400">
+                    <button type="button" onClick={() => handleDeleteCogs(c.id)} className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]">
                       Delete
                     </button>
                   </td>
@@ -599,7 +599,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
             <input required value={assetForm.name} onChange={(e) => setAssetForm({ ...assetForm, name: e.target.value })} placeholder="Name" className="input-field" />
             <input required type="number" step="0.01" min="0" value={assetForm.valueUsd} onChange={(e) => setAssetForm({ ...assetForm, valueUsd: e.target.value })} placeholder="Value (USD)" className="input-field" />
             <input type="date" required value={assetForm.asOfDate} onChange={(e) => setAssetForm({ ...assetForm, asOfDate: e.target.value })} className="input-field" />
-            <button type="submit" className="w-full border border-gold bg-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-black hover:bg-transparent hover:text-gold">
+            <button type="submit" className="w-full border border-[var(--x-muted)] bg-[var(--x-raised)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] hover:border-[var(--x-text)]">
               Add Asset
             </button>
           </form>
@@ -609,7 +609,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
                 <span>{a.name} ({a.type})</span>
                 <span className="flex items-center gap-2">
                   {fmt(a.valueUsd)}
-                  <button type="button" onClick={() => handleDeleteAsset(a.id)} className="text-red-300/80 hover:text-red-300">×</button>
+                  <button type="button" onClick={() => handleDeleteAsset(a.id)} className="text-[var(--x-muted)] hover:text-[var(--x-negative)]">×</button>
                 </span>
               </li>
             ))}
@@ -629,7 +629,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
             <input required value={liabilityForm.name} onChange={(e) => setLiabilityForm({ ...liabilityForm, name: e.target.value })} placeholder="Name" className="input-field" />
             <input required type="number" step="0.01" min="0" value={liabilityForm.valueUsd} onChange={(e) => setLiabilityForm({ ...liabilityForm, valueUsd: e.target.value })} placeholder="Value (USD)" className="input-field" />
             <input type="date" required value={liabilityForm.asOfDate} onChange={(e) => setLiabilityForm({ ...liabilityForm, asOfDate: e.target.value })} className="input-field" />
-            <button type="submit" className="w-full border border-gold bg-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-black hover:bg-transparent hover:text-gold">
+            <button type="submit" className="w-full border border-[var(--x-muted)] bg-[var(--x-raised)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] hover:border-[var(--x-text)]">
               Add Liability
             </button>
           </form>
@@ -639,7 +639,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
                 <span>{l.name} ({l.type.replace("_", " ")})</span>
                 <span className="flex items-center gap-2">
                   {fmt(l.valueUsd)}
-                  <button type="button" onClick={() => handleDeleteLiability(l.id)} className="text-red-300/80 hover:text-red-300">×</button>
+                  <button type="button" onClick={() => handleDeleteLiability(l.id)} className="text-[var(--x-muted)] hover:text-[var(--x-negative)]">×</button>
                 </span>
               </li>
             ))}
@@ -658,7 +658,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
           <input required type="number" step="0.01" min="0" value={ownerForm.amountUsd} onChange={(e) => setOwnerForm({ ...ownerForm, amountUsd: e.target.value })} placeholder="Amount" className="input-field" />
           <input type="date" required value={ownerForm.date} onChange={(e) => setOwnerForm({ ...ownerForm, date: e.target.value })} className="input-field" />
           <input value={ownerForm.notes} onChange={(e) => setOwnerForm({ ...ownerForm, notes: e.target.value })} placeholder="Notes" className="input-field" />
-          <button type="submit" className="border border-gold bg-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-black hover:bg-transparent hover:text-gold sm:col-span-4">
+          <button type="submit" className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] hover:border-[var(--x-text)] sm:col-span-4">
             Record Transaction
           </button>
         </form>
@@ -668,7 +668,7 @@ export function LedgerPanel({ variant }: { variant: "command" | "office" }) {
               <span className="capitalize">{t.date} — {t.type}</span>
               <span className="flex items-center gap-2">
                 {fmt(t.amountUsd)}
-                <button type="button" onClick={() => handleDeleteOwnerTx(t.id)} className="text-red-300/80 hover:text-red-300">×</button>
+                <button type="button" onClick={() => handleDeleteOwnerTx(t.id)} className="text-[var(--x-muted)] hover:text-[var(--x-negative)]">×</button>
               </span>
             </li>
           ))}

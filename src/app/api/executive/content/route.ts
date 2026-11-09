@@ -23,6 +23,7 @@ import { getOrderingSettings, ORDERING_CONTENT_KEY } from "@/lib/ordering";
 
 export const dynamic = "force-dynamic";
 
+// NOTE: both executive realms since 2026-11-08 (owner gave /office full parity) — see lib/executive/require-auth.ts.
 // Site content editing is /command-only — /office never sees or can call this.
 export const GET = withApiErrorHandling(async () => {
   if (!(await requireCommandSession())) {

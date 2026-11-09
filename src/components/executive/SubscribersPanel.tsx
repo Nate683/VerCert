@@ -55,7 +55,7 @@ export function SubscribersPanel() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-white/40">Newsletter Subscribers</p>
-            <p className="mt-3 font-mono text-4xl text-gold">{loading ? "—" : active.length}</p>
+            <p className="mt-3 font-mono text-4xl text-[var(--x-text)]">{loading ? "—" : active.length}</p>
             <p className="mt-1 text-xs text-white/40">
               subscribed{unsubscribedCount > 0 ? ` · ${unsubscribedCount} unsubscribed on file` : ""}
             </p>
@@ -65,14 +65,14 @@ export function SubscribersPanel() {
               <button
                 type="button"
                 onClick={() => setShowUnsubscribed((v) => !v)}
-                className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+                className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
               >
                 {showUnsubscribed ? "Hide Unsubscribed" : "Show Unsubscribed"}
               </button>
             )}
             <a
               href="/api/executive/newsletter?format=csv"
-              className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+              className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
             >
               Export CSV
             </a>
@@ -115,7 +115,7 @@ export function SubscribersPanel() {
                           type="button"
                           onClick={() => handleRemove(s)}
                           disabled={removingId === s.id}
-                          className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400 disabled:opacity-40"
+                          className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] disabled:opacity-40 hover:text-[var(--x-negative)]"
                         >
                           {removingId === s.id ? "Removing..." : "Unsubscribe"}
                         </button>

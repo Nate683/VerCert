@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 const CSV_COLUMNS = ["email", "status", "signedUp", "sourcePage", "consentIp", "consentText", "unsubscribedAt", "unsubscribeSource"];
 
+// NOTE: both executive realms since 2026-11-08 (owner gave /office full parity) — see lib/executive/require-auth.ts.
 // The newsletter list, newest first — /command only, like Segments, since it's
 // a contact list. ?format=csv downloads every row, unsubscribed included, as
 // the consent and opt-out record.

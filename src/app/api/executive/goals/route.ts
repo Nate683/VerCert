@@ -15,6 +15,7 @@ export const GET = withApiErrorHandling(async () => {
   return NextResponse.json({ goals });
 });
 
+// NOTE: both executive realms since 2026-11-08 (owner gave /office full parity) — see lib/executive/require-auth.ts.
 // Setting targets is a command-only action; /office views them read-only.
 export const POST = withApiErrorHandling(async (request: Request) => {
   if (!(await requireCommandSession())) {

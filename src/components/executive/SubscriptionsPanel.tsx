@@ -19,7 +19,7 @@ type Row = {
   customer: { firstName: string; lastName: string; email: string };
 };
 
-const CARD = "border border-white/10 bg-black/40 p-5";
+const CARD = "border border-white/10 bg-[var(--x-base)]/40 p-5";
 
 // /command-only. Subscribe and save is off until a discount is set here; the
 // storefront then offers it on single-compound products (never blends or
@@ -97,7 +97,7 @@ export function SubscriptionsPanel() {
   return (
     <div className="space-y-6">
       <form onSubmit={save} className={CARD}>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">Subscribe and save</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Subscribe and save</p>
         <p className="mt-2 max-w-2xl text-xs leading-relaxed text-white/50">
           {settings.discountPercent === null
             ? "Off. Set a discount to offer subscriptions on single-compound products (never blends or inactive products)."
@@ -132,17 +132,17 @@ export function SubscriptionsPanel() {
         <button
           type="submit"
           disabled={saving}
-          className="mt-4 border border-gold px-5 py-2 text-[11px] uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black disabled:opacity-40"
+          className="mt-4 border border-[var(--x-border-strong)] px-5 py-2 text-[11px] uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
         >
           {saving ? "Saving…" : "Save"}
         </button>
         {message && (
-          <p className={`mt-3 text-xs ${message.ok ? "text-gold" : "text-red-300"}`}>{message.text}</p>
+          <p className={`mt-3 text-xs ${message.ok ? "text-[var(--x-positive)]" : "text-red-300"}`}>{message.text}</p>
         )}
       </form>
 
       <div className={CARD}>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">
           Subscriptions <span className="text-white/40">({live.length} live)</span>
         </p>
         {rows.length === 0 ? (
@@ -188,7 +188,7 @@ export function SubscriptionsPanel() {
                         <button
                           type="button"
                           onClick={() => cancel(r.id)}
-                          className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
+                          className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]"
                         >
                           Cancel
                         </button>

@@ -62,7 +62,7 @@ export function DocumentsPanel({ variant }: { variant: "command" | "office" }) {
   return (
     <div className="space-y-6">
       <form onSubmit={handleUpload} className={cardClass}>
-        <p className="text-xs uppercase tracking-[0.2em] text-gold">Upload Document</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Upload Document</p>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <input
             value={name}
@@ -81,14 +81,14 @@ export function DocumentsPanel({ variant }: { variant: "command" | "office" }) {
             required
             type="file"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="input-field file:mr-3 file:border-0 file:bg-gold file:px-3 file:py-1.5 file:text-xs file:uppercase file:text-black"
+            className="input-field file:mr-3 file:border-0 file:bg-[var(--x-raised)] file:px-3 file:py-1.5 file:text-xs file:uppercase file:text-[var(--x-text)]"
           />
         </div>
         {error && <p className="mt-2 text-sm text-red-300">{error}</p>}
         <button
           type="submit"
           disabled={uploading || !file}
-          className="mt-4 border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+          className="mt-4 border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40"
         >
           {uploading ? "Uploading..." : "Upload"}
         </button>
@@ -102,7 +102,7 @@ export function DocumentsPanel({ variant }: { variant: "command" | "office" }) {
           <ul className="mt-3 space-y-2">
             {documents.map((d) => (
               <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-2 text-sm">
-                <a href={d.fileUrl} target="_blank" rel="noreferrer" className="text-white/80 hover:text-gold">
+                <a href={d.fileUrl} target="_blank" rel="noreferrer" className="text-white/80 hover:text-[var(--x-text)]">
                   {d.name}
                 </a>
                 <span className="flex items-center gap-3 text-xs text-white/40">

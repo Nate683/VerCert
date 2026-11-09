@@ -20,7 +20,7 @@ function SaveButton({ saving, onClick }: { saving: boolean; onClick: () => void 
       type="button"
       onClick={onClick}
       disabled={saving}
-      className="mt-4 border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black disabled:opacity-40"
+      className="mt-4 border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
     >
       {saving ? "Saving..." : "Save"}
     </button>
@@ -132,8 +132,8 @@ export function SiteContentPanel() {
           </span>
         </label>
         <SaveButton saving={savingKey === ordering.key} onClick={() => save(ordering.key, { enabled: ordering.enabled })} />
-        {savedKey === ordering.key && <span className="ml-3 text-xs text-gold">Saved.</span>}
-        {saveError?.key === ordering.key && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
+        {savedKey === ordering.key && <span className="ml-3 text-xs text-[var(--x-text)]">Saved.</span>}
+        {saveError?.key === ordering.key && <span className="ml-3 text-xs text-[var(--x-negative)]">{saveError.message}</span>}
       </div>
 
       {/* Homepage Hero */}
@@ -171,7 +171,7 @@ export function SiteContentPanel() {
               // eslint-disable-next-line @next/next/no-img-element -- small admin preview thumbnail, not worth next/image config here
               <img src={hero.heroImageUrl} alt="" className="h-16 w-28 border border-white/10 object-cover" />
             )}
-            <label className="cursor-pointer border border-white/20 px-3 py-2 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold">
+            <label className="cursor-pointer border border-white/20 px-3 py-2 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]">
               {uploadingHero ? "Uploading..." : hero.heroImageUrl ? "Replace Image" : "Upload Image"}
               <input
                 type="file"
@@ -187,7 +187,7 @@ export function SiteContentPanel() {
               <button
                 type="button"
                 onClick={() => setHero({ ...hero, heroImageUrl: undefined })}
-                className="text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:text-red-300"
+                className="text-[10px] uppercase tracking-[0.1em] text-[var(--x-muted)] hover:text-[var(--x-negative)]"
               >
                 Remove
               </button>
@@ -195,8 +195,8 @@ export function SiteContentPanel() {
           </div>
         </div>
         <SaveButton saving={savingKey === "home_hero"} onClick={() => save("home_hero", hero)} />
-        {savedKey === "home_hero" && <span className="ml-3 text-xs text-gold">Saved.</span>}
-        {saveError?.key === "home_hero" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
+        {savedKey === "home_hero" && <span className="ml-3 text-xs text-[var(--x-text)]">Saved.</span>}
+        {saveError?.key === "home_hero" && <span className="ml-3 text-xs text-[var(--x-negative)]">{saveError.message}</span>}
       </div>
 
       {/* Featured products */}
@@ -228,8 +228,8 @@ export function SiteContentPanel() {
           ))}
         </div>
         <SaveButton saving={savingKey === "featured_products"} onClick={() => save("featured_products", featured)} />
-        {savedKey === "featured_products" && <span className="ml-3 text-xs text-gold">Saved.</span>}
-        {saveError?.key === "featured_products" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
+        {savedKey === "featured_products" && <span className="ml-3 text-xs text-[var(--x-text)]">Saved.</span>}
+        {saveError?.key === "featured_products" && <span className="ml-3 text-xs text-[var(--x-negative)]">{saveError.message}</span>}
       </div>
 
       {/* About page */}
@@ -286,8 +286,8 @@ export function SiteContentPanel() {
           ))}
         </div>
         <SaveButton saving={savingKey === "about_page"} onClick={() => save("about_page", about)} />
-        {savedKey === "about_page" && <span className="ml-3 text-xs text-gold">Saved.</span>}
-        {saveError?.key === "about_page" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
+        {savedKey === "about_page" && <span className="ml-3 text-xs text-[var(--x-text)]">Saved.</span>}
+        {saveError?.key === "about_page" && <span className="ml-3 text-xs text-[var(--x-negative)]">{saveError.message}</span>}
       </div>
 
       {/* FAQ */}
@@ -312,7 +312,7 @@ export function SiteContentPanel() {
               <button
                 type="button"
                 onClick={() => setFaq(faq.filter((_, j) => j !== i))}
-                className="mt-2 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:text-red-300"
+                className="mt-2 text-[10px] uppercase tracking-[0.1em] text-[var(--x-muted)] hover:text-[var(--x-negative)]"
               >
                 Remove Question
               </button>
@@ -323,14 +323,14 @@ export function SiteContentPanel() {
           <button
             type="button"
             onClick={() => setFaq([...faq, { q: "", a: "" }])}
-            className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+            className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
           >
             + Add Question
           </button>
         </div>
         <SaveButton saving={savingKey === "faq_items"} onClick={() => save("faq_items", faq)} />
-        {savedKey === "faq_items" && <span className="ml-3 text-xs text-gold">Saved.</span>}
-        {saveError?.key === "faq_items" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
+        {savedKey === "faq_items" && <span className="ml-3 text-xs text-[var(--x-text)]">Saved.</span>}
+        {saveError?.key === "faq_items" && <span className="ml-3 text-xs text-[var(--x-negative)]">{saveError.message}</span>}
       </div>
 
       {/* Contact */}
@@ -377,8 +377,8 @@ export function SiteContentPanel() {
           />
         </div>
         <SaveButton saving={savingKey === "contact_page"} onClick={() => save("contact_page", contact)} />
-        {savedKey === "contact_page" && <span className="ml-3 text-xs text-gold">Saved.</span>}
-        {saveError?.key === "contact_page" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
+        {savedKey === "contact_page" && <span className="ml-3 text-xs text-[var(--x-text)]">Saved.</span>}
+        {saveError?.key === "contact_page" && <span className="ml-3 text-xs text-[var(--x-negative)]">{saveError.message}</span>}
       </div>
 
       {/* Policies */}
@@ -420,8 +420,8 @@ export function SiteContentPanel() {
           />
         </label>
         <SaveButton saving={savingKey === "policies"} onClick={() => save("policies", policies)} />
-        {savedKey === "policies" && <span className="ml-3 text-xs text-gold">Saved.</span>}
-        {saveError?.key === "policies" && <span className="ml-3 text-xs text-red-600">{saveError.message}</span>}
+        {savedKey === "policies" && <span className="ml-3 text-xs text-[var(--x-text)]">Saved.</span>}
+        {saveError?.key === "policies" && <span className="ml-3 text-xs text-[var(--x-negative)]">{saveError.message}</span>}
       </div>
     </div>
   );

@@ -1,12 +1,15 @@
-// Gains read as aged brass-green, losses as dried oxblood — the same warmth
-// as the rest of the room, never stock-ticker neon. Both tones sit legibly on
-// the Command leather and the Office navy.
+// A period-over-period change. Gains in the gold accent, losses in the
+// desaturated negative tone; both resolve through the portal's tokens
+// (globals.css, .exec-shell).
 export function ChangeBadge({ changePercent }: { changePercent: number | null }) {
-  if (changePercent === null) return <span className="opacity-40">—</span>;
+  if (changePercent === null) return <span className="text-[var(--x-faint)]">—</span>;
   const positive = changePercent >= 0;
   return (
-    <span className={`command-figure text-[11px] ${positive ? "text-[#8fbc9c]" : "text-[#d79a92]"}`}>
-      {positive ? "▲" : "▼"} {Math.abs(changePercent).toFixed(1)}%
+    <span
+      className={`font-medium tabular-nums ${positive ? "text-[var(--x-gold)]" : "text-[var(--x-negative)]"}`}
+    >
+      {positive ? "+" : "−"}
+      {Math.abs(changePercent).toFixed(1)}%
     </span>
   );
 }

@@ -58,7 +58,7 @@ export function AssistantChat({ variant }: { variant: "command" | "office" }) {
               key={s}
               type="button"
               onClick={() => ask(s)}
-              className="border border-white/15 px-3 py-1.5 text-xs text-white/60 transition-colors hover:border-gold hover:text-gold"
+              className="border border-white/15 px-3 py-1.5 text-xs text-white/60 transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
             >
               {s}
             </button>
@@ -75,7 +75,7 @@ export function AssistantChat({ variant }: { variant: "command" | "office" }) {
             <p
               className={`inline-block border px-4 py-2.5 text-left text-sm ${
                 m.role === "user"
-                  ? "border-gold/40 bg-gold/5 text-white"
+                  ? "border-[var(--x-border-strong)] bg-[var(--x-raised)] text-white"
                   : "border-white/15 text-white/80"
               }`}
             >
@@ -103,7 +103,7 @@ export function AssistantChat({ variant }: { variant: "command" | "office" }) {
         <button
           type="submit"
           disabled={loading}
-          className="shrink-0 border border-gold px-5 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black disabled:opacity-40"
+          className="shrink-0 border border-[var(--x-border-strong)] px-5 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
         >
           Ask
         </button>

@@ -42,8 +42,8 @@ function emptyForm(): FormState {
   };
 }
 
-// Shared tab (both realms) — /office gets a read-only view (no create,
-// payout, activate/deactivate, delete, or portal-code regeneration).
+// Shared tab. Both realms manage affiliates in full (owner gave /office
+// full parity on 2026-11-08); `variant` no longer limits anything here.
 export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) {
   const isCommand = variant === "command";
   const [affiliates, setAffiliates] = useState<AffiliateSummary[]>([]);
@@ -226,7 +226,7 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
 
   return (
     <div className="space-y-6">
-      {structure && isCommand && (
+      {structure && (
         <div className={cardClass}>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">Commission Structure</p>
           <textarea
@@ -242,18 +242,10 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
             type="button"
             onClick={handleSaveStructure}
             disabled={structureSaving}
-            className="mt-3 border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black disabled:opacity-40"
+            className="mt-3 border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
           >
             {structureSaving ? "Saving..." : "Save"}
           </button>
-        </div>
-      )}
-      {structure && !isCommand && structure.paragraphs.length > 0 && (
-        <div className="office-card">
-          <p className="text-xs uppercase tracking-[0.2em] text-white/40">Commission Structure</p>
-          {structure.paragraphs.map((p, i) => (
-            <p key={i} className="mt-3 text-sm text-white/70">{p}</p>
-          ))}
         </div>
       )}
 
@@ -264,15 +256,15 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route */}
             <a
               href="/api/executive/affiliates?format=csv"
-              className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+              className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
             >
               Export CSV
             </a>
-            {isCommand && (
+            {(
               <button
                 type="button"
                 onClick={() => setCreating(true)}
-                className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+                className="border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]"
               >
                 + New Affiliate
               </button>
@@ -284,10 +276,10 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
           <p className="mt-4 border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">{error}</p>
         )}
 
-        {shownLink && isCommand && (
-          <div className="mt-4 border border-gold/40 bg-black p-4">
+        {shownLink && (
+          <div className="mt-4 border border-[var(--x-border-strong)] bg-[var(--x-base)] p-4">
             <div className="flex items-start justify-between gap-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-gold">Sign-In Link — {shownLink.name}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Sign-In Link — {shownLink.name}</p>
               <button
                 type="button"
                 onClick={() => setShownLink(null)}
@@ -301,19 +293,19 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
               readOnly
               value={shownLink.url}
               onFocus={(e) => e.currentTarget.select()}
-              className="mt-3 w-full border border-white/15 bg-black px-2 py-1.5 font-mono text-xs text-white focus:border-gold focus:outline-none"
+              className="mt-3 w-full border border-white/15 bg-[var(--x-base)] px-2 py-1.5 font-mono text-xs text-white focus:border-[var(--x-muted)] focus:outline-none"
             />
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+                className="border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]"
               >
                 {copied ? "Copied" : "Copy Link"}
               </button>
               <a
                 href={smsHref(shownLink)}
-                className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+                className="border border-white/20 px-4 py-2 text-xs uppercase tracking-[0.15em] text-white/70 transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
               >
                 Text It{shownLink.phone ? ` to ${shownLink.phone}` : ""}
               </a>
@@ -344,7 +336,7 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                   <th className="pb-3 pr-4 font-normal">Paid</th>
                   <th className="pb-3 pr-4 font-normal">Balance Owed</th>
                   <th className="pb-3 pr-4 font-normal">YTD Revenue</th>
-                  {isCommand && <th className="pb-3 font-normal">Actions</th>}
+                  {<th className="pb-3 font-normal">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -357,15 +349,15 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                     </td>
                     <td className="py-3 pr-4 font-mono text-xs">{a.code ?? "—"}</td>
                     <td className="py-3 pr-4">
-                      <p className="font-mono text-xs text-gold">{a.portalCode ?? "—"}</p>
+                      <p className="font-mono text-xs text-[var(--x-text)]">{a.portalCode ?? "—"}</p>
                       <p className="text-[10px] text-white/30">Not used at /login — send a sign-in link</p>
-                      {isCommand && (
+                      {(
                         <div className="mt-1 flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => handleRegenerateCode(a.id)}
                             disabled={regeneratingId === a.id}
-                            className="text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-gold disabled:opacity-40"
+                            className="text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-[var(--x-text)] disabled:opacity-40"
                           >
                             {regeneratingId === a.id ? "Regenerating..." : "Regenerate"}
                           </button>
@@ -373,7 +365,7 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                             type="button"
                             onClick={() => handleGetSignInLink(a)}
                             disabled={linkingId === a.id}
-                            className="text-[10px] uppercase tracking-[0.1em] text-gold/80 hover:text-gold disabled:opacity-40"
+                            className="text-[10px] uppercase tracking-[0.1em] text-[var(--x-muted)] hover:text-[var(--x-text)] disabled:opacity-40"
                           >
                             {linkingId === a.id ? "Making..." : "Get Sign-In Link"}
                           </button>
@@ -381,7 +373,7 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                             type="button"
                             onClick={() => handleSendInvite(a.id)}
                             disabled={invitingId === a.id}
-                            className="text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-gold disabled:opacity-40"
+                            className="text-[10px] uppercase tracking-[0.1em] text-white/40 hover:text-[var(--x-text)] disabled:opacity-40"
                           >
                             {invitingId === a.id ? "Sending..." : inviteSentId === a.id ? "Sent!" : "Resend Invite"}
                           </button>
@@ -392,37 +384,37 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                     <td className="py-3 pr-4">${a.grossRevenue.toFixed(2)}</td>
                     <td className="py-3 pr-4">${a.commissionEarned.toFixed(2)}</td>
                     <td className="py-3 pr-4">${a.commissionPaid.toFixed(2)}</td>
-                    <td className="py-3 pr-4 text-gold">${a.balanceOwed.toFixed(2)}</td>
+                    <td className="py-3 pr-4 text-[var(--x-text)]">${a.balanceOwed.toFixed(2)}</td>
                     <td className="py-3 pr-4 text-xs text-white/50">
                       ${a.ytdRevenue.toFixed(2)} / ${a.ytdCommission.toFixed(2)} comm.
                     </td>
-                    {isCommand && (
+                    {(
                     <td className="py-3">
                       <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
                           onClick={() => setPayoutFor(a.id)}
-                          className="border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+                          className="border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
                         >
                           Record Payout
                         </button>
                         <button
                           type="button"
                           onClick={() => handleToggleActive(a)}
-                          className="border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold"
+                          className="border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
                         >
                           {a.active ? "Deactivate" : "Activate"}
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(a.id)}
-                          className="border border-red-500/30 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-red-300/80 hover:border-red-400"
+                          className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]"
                         >
                           Delete
                         </button>
                       </div>
                       {payoutFor === a.id && (
-                        <div className="mt-2 space-y-2 border border-white/15 bg-black p-3">
+                        <div className="mt-2 space-y-2 border border-white/15 bg-[var(--x-base)] p-3">
                           <input
                             type="number"
                             step="0.01"
@@ -430,19 +422,19 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
                             value={payoutAmount}
                             onChange={(e) => setPayoutAmount(e.target.value)}
                             placeholder={`Amount (balance: $${a.balanceOwed.toFixed(2)})`}
-                            className="w-full border border-white/15 bg-black px-2 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-gold focus:outline-none"
+                            className="w-full border border-white/15 bg-[var(--x-base)] px-2 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-[var(--x-muted)] focus:outline-none"
                           />
                           <input
                             value={payoutNote}
                             onChange={(e) => setPayoutNote(e.target.value)}
                             placeholder="Note (optional)"
-                            className="w-full border border-white/15 bg-black px-2 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-gold focus:outline-none"
+                            className="w-full border border-white/15 bg-[var(--x-base)] px-2 py-1.5 text-xs text-white placeholder:text-white/30 focus:border-[var(--x-muted)] focus:outline-none"
                           />
                           <div className="flex gap-2">
                             <button
                               type="button"
                               onClick={() => handleRecordPayout(a.id)}
-                              className="border border-gold px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-gold hover:bg-gold hover:text-black"
+                              className="border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text)] hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]"
                             >
                               Confirm Paid
                             </button>
@@ -466,9 +458,9 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
         </div>
       </div>
 
-      {creating && isCommand && (
+      {creating && (
         <form onSubmit={handleCreate} className={cardClass}>
-          <p className="text-xs uppercase tracking-[0.2em] text-gold">New Affiliate</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">New Affiliate</p>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <input required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Name" className="input-field" />
             <input required type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="Email" className="input-field" />
@@ -533,7 +525,7 @@ export function AffiliatesPanel({ variant }: { variant: "command" | "office" }) 
             <button
               type="submit"
               disabled={saving}
-              className="border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+              className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40"
             >
               {saving ? "Saving..." : "Save Affiliate"}
             </button>

@@ -12,6 +12,7 @@ import { getCurrentCustomer } from "@/lib/users/current-user";
 
 export const dynamic = "force-dynamic";
 
+// NOTE: both executive realms since 2026-11-08 (owner gave /office full parity) — see lib/executive/require-auth.ts.
 // Subscribe-and-save settings and every subscription. /command only: the
 // discount is a pricing decision.
 export const GET = withApiErrorHandling(async () => {

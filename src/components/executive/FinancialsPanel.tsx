@@ -56,7 +56,7 @@ export function FinancialsPanel({ variant }: { variant: "command" | "office" }) 
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route */}
           <a
             href="/api/executive/financials?format=csv"
-            className="border border-gold px-4 py-2 text-xs uppercase tracking-[0.15em] text-gold transition-colors hover:bg-gold hover:text-black"
+            className="border border-[var(--x-border-strong)] px-4 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:bg-[var(--x-raised)] hover:border-[var(--x-text)]"
           >
             Export P&L CSV
           </a>
@@ -67,16 +67,16 @@ export function FinancialsPanel({ variant }: { variant: "command" | "office" }) 
             return (
               <div key={key} className="border border-white/10 p-4">
                 <p className="text-[10px] uppercase tracking-[0.15em] text-white/40">{label}</p>
-                <p className="mt-2 font-mono text-xl text-gold">{fmt(period.current)}</p>
+                <p className="mt-2 font-mono text-xl text-[var(--x-text)]">{fmt(period.current)}</p>
                 <p className="mt-1 text-xs">
                   <ChangeBadge changePercent={period.changePercent} /> vs prior period
                 </p>
               </div>
             );
           })}
-          <div className="border border-gold/30 p-4">
+          <div className="border border-[var(--x-border-strong)] p-4">
             <p className="text-[10px] uppercase tracking-[0.15em] text-white/40">All Time</p>
-            <p className="mt-2 font-mono text-xl text-gold">{fmt(financials.revenue.allTime)}</p>
+            <p className="mt-2 font-mono text-xl text-[var(--x-text)]">{fmt(financials.revenue.allTime)}</p>
           </div>
         </div>
       </div>
@@ -88,7 +88,7 @@ export function FinancialsPanel({ variant }: { variant: "command" | "office" }) 
             <div className="flex justify-between"><dt className="text-white/60">Gross Revenue</dt><dd className="text-white"><Fig isCommand={isCommand}>{fmt(financials.grossRevenue)}</Fig></dd></div>
             <div className="flex justify-between"><dt className="text-white/60">Discounts Given</dt><dd className="text-white"><Fig isCommand={isCommand}>-{fmt(financials.discountsGiven)}</Fig></dd></div>
             <div className="flex justify-between"><dt className="text-white/60">Commissions Owed</dt><dd className="text-white"><Fig isCommand={isCommand}>-{fmt(financials.commissionsOwed)}</Fig></dd></div>
-            <div className="flex justify-between border-t border-white/10 pt-2"><dt className="text-white">Net Revenue</dt><dd className="text-gold"><Fig isCommand={isCommand}>{fmt(financials.netRevenue)}</Fig></dd></div>
+            <div className="flex justify-between border-t border-white/10 pt-2"><dt className="text-white">Net Revenue</dt><dd className="text-[var(--x-text)]"><Fig isCommand={isCommand}>{fmt(financials.netRevenue)}</Fig></dd></div>
             <div className="flex justify-between border-t border-white/10 pt-2"><dt className="text-white/60">Average Order Value</dt><dd className="text-white"><Fig isCommand={isCommand}>{fmt(financials.averageOrderValue)}</Fig></dd></div>
             <div className="flex justify-between"><dt className="text-white/60">Repeat Purchase Rate</dt><dd className="text-white"><Fig isCommand={isCommand}>{financials.repeatPurchaseRate.toFixed(1)}%</Fig></dd></div>
             <div className="flex justify-between"><dt className="text-white/60">Customer Lifetime Value</dt><dd className="text-white"><Fig isCommand={isCommand}>{fmt(financials.customerLifetimeValue)}</Fig></dd></div>
@@ -157,7 +157,7 @@ export function FinancialsPanel({ variant }: { variant: "command" | "office" }) 
             {financials.revenueByPromoCode.length === 0 && <p className="text-white/40">No promo codes used yet.</p>}
           </ul>
         </div>
-        {isCommand && (
+        {(
           <div className={cardClass}>
             <p className="text-xs uppercase tracking-[0.2em] text-white/40">Revenue by Affiliate</p>
             <ul className="mt-4 space-y-2 text-sm">

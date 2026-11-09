@@ -9,6 +9,7 @@ import { sendInviteCodeEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
+// NOTE: both executive realms since 2026-11-08 (owner gave /office full parity) — see lib/executive/require-auth.ts.
 // Command-only — generating codes controls who can get instant affiliate
 // access, so this is kept out of /office's shared Affiliates tab.
 export const GET = withApiErrorHandling(async () => {

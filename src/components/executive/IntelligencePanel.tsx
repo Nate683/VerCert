@@ -20,7 +20,7 @@ function FunnelBar({ label, value, max }: { label: string; value: number; max: n
         <span className="font-mono text-white">{value}</span>
       </div>
       <div className="mt-1 h-3 w-full bg-white/5">
-        <div className="h-3 bg-gold/70" style={{ width: `${width}%` }} />
+        <div className="h-3 bg-[var(--x-muted)]" style={{ width: `${width}%` }} />
       </div>
     </div>
   );
@@ -85,10 +85,10 @@ export function IntelligencePanel({ variant }: { variant: "command" | "office" }
             {trendSeries.map((point) => (
               <div key={point.date} className="group relative flex-1">
                 <div
-                  className="rounded-t bg-gold/60 transition-all group-hover:bg-gold"
+                  className="rounded-t bg-white/25 transition-colors group-hover:bg-white/50"
                   style={{ height: `${Math.max(2, (point.revenue / maxRevenue) * 100)}%` }}
                 />
-                <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap border border-white/10 bg-black px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap border border-white/10 bg-[var(--x-base)] px-2 py-1 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
                   {point.date}: ${point.revenue.toFixed(0)}
                 </div>
               </div>
@@ -117,7 +117,7 @@ export function IntelligencePanel({ variant }: { variant: "command" | "office" }
             {topCustomers.map((c, i) => (
               <li key={c.id} className="flex justify-between">
                 <span className="text-white/70">
-                  <span className="font-mono text-gold">{String(i + 1).padStart(2, "0")}</span> {c.email}
+                  <span className="font-mono text-[var(--x-text)]">{String(i + 1).padStart(2, "0")}</span> {c.email}
                 </span>
                 <span className="text-white">${c.lifetimeValue.toFixed(0)}</span>
               </li>
@@ -125,14 +125,14 @@ export function IntelligencePanel({ variant }: { variant: "command" | "office" }
             {topCustomers.length === 0 && <p className="text-white/40">No customers yet.</p>}
           </ul>
         </div>
-        {isCommand && (
+        {(
           <div className={cardClass}>
             <p className="text-xs uppercase tracking-[0.2em] text-white/40">Top Affiliates</p>
             <ul className="mt-4 space-y-2 text-sm">
               {topAffiliates.map((a, i) => (
                 <li key={a.name} className="flex justify-between">
                   <span className="text-white/70">
-                    <span className="font-mono text-gold">{String(i + 1).padStart(2, "0")}</span> {a.name}
+                    <span className="font-mono text-[var(--x-text)]">{String(i + 1).padStart(2, "0")}</span> {a.name}
                   </span>
                   <span className="text-white">${a.grossRevenue.toFixed(0)}</span>
                 </li>

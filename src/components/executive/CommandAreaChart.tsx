@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { RevenuePoint } from "@/lib/executive/stats";
 
 const WIDTH = 600;
 const HEIGHT = 170;
 const PADDING_Y = 14;
 
-const BRASS = "#b8912f";
-const BRASS_BRIGHT = "#d9b45c";
+// Graphite chart colours (match .exec-shell in globals.css). SVG attributes
+// can't take the CSS variables everywhere, so the values are repeated here.
+const LINE = "#b9bec4";
+const FILL = "#eceef0";
+const GRID = "#272b30";
+const BASE = "#111316";
 
 function buildPath(series: RevenuePoint[], max: number) {
   if (series.length === 0) return { line: "", area: "" };
@@ -28,33 +32,14 @@ function buildPath(series: RevenuePoint[], max: number) {
   return { line, area };
 }
 
-// Command-exclusive: an engraved plot. Brass stroke over a ruled ledger
-// grid, the curve drawing itself in slowly on mount — no bounce, no easing
-// overshoot.
+// Revenue over the trailing fourteen days: a plain line over hairline gridlines,
+// a faint flat fill, a value on hover. No draw-in animation, no gradient.
 export function CommandAreaChart({ series }: { series: RevenuePoint[] }) {
-  const pathRef = useRef<SVGPathElement>(null);
-  const [drawn, setDrawn] = useState(false);
   const max = Math.max(1, ...series.map((p) => p.revenue));
   const { line, area } = buildPath(series, max);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    const el = pathRef.current;
-    if (!el) return;
-    const length = el.getTotalLength();
-    el.style.strokeDasharray = `${length}`;
-    el.style.strokeDashoffset = `${length}`;
-    // Force reflow so the transition reliably plays from the initial offset.
-    el.getBoundingClientRect();
-    const timeout = setTimeout(() => {
-      setDrawn(true);
-      el.style.strokeDashoffset = "0";
-    }, 60);
-    return () => clearTimeout(timeout);
-  }, [line]);
-
   const stepX = WIDTH / Math.max(1, series.length - 1);
-  // Four ruled lines across the plot, labelled in brass down the left edge.
   const gridLines = [0.25, 0.5, 0.75, 1];
 
   return (
@@ -66,14 +51,6 @@ export function CommandAreaChart({ series }: { series: RevenuePoint[] }) {
         role="img"
         aria-label="Revenue over the trailing fourteen days"
       >
-        <defs>
-          <linearGradient id="command-revenue-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={BRASS} stopOpacity="0.34" />
-            <stop offset="70%" stopColor="#5c1a1b" stopOpacity="0.16" />
-            <stop offset="100%" stopColor="#5c1a1b" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
         {gridLines.map((fraction) => {
           const y = HEIGHT - PADDING_Y - fraction * (HEIGHT - PADDING_Y * 2);
           return (
@@ -83,27 +60,21 @@ export function CommandAreaChart({ series }: { series: RevenuePoint[] }) {
               x2={WIDTH}
               y1={y}
               y2={y}
-              stroke={BRASS}
-              strokeOpacity={0.13}
-              strokeWidth={0.5}
-              strokeDasharray="3 5"
+              stroke={GRID}
+              strokeWidth={1}
+              vectorEffect="non-scaling-stroke"
             />
           );
         })}
 
+        <path d={area} fill={FILL} fillOpacity={0.04} />
         <path
-          d={area}
-          fill="url(#command-revenue-fill)"
-          className={`transition-opacity duration-1000 ${drawn ? "opacity-100" : "opacity-0"}`}
-        />
-        <path
-          ref={pathRef}
           d={line}
           fill="none"
-          stroke={BRASS_BRIGHT}
+          stroke={LINE}
           strokeWidth={1.5}
           strokeLinejoin="round"
-          style={{ transition: "stroke-dashoffset 1.8s cubic-bezier(0.16, 1, 0.3, 1)" }}
+          vectorEffect="non-scaling-stroke"
         />
 
         {series.map((point, i) => {
@@ -120,31 +91,21 @@ export function CommandAreaChart({ series }: { series: RevenuePoint[] }) {
                 onMouseEnter={() => setHoverIndex(i)}
                 onMouseLeave={() => setHoverIndex((prev) => (prev === i ? null : prev))}
               />
-              <circle
-                cx={x}
-                cy={y}
-                r={hoverIndex === i ? 3.5 : 0}
-                fill={BRASS_BRIGHT}
-                stroke="#0d0b0a"
-                strokeWidth={1}
-                className="transition-all duration-300"
-              />
+              {hoverIndex === i && <circle cx={x} cy={y} r={3} fill={FILL} stroke={BASE} strokeWidth={1} />}
             </g>
           );
         })}
       </svg>
 
-      {/* Scale, engraved down the left edge. */}
+      {/* Scale down the left edge. */}
       <div className="pointer-events-none absolute inset-y-0 left-0 flex flex-col justify-between py-1">
-        <span className="command-figure text-[9px] text-[var(--cmd-bone-faint)]">
-          ${Math.round(max).toLocaleString()}
-        </span>
-        <span className="command-figure text-[9px] text-[var(--cmd-bone-faint)]">$0</span>
+        <span className="text-[10px] tabular-nums text-[var(--x-faint)]">${Math.round(max).toLocaleString()}</span>
+        <span className="text-[10px] tabular-nums text-[var(--x-faint)]">$0</span>
       </div>
 
       {hoverIndex !== null && series[hoverIndex] && (
         <div
-          className="command-figure pointer-events-none absolute -top-8 z-10 -translate-x-1/2 whitespace-nowrap border border-[var(--cmd-brass)]/50 bg-[#0d0b0a] px-2 py-1 text-[10px] text-[var(--cmd-bone)] shadow-lg"
+          className="pointer-events-none absolute -top-8 z-10 -translate-x-1/2 whitespace-nowrap border border-[var(--x-border-strong)] bg-[var(--x-base)] px-2 py-1 text-[11px] tabular-nums text-[var(--x-text)]"
           style={{ left: `${(hoverIndex * stepX * 100) / WIDTH}%` }}
         >
           {series[hoverIndex].date} · ${series[hoverIndex].revenue.toFixed(0)}

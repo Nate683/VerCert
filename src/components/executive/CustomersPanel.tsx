@@ -148,7 +148,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download, not a page route */}
           <a
             href="/api/executive/customers?format=csv"
-            className="border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+            className="border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
           >
             Export CSV
           </a>
@@ -193,7 +193,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                         />
                       </td>
                       <td className="py-3 pr-4 text-white">
-                        <button type="button" onClick={() => toggleExpanded(c)} className="hover:text-gold">
+                        <button type="button" onClick={() => toggleExpanded(c)} className="hover:text-[var(--x-text)]">
                           {c.email}
                         </button>
                       </td>
@@ -206,7 +206,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                       </td>
                       <td className="py-3 text-xs">
                         {c.marketingConsent ? (
-                          <span className="text-gold">Opted In</span>
+                          <span className="text-[var(--x-text)]">Opted In</span>
                         ) : (
                           <span className="text-white/30">Opted Out</span>
                         )}
@@ -244,7 +244,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
                                 type="button"
                                 onClick={() => handleSaveNotes(c.id)}
                                 disabled={notesSaving}
-                                className="mt-2 border border-gold px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-gold hover:bg-gold hover:text-black disabled:opacity-40"
+                                className="mt-2 border border-[var(--x-border-strong)] px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text)] hover:bg-[var(--x-raised)] disabled:opacity-40 hover:border-[var(--x-text)]"
                               >
                                 {notesSaving ? "Saving..." : "Save Notes"}
                               </button>
@@ -356,12 +356,12 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
               ? "An unsubscribe link is automatically appended. Only opted-in customers ever receive these emails."
               : "STOP instructions are automatically appended. Only customers/affiliates who explicitly opted in with a phone number ever receive these texts."}
           </p>
-          {result && <p className="text-sm text-gold">{result}</p>}
+          {result && <p className="text-sm text-[var(--x-text)]">{result}</p>}
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
               disabled={sending || (mode === "selected" && selected.size === 0)}
-              className="border border-gold bg-gold px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-black transition-colors hover:bg-transparent hover:text-gold disabled:opacity-40"
+              className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] transition-colors hover:border-[var(--x-text)] disabled:opacity-40"
             >
               {sending ? "Sending..." : `Send ${channel === "email" ? "Email" : "SMS"}`}
             </button>
@@ -375,7 +375,7 @@ export function CustomersPanel({ variant }: { variant: "command" | "office" }) {
               type="button"
               onClick={handleSaveTemplate}
               disabled={savingTemplate || !templateName.trim() || !body.trim()}
-              className="border border-white/15 px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-gold hover:text-gold disabled:opacity-40"
+              className="border border-white/15 px-4 py-2.5 text-xs uppercase tracking-[0.1em] text-white/70 transition-colors hover:border-[var(--x-muted)] hover:text-[var(--x-text)] disabled:opacity-40"
             >
               Save as Template
             </button>

@@ -7,7 +7,7 @@ import { LiveIndicator } from "./LiveIndicator";
 
 const SEVERITY_STYLE: Record<Alert["severity"], string> = {
   critical: "border-red-500/40 text-red-300",
-  warning: "border-gold/50 text-gold",
+  warning: "border-[var(--x-border-strong)] text-[var(--x-text)]",
   info: "border-white/20 text-white/60",
 };
 

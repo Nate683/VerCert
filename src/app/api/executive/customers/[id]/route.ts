@@ -8,14 +8,14 @@ import { withApiErrorHandling } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
-// A customer's full record, for the /command segments view. Command-only,
+// A customer's full record, for the segments view. Both executive realms,
 // like the segments themselves.
 export const GET = withApiErrorHandling(async (
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const viewer = await getCurrentCustomer();
-  if (viewer?.role !== "command") {
+  if (viewer?.role !== "command" && viewer?.role !== "office") {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
