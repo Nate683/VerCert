@@ -5,25 +5,17 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { safeNextPath } from "@/lib/safe-next";
 import { PasswordField } from "@/components/PasswordField";
-import { COA_LOOKUP_ENABLED } from "@/lib/coa-lookup";
 import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
 import { AcknowledgmentText } from "@/components/AcknowledgmentText";
 
 // What an account opens up. Every line is something the site does today;
-// keep it that way when editing. The certificate line depends on the batch
-// lookup, so it shows only while that lookup is enabled (lib/coa-lookup.ts)
-// and the two can never disagree.
-const ALL_BENEFITS = [
+// keep it that way when editing. (Certificate lookup isn't listed: it needs no
+// account — the header's VERIFY BEFORE YOU BUY search is open to everyone.)
+const ACCOUNT_BENEFITS = [
   {
     title: "The full catalog, with pricing",
     body: "Every compound and size with its price, and live stock: you see what's in stock, and how many are left when it runs low.",
     icon: "M4 6h16M4 12h16M4 18h10",
-  },
-  {
-    title: "Certificates of analysis",
-    body: "Look up the third-party certificate for any lot, and see which lot you'll receive on each product page before you order.",
-    icon: "M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3zM9 12l2 2 4-4",
-    needsCoaLookup: true,
   },
   {
     title: "Order history and tracking",
@@ -36,7 +28,6 @@ const ALL_BENEFITS = [
     icon: "M5 12l4 4L19 6",
   },
 ];
-const ACCOUNT_BENEFITS = ALL_BENEFITS.filter((b) => !b.needsCoaLookup || COA_LOOKUP_ENABLED);
 
 function RegisterForm() {
   const searchParams = useSearchParams();

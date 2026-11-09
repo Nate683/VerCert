@@ -12,7 +12,6 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { EditableText } from "@/components/EditableText";
 import { EditableImage } from "@/components/EditableImage";
 import { SectionToggle } from "@/components/SectionToggle";
-import { CoaQuickLookup } from "@/components/CoaQuickLookup";
 import { buildMetadata } from "@/lib/seo";
 import { getContent, DEFAULT_HOME_HERO, DEFAULT_FEATURED, DEFAULT_HOME_SECTIONS } from "@/lib/site-content";
 
@@ -274,8 +273,8 @@ export default async function Home() {
 
       {/* Every Batch. Certified. — full-bleed photo (uploaded in EXEC MODE;
           there is no laboratory photo in the repo yet) under a 75% navy-deep
-          overlay, so the text and form stay crisp on any image. The lookup
-          form renders only while the lookup flag is on (lib/coa-lookup.ts). */}
+          overlay, so the text stays crisp on any image. The
+          lot search itself is the header's VERIFY BEFORE YOU BUY control (components/verify). */}
       {sections.cta && (
         <section className="relative isolate overflow-hidden bg-navy-deep">
           <SectionToggle sectionKey="cta" visible={sections.cta} />
@@ -293,9 +292,6 @@ export default async function Home() {
             <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-white/80">
               Already have a product in hand? Enter its lot number to pull the independent laboratory report.
             </p>
-            <div className="mt-8 w-full max-w-xl">
-              <CoaQuickLookup tone="dark" id="home-coa-batch" />
-            </div>
           </ScrollReveal>
         </section>
       )}

@@ -3,8 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductBySlug, isOnSale, listProducts, pricedSizes } from "@/lib/products";
 import { toStorefrontProduct } from "@/lib/products/storefront";
-import { CoaQuickLookup } from "@/components/CoaQuickLookup";
-import { COA_LOOKUP_ENABLED, coaLookupUrl } from "@/lib/coa-lookup";
+import { lotKey, publishedLotKeys } from "@/lib/coa/public";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductCard } from "@/components/ProductCard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
@@ -63,10 +62,13 @@ export default async function ProductDetailPage({
   const [certifiedFound, ...catalog] = await withCertifiedPurity([found, ...fullCatalog]);
   const [product, ...allProducts] = await withStock([certifiedFound, ...catalog.filter(isOnSale)]);
   const components = blendComponents(product, catalog);
-  const [subscriptionSettings, orderingEnabled] = await Promise.all([
+  const [subscriptionSettings, orderingEnabled, publishedLots] = await Promise.all([
     getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS),
     isOrderingEnabled(),
+    publishedLotKeys(),
   ]);
+  // A lot links to its permanent page only once it has a published certificate.
+  const hasCertificate = (lot: string) => publishedLots.has(lotKey(product.slug, lot));
 
   // Related = same category first, then anything else, so the rail is never
   // short on a thin category.
@@ -175,16 +177,14 @@ export default async function ProductDetailPage({
               {primaryBatch &&
                 // Orders are filled from the first listed batch (api/orders),
                 // so this is the lot the customer receives. It links to the
-                // lab's record only while batch lookups are enabled.
-                (COA_LOOKUP_ENABLED ? (
-                  <a
-                    href={coaLookupUrl(primaryBatch)}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                // lot's certificate page once one is published.
+                (hasCertificate(primaryBatch) ? (
+                  <Link
+                    href={`/lot/${encodeURIComponent(primaryBatch)}`}
                     className="inline-block py-1.5 font-mono text-xs text-muted underline-offset-4 hover:underline"
                   >
                     You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
-                  </a>
+                  </Link>
                 ) : (
                   <span className="inline-block py-1.5 font-mono text-xs text-muted">
                     You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
@@ -230,16 +230,14 @@ export default async function ProductDetailPage({
               <ul className="mt-4 space-y-2">
                 {product.batchNumbers.map((batch) => (
                   <li key={batch}>
-                    {COA_LOOKUP_ENABLED ? (
-                      <a
-                        href={coaLookupUrl(batch)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    {hasCertificate(batch) ? (
+                      <Link
+                        href={`/lot/${encodeURIComponent(batch)}`}
                         className="flex items-center justify-between border border-hairline bg-paper px-4 py-3 text-sm text-muted transition-colors hover:border-gold hover:text-gold-ink"
                       >
                         <span className="font-mono">{batch}</span>
                         <span className="text-xs uppercase tracking-[0.15em]">View COA →</span>
-                      </a>
+                      </Link>
                     ) : (
                       <span className="block border border-hairline bg-paper px-4 py-3 font-mono text-sm text-muted">{batch}</span>
                     )}
@@ -248,13 +246,6 @@ export default async function ProductDetailPage({
               </ul>
             ) : (
               <p className="mt-4 text-xs text-muted">Certificates are published as each lot clears testing.</p>
-            )}
-            {/* Quick check for a vial already in hand; renders only while
-                batch lookups are enabled. */}
-            {COA_LOOKUP_ENABLED && (
-              <div className="mt-4">
-                <CoaQuickLookup id="product-coa-batch" />
-              </div>
             )}
           </section>
 

@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { CoaQuickLookup } from "@/components/CoaQuickLookup";
-import { COA_LOOKUP_ENABLED } from "@/lib/coa-lookup";
 
 export const metadata = {
   title: "Page Not Found | VeriCert",
@@ -31,20 +29,6 @@ export default function NotFound() {
           Contact Us
         </Link>
       </div>
-
-      {COA_LOOKUP_ENABLED && (
-        <div className="mt-14 border-t border-hairline pt-10 text-left">
-          <p className="text-xs uppercase tracking-[0.2em] text-gold-ink">
-            Looking for a certificate?
-          </p>
-          <p className="mt-2 text-sm text-muted">
-            Enter the lot number from your vial label.
-          </p>
-          <div className="mt-4">
-            <CoaQuickLookup id="not-found-coa-batch" />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

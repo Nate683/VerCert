@@ -7,7 +7,7 @@ import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import Image from "next/image";
 import { SearchBox } from "./SearchBox";
-import { CoaEmblem } from "./CoaEmblem";
+import { VerifyButton, VerifyPanel } from "./verify/VerifyHeader";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -25,6 +25,10 @@ export function Header() {
   const [openedAt, setOpenedAt] = useState<string | null>(null);
   const menuOpen = openedAt === pathname;
   const setMenuOpen = (open: boolean) => setOpenedAt(open ? pathname : null);
+  // The VERIFY BEFORE YOU BUY search panel, keyed to the route the same way, so it closes on navigation.
+  const [verifyAt, setVerifyAt] = useState<string | null>(null);
+  const verifyOpen = verifyAt === pathname;
+  const toggleVerify = () => setVerifyAt(verifyOpen ? null : pathname);
 
   return (
     <header className="sticky top-0 z-50 border-b border-gold/15 bg-navy/95 backdrop-blur">
@@ -80,7 +84,9 @@ export function Header() {
         <div className="ml-auto hidden w-full max-w-xs md:block">{user && <SearchBox />}</div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
-          <CoaEmblem className="-mx-1.5" />
+          <div className="hidden lg:block">
+            <VerifyButton open={verifyOpen} onToggle={toggleVerify} />
+          </div>
           {user?.role && (
             <Link
               href={`/${user.role}`}
@@ -129,6 +135,13 @@ export function Header() {
           </button>
         </div>
       </div>
+
+      {/* Below lg the top row is full, so VERIFY BEFORE YOU BUY gets its own slim row inside the header. */}
+      <div className="border-t border-white/10 px-4 lg:hidden">
+        <VerifyButton open={verifyOpen} onToggle={toggleVerify} compact />
+      </div>
+
+      {verifyOpen && <VerifyPanel onClose={() => setVerifyAt(null)} />}
 
       {menuOpen && (
         <div className="pop-in border-t border-white/10 px-6 py-4 xl:hidden">

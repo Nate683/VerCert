@@ -1,7 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import { VialGlyph } from "@/components/VialGlyph";
-import { CoaQuickLookup } from "@/components/CoaQuickLookup";
-import { COA_LOOKUP_ENABLED } from "@/lib/coa-lookup";
+import { EveryLotCertified } from "@/components/verify/EveryLotCertified";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
@@ -11,40 +11,45 @@ export const metadata = buildMetadata({
   path: "/how-we-test",
 });
 
+// Owner's wording, November 2026 — exactly six steps.
 const STAGES = [
   {
     step: "01",
-    title: "Sampling",
-    body: "A representative sample will be drawn from each production lot before any of it is packaged. Lots will never be pooled — every lot number will correspond to one physical run of material.",
+    title: "Receipt & Identification",
+    body: "Upon arrival, each shipment is inspected, documented, and assigned a unique VeriCert lot number. Inventory remains quarantined pending independent laboratory testing and review.",
   },
   {
     step: "02",
-    title: "Independent Analysis",
-    body: "Samples will go to accredited third-party analytical laboratories with no ownership or affiliation with VeriCert. We do not run our own confirmatory testing, because a supplier grading its own work is not verification.",
+    title: "Random Sample Selection",
+    body: "VeriCert independently selects sample vials at random from each received lot. The selection process is documented to maintain traceability between the received inventory and the samples submitted for analysis.",
   },
   {
     step: "03",
-    title: "HPLC — Purity",
-    body: "Reverse-phase high-performance liquid chromatography separates the sample into its components and measures the proportion attributable to the target compound. That percentage is the purity figure printed on the certificate.",
+    title: "Independent Laboratory Analysis",
+    body: "Selected samples are submitted to an independent, accredited laboratory for analytical testing. Testing evaluates compound identity, purity, quantity, and applicable quality parameters under VeriCert's established specifications.",
   },
   {
     step: "04",
-    title: "Mass Spectrometry — Identity",
-    body: "Mass spectrometry confirms the molecular weight of the primary peak matches the expected compound. Purity without identity is meaningless: it tells you the vial is 99% of something.",
+    title: "Quality Review",
+    body: "VeriCert reviews the independent laboratory results against its established acceptance criteria, including the minimum 99.0% chromatographic purity requirement for applicable peptide products.",
   },
   {
     step: "05",
     title: "Release or Reject",
-    body: "A lot that misses its purity specification, or whose identity cannot be confirmed, is not repriced or sold as a lower grade. It does not ship.",
+    body: "Lots that fail to meet any required specification are rejected and are not released for sale. Only lots that satisfy all applicable requirements are approved for inventory release.",
   },
   {
     step: "06",
-    title: "Publication",
-    body: "The full report will be archived against its lot number and published here. It will stay available permanently — including after that lot has sold out.",
+    title: "Certificate & Traceability",
+    body: "Each approved lot is linked to its laboratory-issued Certificate of Analysis (COA). Customers can access the laboratory documentation and independently verify the certificate through the issuing laboratory's verification system, where available.",
   },
 ];
 
-const COA_FIELDS = [
+// The eight certificate categories, in the owner's order. Copy for each comes from the owner's specification
+// document. A row whose approved copy hasn't been supplied yet (meaning: null) is not rendered — the site never
+// shows placeholder or invented copy. ACTIVE PEPTIDE QUANTITY and ADDITIONAL QUALITY TESTING are waiting for theirs;
+// the other six keep the wording the page already had until the approved copy replaces it.
+const COA_FIELDS: { field: string; meaning: string | null }[] = [
   {
     field: "Lot Number",
     meaning: "The specific production lot. It appears on your vial label and is the key to everything below.",
@@ -53,6 +58,7 @@ const COA_FIELDS = [
     field: "Purity (%)",
     meaning: "The proportion of the sample that is the target compound, by HPLC peak area. 99.0% and above is our release specification.",
   },
+  { field: "Active Peptide Quantity (mg)", meaning: null },
   {
     field: "Test Method",
     meaning: "The analytical technique used — typically RP-HPLC for purity and LC-MS for identity confirmation.",
@@ -69,18 +75,30 @@ const COA_FIELDS = [
     field: "Appearance",
     meaning: "The physical description of the material as received — colour, form, and condition of the lyophilised cake or powder.",
   },
+  { field: "Additional Quality Testing", meaning: null },
 ];
 
 export default function HowWeTestPage() {
   return (
     <div>
-      <section className="border-b border-hairline">
+      {/* how-we-test-backdrop.webp (2170 × 725), served as uploaded: no resizing or re-encoding. The wording,
+          type and layout are unchanged; only the text colours change for contrast on the dark photograph. */}
+      <section className="relative isolate overflow-hidden border-b border-hairline bg-navy-deep">
+        <Image
+          src="/how-we-test-backdrop.webp"
+          alt=""
+          fill
+          priority
+          unoptimized
+          sizes="100vw"
+          className="-z-10 object-cover object-center"
+        />
         <div className="mx-auto max-w-4xl px-6 py-20 lg:px-10">
-          <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Verification</p>
-          <h1 className="mt-3 font-serif text-4xl leading-tight text-navy lg:text-5xl">
+          <p className="text-xs uppercase tracking-[0.35em] text-[#b08c50]">Verification</p>
+          <h1 className="mt-3 font-serif text-4xl leading-tight text-white lg:text-5xl">
             How We Test
           </h1>
-          <p className="mt-6 max-w-2xl text-base leading-relaxed text-muted">
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/85">
             Every claim VeriCert makes about a compound will be traceable to a
             document produced by someone other than us. This page explains
             exactly how that will work — the process, the instruments, and how to
@@ -117,7 +135,7 @@ export default function HowWeTestPage() {
           </div>
 
           <dl className="mt-12 divide-y divide-hairline border-y border-hairline">
-            {COA_FIELDS.map((row) => (
+            {COA_FIELDS.filter((row) => row.meaning !== null).map((row) => (
               <div key={row.field} className="grid grid-cols-1 gap-2 py-5 sm:grid-cols-[220px_1fr] sm:gap-8">
                 <dt className="text-sm uppercase tracking-[0.12em] text-gold-ink">{row.field}</dt>
                 <dd className="text-sm leading-relaxed text-muted">{row.meaning}</dd>
@@ -127,23 +145,11 @@ export default function HowWeTestPage() {
         </div>
       </section>
 
-      {/* Check yours */}
-      <section className="mx-auto max-w-4xl px-6 py-20 lg:px-10">
-        {/* Shown only while batch lookups are enabled (lib/coa-lookup.ts). */}
-        {COA_LOOKUP_ENABLED && (
-          <>
-            <h2 className="font-serif text-3xl text-navy">Check Your Lot</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
-              Enter the lot number from your vial label to open the testing
-              laboratory&apos;s record for that lot.
-            </p>
-            <div className="mt-8">
-              <CoaQuickLookup id="how-we-test-coa-batch" />
-            </div>
-          </>
-        )}
+      {/* Every Lot Certified: banner, with the certificate search beneath it. */}
+      <EveryLotCertified />
 
-        <div className={COA_LOOKUP_ENABLED ? "mt-16 border-t border-hairline pt-10" : ""}>
+      <section className="mx-auto max-w-4xl px-6 py-20 lg:px-10">
+        <div>
           <h3 className="font-serif text-xl text-navy">Still have a question?</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             If a figure on your certificate doesn&apos;t look right, or the lot

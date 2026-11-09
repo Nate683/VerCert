@@ -64,12 +64,6 @@ export type Product = {
   sizeStock?: Record<string, import("./products/stock").StockState>;
 };
 
-export type CoaDocument = {
-  batchNumber: string;
-  fileUrl: string;
-  uploadedAt: string;
-};
-
 export type CartItem = {
   slug: string;
   name: string;

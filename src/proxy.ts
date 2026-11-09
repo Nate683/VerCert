@@ -48,7 +48,8 @@ const AUTH_PAGES = new Set([
 
 // Sections that handle their own sign-in. /command and /office are checked
 // separately below.
-const OWN_AUTH_SECTIONS = ["/account", "/hq", "/order"];
+// /lot/<lot> is the public certificate page for a lot (vial QR codes land there).
+const OWN_AUTH_SECTIONS = ["/account", "/hq", "/order", "/lot"];
 
 // API routes that are public or check auth themselves. The rest — catalog,
 // promo validation, orders — need a signed-in customer.
@@ -66,6 +67,8 @@ const UNGATED_API = [
   // payment-status poll on the order page work signed out (see /order-status).
   "/api/orders",
   "/api/cron",
+  // Public certificate search and certificate PDFs (published records only; see lib/coa/public.ts).
+  "/api/verify",
 ];
 
 const within = (pathname: string, section: string) =>

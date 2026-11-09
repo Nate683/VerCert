@@ -6,13 +6,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { searchCatalog } from "@/lib/catalog";
 import { useCatalog } from "@/lib/use-catalog";
-import { COA_LOOKUP_ENABLED, openCoaLookup } from "@/lib/coa-lookup";
-
-// A query shaped like a lot number ("VC-BPC-2411"): letters, a hyphen, and at
-// least one digit. Offered as a batch lookup while that lookup is enabled.
-function looksLikeLot(query: string): boolean {
-  return /^[a-z]{1,6}(-[a-z0-9]+)+$/i.test(query) && /\d/.test(query);
-}
+// Certificate and lot searches live in one place: the header's VERIFY BEFORE YOU BUY search
+// (components/verify). This box searches the product catalog only.
 
 // Instant search across product name and CAS number. The catalog is small
 // enough to hold in memory, so results appear as the customer types — there
@@ -76,19 +71,11 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
     router.push(href);
   }
 
-  const lotQuery = COA_LOOKUP_ENABLED && looksLikeLot(query.trim());
-
-  function verifyBatch() {
-    openCoaLookup(query.trim());
-    setOpen(false);
-  }
-
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (!open || results.length === 0) {
       if (event.key === "Enter" && query.trim()) {
         event.preventDefault();
-        if (lotQuery) verifyBatch();
-        else go(`/shop?q=${encodeURIComponent(query.trim())}`);
+        go(`/shop?q=${encodeURIComponent(query.trim())}`);
       }
       return;
     }
@@ -160,22 +147,6 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
           role="listbox"
           className="pop-in absolute left-0 right-0 top-full z-50 mt-1 max-h-[70vh] overflow-y-auto border border-gold/25 bg-navy-deep shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7)]"
         >
-          {lotQuery && (
-            // The same handler as every other batch lookup (lib/coa-lookup.ts).
-            <button
-              type="button"
-              onClick={verifyBatch}
-              className="flex w-full items-center gap-3 border-b border-white/10 px-3 py-2.5 text-left transition-colors hover:bg-gold/10"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-paper">
-                <Image src="/icon.png" alt="" width={32} height={32} className="h-8 w-8" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm text-white">Verify lot {query.trim()}</span>
-                <span className="block truncate text-[11px] text-white/60">Opens the testing laboratory&apos;s record</span>
-              </span>
-            </button>
-          )}
           {loading ? (
             <div className="space-y-2 p-3">
               {[0, 1, 2].map((i) => (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { BulkPriceTier, CoaDocument, Product, SizeOption } from "@/lib/types";
+import type { BulkPriceTier, Product, SizeOption } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
 import { ProductCardImage } from "./ProductCardImage";
 import { ProductGalleryEditor } from "./ProductGalleryEditor";
@@ -165,8 +165,6 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
   const [form, setForm] = useState<FormState>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [coaDocuments, setCoaDocuments] = useState<Record<string, CoaDocument>>({});
-  const [uploadingCoaFor, setUploadingCoaFor] = useState<string | null>(null);
   // The edit form renders below the whole catalog grid, so opening it has to
   // bring it into view (and closing it has to return to the card), or a click
   // on Edit looks like it did nothing. `at` makes a repeat request distinct.
@@ -178,19 +176,10 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [productsRes, coaRes] = await Promise.all([
-      fetch("/api/executive/products", { cache: "no-store" }),
-      fetch("/api/executive/coa", { cache: "no-store" }),
-    ]);
+    const productsRes = await fetch("/api/executive/products", { cache: "no-store" });
     if (productsRes.ok) {
       const data = await productsRes.json();
       setProducts(data.products ?? []);
-    }
-    if (coaRes.ok) {
-      const data = await coaRes.json();
-      const byBatch: Record<string, CoaDocument> = {};
-      for (const doc of data.documents ?? []) byBatch[doc.batchNumber] = doc;
-      setCoaDocuments(byBatch);
     }
     setLoading(false);
   }, []);
@@ -327,30 +316,6 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
   async function handleToggleActive(product: ProductWithStock) {
     await handleInlinePatch(product.slug, { active: !(product.active ?? true) });
-  }
-
-  async function handleUploadCoa(batch: string, file: File) {
-    setUploadingCoaFor(batch);
-    try {
-      const body = new FormData();
-      body.set("file", file);
-      const res = await fetch(`/api/executive/coa/${encodeURIComponent(batch)}`, {
-        method: "POST",
-        body,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "COA upload failed.");
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "COA upload failed.");
-    } finally {
-      setUploadingCoaFor(null);
-    }
-  }
-
-  async function handleRemoveCoa(batch: string) {
-    await fetch(`/api/executive/coa/${encodeURIComponent(batch)}`, { method: "DELETE" });
-    await load();
   }
 
   const cardClass = isCommand
@@ -638,52 +603,10 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
           {editingProduct && editingProduct.batchNumbers.length > 0 && (
             <div className="mt-6">
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Certificates of Analysis</p>
-              <div className="mt-3 space-y-2">
-                {editingProduct.batchNumbers.map((batch) => {
-                  const doc = coaDocuments[batch];
-                  return (
-                    <div
-                      key={batch}
-                      className="flex flex-wrap items-center justify-between gap-3 border border-white/10 px-3 py-2"
-                    >
-                      <span className="font-mono text-xs text-white/70">{batch}</span>
-                      <div className="flex items-center gap-2">
-                        {doc && (
-                          <a
-                            href={doc.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] uppercase tracking-[0.1em] text-[var(--x-muted)] hover:text-white"
-                          >
-                            View File
-                          </a>
-                        )}
-                        <label className="cursor-pointer border border-white/20 px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]">
-                          {uploadingCoaFor === batch ? "Uploading..." : doc ? "Replace" : "Upload"}
-                          <input
-                            type="file"
-                            accept="application/pdf,image/jpeg,image/png"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleUploadCoa(batch, file);
-                            }}
-                          />
-                        </label>
-                        {doc && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCoa(batch)}
-                            className="border border-[var(--x-border-strong)] px-2 py-1 text-[10px] uppercase tracking-[0.1em] text-[var(--x-text-2)] hover:border-[var(--x-negative)] hover:text-[var(--x-negative)]"
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <p className="mt-2 text-xs leading-relaxed text-white/60">
+                Certificates for these lots ({editingProduct.batchNumbers.join(", ")}) are uploaded, reviewed, approved and
+                published in the Certificates tab.
+              </p>
             </div>
           )}
 

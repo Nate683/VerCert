@@ -18,6 +18,7 @@ import { SubscriptionsPanel } from "./SubscriptionsPanel";
 import { PromotionsPanel } from "./PromotionsPanel";
 import { SiteContentPanel } from "./SiteContentPanel";
 import { AnnouncementsPanel } from "./AnnouncementsPanel";
+import { CertificatesPanel } from "./CertificatesPanel";
 import { FinancialsPanel } from "./FinancialsPanel";
 import { IntelligencePanel } from "./IntelligencePanel";
 import { AffiliatesPanel } from "./AffiliatesPanel";
@@ -61,7 +62,8 @@ type Tab =
   | "chat"
   | "subscriptions"
   | "newsletter"
-  | "announcements";
+  | "announcements"
+  | "certificates";
 
 // Tab names stay plain business English — no codenames, no jargon. The room
 // may be theatrical; the filing labels are not.
@@ -71,6 +73,7 @@ const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "financials", label: "Revenue" },
   { id: "orders", label: "Orders" },
   { id: "products", label: "Inventory" },
+  { id: "certificates", label: "Certificates" },
   { id: "ledger", label: "Ledger" },
   { id: "goals", label: "Goals" },
   { id: "forecasting", label: "Forecast" },
@@ -206,6 +209,7 @@ export function ExecutiveTerminal({
           {tab === "briefing" && <BriefingPanel variant={variant} />}
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}
+          {tab === "certificates" && <CertificatesPanel />}
           {tab === "financials" && <FinancialsPanel variant={variant} />}
           {tab === "ledger" && <LedgerPanel variant={variant} />}
           {tab === "goals" && <GoalsPanel variant={variant} />}
