@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ContactContent } from "@/lib/site-content";
 import { EditableText } from "@/components/EditableText";
 import { useExecMode } from "@/lib/exec-mode-context";
+import { CONTACT_SUBJECTS } from "@/lib/contact-subjects";
 
 // Placeholder values aren't real contact details yet — never show them to
 // real visitors, only to an executive in Live Edit Mode (who needs the hint
@@ -17,6 +18,7 @@ export default function ContactClient({ content }: { content: ContactContent }) 
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [subject, setSubject] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -66,7 +68,25 @@ export default function ContactClient({ content }: { content: ContactContent }) 
                 <input required name="name" type="text" placeholder="Name" className="input-field-light" />
                 <input required name="email" type="email" placeholder="Email address" className="input-field-light" />
               </div>
-              <input name="subject" type="text" placeholder="Subject" className="input-field-light" />
+              {/* Required choice (lib/contact-subjects.ts); the API accepts only these values. Styled like the
+                  register page's dropdown: muted while the placeholder shows. */}
+              <select
+                required
+                name="subject"
+                aria-label="Subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className={`input-field-light ${subject ? "" : "text-muted/70"}`}
+              >
+                <option value="" disabled>
+                  Subject
+                </option>
+                {CONTACT_SUBJECTS.map((s) => (
+                  <option key={s} value={s} className="text-navy">
+                    {s}
+                  </option>
+                ))}
+              </select>
               <textarea
                 required
                 name="message"

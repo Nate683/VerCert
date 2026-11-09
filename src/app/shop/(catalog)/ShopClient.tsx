@@ -36,15 +36,15 @@ function matchesQuery(product: Product, query: string): boolean {
   return searchScore(product, query) !== null;
 }
 
-export function ShopClient({ products }: { products: Product[] }) {
+export function ShopClient({ products, orderingEnabled }: { products: Product[]; orderingEnabled: boolean }) {
   return (
     <Suspense fallback={<CatalogSkeleton />}>
-      <ShopCatalog products={products} />
+      <ShopCatalog products={products} orderingEnabled={orderingEnabled} />
     </Suspense>
   );
 }
 
-function ShopCatalog({ products }: { products: Product[] }) {
+function ShopCatalog({ products, orderingEnabled }: { products: Product[]; orderingEnabled: boolean }) {
   const searchParams = useSearchParams();
   // A search started from the header lands here as ?q= — pick it up so the
   // customer sees the same query they typed, already applied. Adjusted during
@@ -64,15 +64,10 @@ function ShopCatalog({ products }: { products: Product[] }) {
 
   // A filter where every option would return nothing reads as broken, so it
   // isn't shown: the purity filter (and purity sort) appear only once some
-  // product carries a purity value. Category and price always have results.
+  // product carries a purity value. Category always has results. (The price filter was removed at the owner's
+  // request, November 2026; price sorting stays.)
   const hasPurity = products.some((p) => (p.purityPercent ?? 0) > 0);
   const sortOptions = hasPurity ? SORT_OPTIONS : SORT_OPTIONS.filter((o) => o.value !== "purity");
-
-  const priceCeiling = useMemo(
-    () => Math.ceil(Math.max(10, ...products.map(minPrice)) / 10) * 10,
-    [products]
-  );
-  const [maxPrice, setMaxPrice] = useState(priceCeiling);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -80,8 +75,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
       (p) =>
         (category === "All" || p.category === category) &&
         matchesQuery(p, q) &&
-        (p.purityPercent ?? 0) >= minPurity &&
-        minPrice(p) <= maxPrice
+        (p.purityPercent ?? 0) >= minPurity
     );
 
     return result.sort((a, b) => {
@@ -96,20 +90,18 @@ function ShopCatalog({ products }: { products: Product[] }) {
           return a.name.localeCompare(b.name);
       }
     });
-  }, [products, category, query, sort, minPurity, maxPrice]);
+  }, [products, category, query, sort, minPurity]);
 
   const activeFilters = [
     category !== "All" && { label: category, clear: () => setCategory("All") },
     query.trim() && { label: `“${query.trim()}”`, clear: () => setQuery("") },
     minPurity > 0 && { label: `${minPurity.toFixed(1)}%+ purity`, clear: () => setMinPurity(0) },
-    maxPrice < priceCeiling && { label: `Under $${maxPrice}`, clear: () => setMaxPrice(priceCeiling) },
   ].filter((f): f is { label: string; clear: () => void } => Boolean(f));
 
   function clearAll() {
     setCategory("All");
     setQuery("");
     setMinPurity(0);
-    setMaxPrice(priceCeiling);
   }
 
   const filterControls = (
@@ -157,29 +149,6 @@ function ShopCatalog({ products }: { products: Product[] }) {
           </div>
         </fieldset>
       )}
-
-      <div>
-        <label htmlFor="max-price" className="text-[11px] uppercase tracking-[0.2em] text-gold-ink">
-          Price
-        </label>
-        <p className="mt-2 font-mono text-sm text-navy">
-          {maxPrice >= priceCeiling ? "Any price" : `Up to $${maxPrice}`}
-        </p>
-        <input
-          id="max-price"
-          type="range"
-          min={10}
-          max={priceCeiling}
-          step={5}
-          value={maxPrice}
-          onChange={(e) => setMaxPrice(Number(e.target.value))}
-          className="mt-2 w-full accent-gold"
-        />
-        <div className="flex justify-between font-mono text-[10px] text-muted/70">
-          <span>$10</span>
-          <span>${priceCeiling}</span>
-        </div>
-      </div>
     </div>
   );
 
@@ -266,7 +235,7 @@ function ShopCatalog({ products }: { products: Product[] }) {
           {filtered.length > 0 ? (
             <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((product) => (
-                <ProductCard key={product.slug} product={product} />
+                <ProductCard key={product.slug} product={product} orderingEnabled={orderingEnabled} />
               ))}
             </div>
           ) : (

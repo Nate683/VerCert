@@ -13,9 +13,11 @@ import type { Product } from "@/lib/types";
 export function HomeFeaturedGrid({
   products,
   pricingLocked = false,
+  orderingEnabled,
 }: {
   products: Product[];
   pricingLocked?: boolean;
+  orderingEnabled: boolean;
 }) {
   const { execMode, beginSave, endSave } = useExecMode();
   const router = useRouter();
@@ -64,10 +66,10 @@ export function HomeFeaturedGrid({
             onDrop={() => handleDrop(product.slug)}
             className="cursor-move outline-dashed outline-1 outline-transparent transition-colors hover:outline-gold/60"
           >
-            <ProductCard product={product} pricingLocked={pricingLocked} />
+            <ProductCard product={product} pricingLocked={pricingLocked} orderingEnabled={orderingEnabled} />
           </div>
         ) : (
-          <ProductCard key={product.slug} product={product} pricingLocked={pricingLocked} />
+          <ProductCard key={product.slug} product={product} pricingLocked={pricingLocked} orderingEnabled={orderingEnabled} />
         )
       )}
     </div>

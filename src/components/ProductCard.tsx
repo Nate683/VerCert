@@ -7,7 +7,7 @@ import { ProductImage } from "./ProductImage";
 import { useExecMode } from "@/lib/exec-mode-context";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
 import { pricedSizes } from "@/lib/products/pricing";
-import { availabilityLabel, availabilityStatus } from "@/lib/products/availability";
+import { availabilityLabel, availabilityStatus, isPurchasable } from "@/lib/products/availability";
 
 // The tile's unit price. One size (or the one a signed-out homepage tile
 // carries, see withPublicPrice): "$64.99 / 10mg vial". Several: the range,
@@ -25,7 +25,19 @@ function unitPrice(product: Product): string | null {
 
 // pricingLocked is for signed-out visitors: the tile shows at most one unit
 // price, and the whole tile leads to registration rather than the product page.
-export function ProductCard({ product, pricingLocked = false }: { product: Product; pricingLocked?: boolean }) {
+// orderingEnabled is the site-wide ordering switch (lib/ordering.ts): with it,
+// the product's own status decides the button — SELECT OPTIONS when it can be
+// bought now (isPurchasable: In Stock, units left, ordering on), VIEW DETAILS
+// otherwise. Both go to the same product page.
+export function ProductCard({
+  product,
+  pricingLocked = false,
+  orderingEnabled,
+}: {
+  product: Product;
+  pricingLocked?: boolean;
+  orderingEnabled: boolean;
+}) {
   const { execMode, beginSave, endSave } = useExecMode();
   const [active, setActive] = useState(product.active ?? true);
   const [priceDraft, setPriceDraft] = useState(String(product.sizes[0]?.priceUsd ?? ""));
@@ -118,19 +130,22 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
               <span className="min-h-[1lh]" />
             )}
           </div>
-          {/* The name holds two lines' height, so one- and two-line names put
-              the price at the same height on every card; a longer name wraps
-              naturally. The button sits at the foot of the card (mt-auto, at
-              least 16px below the price), so buttons line up across a row even
-              when a price or name runs to an extra line. */}
+          {/* The name holds two lines' height and wraps in full when longer.
+              Price and button sit together at the foot of the card (mt-auto,
+              at least 16px below the name), so across a row the prices and
+              the buttons line up even when one name runs to a third line. */}
           <h3 className="min-h-[2lh] font-serif text-lg leading-snug text-white">{product.name}</h3>
-          {price && <p className="mt-4 text-sm text-white">{price}</p>}
 
-          {/* A span, not a button: the whole tile is already one link, and a
-              nested interactive element would be invalid and unreachable. */}
           <div className="mt-auto pt-4">
+            {price && <p className="mb-4 text-sm text-white">{price}</p>}
+            {/* A span, not a button: the whole tile is already one link, and a
+                nested interactive element would be invalid and unreachable. */}
             <span className="block border border-gold/50 px-4 py-2.5 text-center text-[11px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:bg-gold group-hover:text-black">
-              {pricingLocked ? "Verify Account to Order" : "Select options"}
+              {pricingLocked
+                ? "Verify Account to Order"
+                : active && isPurchasable(product, product.stock, orderingEnabled)
+                  ? "Select options"
+                  : "View details"}
             </span>
           </div>
         </div>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { focusAfterScroll } from "@/lib/focus-after-scroll";
 import { isInternalAnnouncementLink, parseAnnouncementText, type BannerAnnouncement } from "@/lib/announcements/rules";
 
 const LINK_CLASS = "text-gold underline underline-offset-2 hover:text-white";
@@ -57,7 +58,11 @@ function AnnouncementLink({ url, label }: { url: string; label: string }) {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
     window.history.replaceState(window.history.state, "", `#${id}`);
-    target.focus({ preventScroll: true });
+    // A section holding a form (the footer's Stay Informed signup): once the scroll settles, put the cursor in its
+    // email field. Anything else gets focus straight away, as before.
+    const field = target.querySelector<HTMLInputElement>('input[type="email"]');
+    if (field) focusAfterScroll(field, target);
+    else target.focus({ preventScroll: true });
   }
 
   return (

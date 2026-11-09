@@ -4,6 +4,7 @@ import { listProducts } from "@/lib/products";
 import { toStorefrontProduct, withPublicPrice } from "@/lib/products/storefront";
 import { withStock } from "@/lib/inventory";
 import { withCertifiedPurity } from "@/lib/products/certified-purity";
+import { isOrderingEnabled } from "@/lib/ordering";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { HomeFeaturedGrid } from "@/components/HomeFeaturedGrid";
 import { VialGlyph } from "@/components/VialGlyph";
@@ -44,12 +45,13 @@ const TRUST_POINTS = [
 ];
 
 export default async function Home() {
-  const [products, hero, featuredContent, sections, customer] = await Promise.all([
+  const [products, hero, featuredContent, sections, customer, orderingEnabled] = await Promise.all([
     listProducts().then(withStock).then(withCertifiedPurity),
     getContent("home_hero", DEFAULT_HOME_HERO),
     getContent("featured_products", DEFAULT_FEATURED),
     getContent("home_sections", DEFAULT_HOME_SECTIONS),
     getCurrentCustomer(),
+    isOrderingEnabled(),
   ]);
   const featured =
     featuredContent.slugs.length > 0
@@ -214,7 +216,7 @@ export default async function Home() {
               View All →
             </Link>
           </div>
-          <HomeFeaturedGrid products={featuredForView} pricingLocked={!signedIn} />
+          <HomeFeaturedGrid products={featuredForView} pricingLocked={!signedIn} orderingEnabled={orderingEnabled} />
           {!signedIn && (
             <p className="mt-8 text-center text-sm text-muted">
               Ordering is reserved for registered research customers. Certificates of Analysis are

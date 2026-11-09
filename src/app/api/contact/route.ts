@@ -30,7 +30,7 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     to: content.email,
     name,
     fromEmail: email,
-    subject: subject ?? "",
+    subject,
     message,
   });
   sendContactAutoAckEmail({ toName: name, toEmail: email }).catch((err) =>

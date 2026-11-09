@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
 import { HEARD_ABOUT_VALUES } from "@/lib/marketing/heard-about";
+import { CONTACT_SUBJECTS } from "@/lib/contact-subjects";
 import { PASSWORD_MAX_LENGTH } from "@/lib/users/password-policy";
 import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
 import { AVAILABILITY_STATUSES } from "@/lib/products/availability";
@@ -312,7 +313,8 @@ export const customerNotesSchema = z.object({
 export const contactFormSchema = z.object({
   name: z.string().trim().min(1).max(200),
   email: z.string().trim().toLowerCase().email(),
-  subject: z.string().trim().max(200).optional(),
+  // Required, and one of the form's dropdown choices (lib/contact-subjects.ts).
+  subject: z.enum(CONTACT_SUBJECTS, { error: "Choose a subject." }),
   message: z.string().trim().min(1).max(5000),
 });
 

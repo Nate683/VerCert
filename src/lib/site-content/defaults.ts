@@ -63,11 +63,11 @@ export const DEFAULT_ABOUT: AboutContent = {
     },
     {
       title: "Traceability from Lot to Certificate",
-      body: "Every vial will carry a lot number that maps to its certificate of analysis. Certificates will come from the testing laboratory directly, so the chain from lot to document stays unbroken.",
+      body: "Traceability is fundamental to VeriCert's quality assurance process. Each released lot is assigned a unique identifier linking the research material to its corresponding laboratory-issued Certificate of Analysis. Through our certificate verification system, researchers can access lot-specific analytical results and independently verify the supporting documentation with the testing laboratory. This approach provides a transparent, documented connection between the material supplied and the testing performed.",
     },
     {
       title: "Professional Reagent Standards",
-      body: "Our infrastructure serves qualified research professionals. Compounds ship as stable lyophilized formulations with precise mass specifications and packaging designed to protect against light exposure, physical damage, and moisture during transit.",
+      body: "VeriCert Peptides maintains defined quality standards for the research compounds we distribute, with an emphasis on material integrity, consistent handling practices, and documented quality assurance. Our standards address supplier qualification, product specifications, independent analytical testing, and appropriate storage and handling conditions. These requirements support a consistent, traceable approach to supplying research materials for laboratory and analytical applications.",
     },
   ],
 };
