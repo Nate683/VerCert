@@ -162,8 +162,10 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
         {loading && !result && <p className="text-sm text-muted">Searching…</p>}
         {error && <p className="text-sm text-[#8a3b33]">{error}</p>}
         {result && !error && total === 0 && (
+          // Honest empty state: nothing has been published for this search. Not an error, not blank, and no hint that
+          // a certificate should have turned up.
           <p className="text-sm text-muted">
-            No published certificate matches &ldquo;{result.query}&rdquo;. For an older lot, enter its full lot number from the vial label.
+            No published certificate matches &ldquo;{result.query}&rdquo;. Certificates are published as each lot is released.
           </p>
         )}
         {result && !error && total > 0 && (

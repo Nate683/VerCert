@@ -50,10 +50,10 @@ export default async function LotPage({ params }: Props) {
 
       {certs.length === 0 ? (
         <div className="mt-8 space-y-4 text-sm leading-relaxed text-muted">
-          <p>No certificate has been published for this lot number.</p>
+          <p>No certificate has been published for this lot number. Certificates are published as each lot is released.</p>
           <p>
-            Check the lot number on your vial label. If it matches and this page still shows nothing,{" "}
-            <Link href="/contact" className="text-navy underline underline-offset-2">tell us</Link> and we&apos;ll look into it.
+            Questions about a lot?{" "}
+            <Link href="/contact" className="text-navy underline underline-offset-2">Contact us</Link>.
           </p>
         </div>
       ) : (

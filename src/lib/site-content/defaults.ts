@@ -51,14 +51,15 @@ export type AboutContent = {
 export const DEFAULT_ABOUT: AboutContent = {
   headline: "Built for the Bench, Not the Bottle",
   intro:
-    "VeriCert Peptides provides research compounds for laboratory and analytical applications. Every lot will be independently tested. Access to our full product catalog, pricing, inventory information, and purchasing is reserved for registered research customers, including independent researchers, laboratories, academic institutions, and commercial research organizations. Certificates of Analysis will be available for public verification without requiring an account. Customers confirm they are 21 or older when creating an account and certify with every order that products are intended exclusively for laboratory research use, not human or veterinary consumption.",
+    // Two paragraphs, separated by a blank line (the About page renders this field with whitespace-pre-line).
+    "VeriCert Peptides supplies research compounds for laboratory and analytical applications, with an emphasis on independent verification, documented quality, and lot-level traceability. Our approach is built around defined quality standards, third-party laboratory testing, and transparent access to analytical results.\n\nAccess to our full product catalog, pricing, inventory information, and purchasing is reserved for registered research customers, including independent researchers, laboratories, academic institutions, and commercial research organizations. Certificates of Analysis are available for public verification without requiring an account. Customers must be at least 21 years of age to register and must acknowledge that all products are intended exclusively for laboratory research and analytical testing, not for human or veterinary consumption.",
   valuesHeading: "Our Core Values",
   valuesIntro:
-    "At VeriCert Peptides, we stand for analytical precision and supply chain transparency. Our operations are built on independent scientific verification, designed to meet the requirements of independent, corporate, and academic research institutions. We do not participate in consumer retail marketing. We maintain rigorous laboratory-focused quality and handling standards across our catalog to support research applications.",
+    "At VeriCert Peptides, our core values are grounded in analytical precision, independent verification, and supply chain transparency. We establish defined quality and handling standards for the research compounds we distribute, with an emphasis on lot-specific laboratory testing, documented traceability, and access to independent analytical results. These principles guide our commitment to supplying research materials for qualified laboratory and analytical applications.",
   pillars: [
     {
       title: "Independent Validation",
-      body: "Every compound distributed under the VeriCert framework will undergo independent third-party laboratory validation. Reverse-phase HPLC purity profiles and mass spectrometry identity confirmation will be completed before a lot is released.",
+      body: "VeriCert Peptides prioritizes independent, lot-specific laboratory testing as a cornerstone of our quality assurance process. Our verification standards include analytical purity assessment through HPLC and identity confirmation through mass spectrometry, supported by additional testing appropriate to the compound and our established quality requirements. Laboratory-issued Certificates of Analysis provide documented results, allowing researchers to independently review the analytical findings associated with each released lot.",
     },
     {
       title: "Traceability from Lot to Certificate",

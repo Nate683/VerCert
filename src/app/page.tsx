@@ -217,7 +217,7 @@ export default async function Home() {
           <HomeFeaturedGrid products={featuredForView} pricingLocked={!signedIn} />
           {!signedIn && (
             <p className="mt-8 text-center text-sm text-muted">
-              Ordering is reserved for registered research customers. Certificates of Analysis will be
+              Ordering is reserved for registered research customers. Certificates of Analysis are
               available for public verification without requiring an account.{" "}
               {/* A deeper gold than gold-ink (#82673B, 5.31:1 on white) so the link
                   reads as clearly clickable at this size: #6E5530, 6.99:1. */}

@@ -24,8 +24,14 @@ export default async function AboutPage() {
           {/* 30% larger than the old h-20 (80px); width follows. */}
           <VeriCertLogo className="mx-auto h-[104px] w-auto" ground="light" priority />
           <EditableText value={content.headline} as="h1" className="mt-10 font-serif text-4xl text-navy lg:text-5xl" contentKey="about_page" field="headline" />
-          <EditableText value={content.intro} as="p" multiline className="mt-6 text-base leading-relaxed text-muted" contentKey="about_page" field="intro" />
+          {/* Two paragraphs in one editable field, separated by a blank line. */}
+          <EditableText value={content.intro} as="p" multiline className="mt-6 whitespace-pre-line text-base leading-relaxed text-muted" contentKey="about_page" field="intro" />
         </section>
+
+        {/* Motto: the page's own serif, set apart by size and colour only. */}
+        <p className="mt-16 text-center font-serif text-xl text-gold-ink sm:text-2xl">
+          Don&apos;t just trust our brand. Verify our standards.
+        </p>
 
         <section className="pt-20">
           <h2 className="text-center text-xs uppercase tracking-[0.35em] text-gold-ink">{content.valuesHeading}</h2>

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { CornerWatermarks } from "@/components/CornerWatermarks";
 
 // Order status without signing in: the reference code plus the email the
 // order was placed with open the order page in this browser for 7 days.
@@ -34,13 +36,25 @@ export function OrderStatusLookup({ initialReference }: { initialReference: stri
   }
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-20 lg:px-10">
+    // Centred in the white area with the corner emblem watermarks (components/CornerWatermarks.tsx); the extra top
+    // padding sits the content slightly lower for balance.
+    <CornerWatermarks>
+    <div className="mx-auto w-full max-w-md px-6 pt-20 pb-12 lg:px-10">
+      {/* The full lockup, transparent vector, at the sign-in page's size. */}
+      <Image
+        src="/VeriCert-Peptides-Full-Color-RGB-V2.svg"
+        alt="VeriCert Peptides"
+        width={298}
+        height={149}
+        unoptimized
+        priority
+        className="mx-auto mb-6 block h-auto w-[196px]"
+      />
       <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Orders</p>
       <h1 className="mt-3 font-serif text-3xl text-navy">Check Order Status</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
-        Order record access. Enter the reference code from your order
-        confirmation (it begins with VC-) alongside the email address the
-        order was placed with.
+        Enter your order reference code and the email address associated with your purchase to review its status. All
+        VeriCert orders require a registered research account.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -90,12 +104,13 @@ export function OrderStatusLookup({ initialReference }: { initialReference: stri
       </form>
 
       <p className="mt-6 text-center text-xs text-muted">
-        Registered accounts may{" "}
+        Registered customers can also access their{" "}
         <Link href="/login?next=/account" className="text-gold-ink hover:underline">
-          access the dashboard
+          account dashboard
         </Link>{" "}
-        to view complete transaction histories and tracking.
+        to review order history and tracking information.
       </p>
     </div>
+    </CornerWatermarks>
   );
 }

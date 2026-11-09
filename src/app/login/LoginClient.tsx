@@ -4,7 +4,8 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { safeNextPath } from "@/lib/safe-next";
-import { VeriCertLogo } from "@/components/VeriCertLogo";
+import Image from "next/image";
+import { CornerWatermarks } from "@/components/CornerWatermarks";
 
 function LoginForm() {
   const router = useRouter();
@@ -47,11 +48,22 @@ function LoginForm() {
   }
 
   return (
-    // Lifted 64px (top-aligned, top padding 80px to 16px). The spec asked for 90px, but only
-    // 80px sat above the content, so 90px put the logo under the sticky header.
-    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-start px-6 pt-4 pb-20 lg:px-10">
-      {/* The navy-and-gold lockup; its JPG background is pure white, like the page. */}
-      <VeriCertLogo className="w-[200px] h-auto object-contain mx-auto mb-6 block" ground="light" priority />
+    // Vertically centred in the white area between header and footer, which carries the corner emblem watermarks
+    // (components/CornerWatermarks.tsx).
+    <CornerWatermarks>
+    <div className="mx-auto w-full max-w-md px-6 py-12 lg:px-10">
+      {/* The full lockup as a transparent vector (the homepage hero's file), so the watermarks show cleanly behind
+          it; the old Logo.jpg has a white background. Its artwork fills 267 of 298 viewBox units: at 196px it shows
+          ≈176px of artwork, 1.45× the ≈121px the 200px JPG showed. */}
+      <Image
+        src="/VeriCert-Peptides-Full-Color-RGB-V2.svg"
+        alt="VeriCert Peptides"
+        width={298}
+        height={149}
+        unoptimized
+        priority
+        className="mx-auto mb-6 block h-auto w-[196px]"
+      />
       <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
       <h1 className="mt-3 font-serif text-3xl text-navy">Sign In</h1>
       <p className="mt-3 text-sm text-muted">
@@ -123,6 +135,7 @@ function LoginForm() {
         </Link>
       </div>
     </div>
+    </CornerWatermarks>
   );
 }
 
