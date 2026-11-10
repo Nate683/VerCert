@@ -36,11 +36,12 @@ export function OrderStatusLookup({ initialReference }: { initialReference: stri
   }
 
   return (
-    // Centred in the white area with the corner emblem watermarks (components/CornerWatermarks.tsx); the extra top
-    // padding sits the content slightly lower for balance.
-    <CornerWatermarks>
-    <div className="mx-auto w-full max-w-md px-6 pt-20 pb-12 lg:px-10">
-      {/* The full lockup, transparent vector, at the sign-in page's size. */}
+    // In the white area with the corner emblem watermarks (components/CornerWatermarks.tsx). above={0.1}: the share of
+    // free vertical space above the composition (0.5 = centred; lower = higher). Tuned by eye against /login, not
+    // copied: this form is taller. Top padding matches sign-in (py-12) instead of the old extra pt-20.
+    <CornerWatermarks above={0.1}>
+    <div className="mx-auto w-full max-w-md px-6 py-12 lg:px-10">
+      {/* The full lockup, transparent vector, at the sign-in page's size: 392px = 2× the previous 196px. */}
       <Image
         src="/VeriCert-Peptides-Full-Color-RGB-V2.svg"
         alt="VeriCert Peptides"
@@ -48,7 +49,7 @@ export function OrderStatusLookup({ initialReference }: { initialReference: stri
         height={149}
         unoptimized
         priority
-        className="mx-auto mb-6 block h-auto w-[196px]"
+        className="relative left-1/2 mb-6 block h-auto w-[392px] max-w-[calc(100vw-3rem)] -translate-x-1/2"
       />
       <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Orders</p>
       <h1 className="mt-3 font-serif text-3xl text-navy">Check Order Status</h1>

@@ -48,13 +48,15 @@ function LoginForm() {
   }
 
   return (
-    // Vertically centred in the white area between header and footer, which carries the corner emblem watermarks
-    // (components/CornerWatermarks.tsx).
-    <CornerWatermarks>
+    // In the white area between header and footer, which carries the corner emblem watermarks
+    // (components/CornerWatermarks.tsx). above={0.15}: 15% of the free vertical space sits above the composition,
+    // 85% below — raised from centred (0.5). Lower the number to raise it further, raise it to lower the form.
+    <CornerWatermarks above={0.15}>
     <div className="mx-auto w-full max-w-md px-6 py-12 lg:px-10">
       {/* The full lockup as a transparent vector (the homepage hero's file), so the watermarks show cleanly behind
-          it; the old Logo.jpg has a white background. Its artwork fills 267 of 298 viewBox units: at 196px it shows
-          ≈176px of artwork, 1.45× the ≈121px the 200px JPG showed. */}
+          it. 392px = 2× the previous 196px; h-auto keeps the 298:149 viewBox ratio, and max-w-full scales it down
+          with the viewport on narrow phones. It is centred on the column and may run into the column's side padding
+          (lg:px-10 leaves only 368px), so desktop shows the full 392px. */}
       <Image
         src="/VeriCert-Peptides-Full-Color-RGB-V2.svg"
         alt="VeriCert Peptides"
@@ -62,7 +64,7 @@ function LoginForm() {
         height={149}
         unoptimized
         priority
-        className="mx-auto mb-6 block h-auto w-[196px]"
+        className="relative left-1/2 mb-6 block h-auto w-[392px] max-w-[calc(100vw-3rem)] -translate-x-1/2"
       />
       <p className="text-xs uppercase tracking-[0.35em] text-gold-ink">Account</p>
       <h1 className="mt-3 font-serif text-3xl text-navy">Sign In</h1>

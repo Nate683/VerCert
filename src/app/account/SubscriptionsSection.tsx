@@ -57,7 +57,7 @@ export function SubscriptionsSection({
   if (shown.length === 0) return null;
 
   return (
-    <section className="mt-12 border-t border-hairline pt-8" aria-labelledby="subscriptions-heading">
+    <section className="mt-8 border-t border-hairline pt-8" aria-labelledby="subscriptions-heading">
       <h2 id="subscriptions-heading" className="text-xs uppercase tracking-[0.25em] text-gold-ink">
         Subscriptions
       </h2>

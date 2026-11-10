@@ -142,7 +142,9 @@ export default async function AccountPage() {
         </div>
       )}
 
-      {/* Orders first — it is the reason people sign in. */}
+      {/* Orders first — it is the reason people sign in. The list has a top rule only and the last row no bottom
+          padding: the next section's own border-t closes it, instead of a second hairline 48px further down.
+          Every section below is mt-8 border-t pt-8, so all gaps match (≈65px, like header → Order History). */}
       <section className="mt-10">
         <div className="flex items-baseline justify-between">
           <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Order History</h2>
@@ -164,11 +166,11 @@ export default async function AccountPage() {
             </Link>
           </div>
         ) : (
-          <ul className="mt-4 divide-y divide-hairline border-y border-hairline">
+          <ul className="mt-4 divide-y divide-hairline border-t border-hairline">
             {orders.map((order) => {
               const reorder = reorderable.find((r) => r.id === order.id);
               return (
-                <li key={order.id} className="flex flex-wrap items-center justify-between gap-4 py-5">
+                <li key={order.id} className="flex flex-wrap items-center justify-between gap-4 py-5 last:pb-0">
                   <div className="min-w-0">
                     <Link
                       href={`/order/${order.reference}`}
@@ -218,7 +220,7 @@ export default async function AccountPage() {
 
       <SubscriptionsSection initial={subscriptionViews} intervalOptions={subscriptionSettings.intervalDays} />
 
-      <section className="mt-12 border-t border-hairline pt-8">
+      <section className="mt-8 border-t border-hairline pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Saved Shipping Address</h2>
         <p className="mt-2 text-xs text-muted">
           Used to pre-fill checkout so returning orders take a few seconds.
@@ -228,21 +230,21 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      <section className="mt-12 border-t border-hairline pt-8">
+      <section className="mt-8 border-t border-hairline pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Email Address</h2>
         <div className="mt-4">
           <EmailChangeForm pendingEmail={customer.pendingEmail} />
         </div>
       </section>
 
-      <section className="mt-12 border-t border-hairline pt-8">
+      <section className="mt-8 border-t border-hairline pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Notifications</h2>
         <div className="mt-4">
           <NotificationPreferences initial={{ notifyStock: customer.notifyStock, notifyCoa: customer.notifyCoa }} />
         </div>
       </section>
 
-      <section className="mt-12 border-t border-hairline pt-8">
+      <section className="mt-8 border-t border-hairline pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Email Preferences</h2>
         <div className="mt-4">
           <MarketingToggle
@@ -252,7 +254,7 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      <section className="mt-12 border-t border-hairline pt-8">
+      <section className="mt-8 border-t border-hairline pt-8">
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Your Data</h2>
         <div className="mt-4">
           <AccountDataSection />

@@ -19,11 +19,13 @@ export default async function AboutPage() {
 
   return (
     <div className="bg-paper">
-      <div className="mx-auto max-w-4xl px-4 pt-24 pb-12">
+      {/* Top padding pt-24 → pt-14 and logo gap mt-10 → mt-8 offset most of the larger logo's extra height. */}
+      <div className="mx-auto max-w-4xl px-4 pt-14 pb-12">
         <section className="text-center">
-          {/* 30% larger than the old h-20 (80px); width follows. */}
-          <VeriCertLogo className="mx-auto h-[104px] w-auto" ground="light" priority />
-          <EditableText value={content.headline} as="h1" className="mt-10 font-serif text-4xl text-navy lg:text-5xl" contentKey="about_page" field="headline" />
+          {/* 2× the previous 104px-tall logo: 472px wide (441:194 file ratio, h-auto keeps it), max-w-full scales it
+              down with the column on phones. */}
+          <VeriCertLogo className="mx-auto h-auto w-[472px] max-w-full" ground="light" priority />
+          <EditableText value={content.headline} as="h1" className="mt-8 font-serif text-4xl text-navy lg:text-5xl" contentKey="about_page" field="headline" />
           {/* Two paragraphs in one editable field, separated by a blank line. */}
           <EditableText value={content.intro} as="p" multiline className="mt-6 whitespace-pre-line text-base leading-relaxed text-muted" contentKey="about_page" field="intro" />
         </section>
@@ -39,7 +41,8 @@ export default async function AboutPage() {
 
           <ol className="mt-12 space-y-6">
             {content.pillars.map((pillar, i) => (
-              <li key={pillar.title} className="border border-slate-300 bg-paper p-8">
+              // Border one small step darker than slate-300 (inline utility, About only — not a shared token).
+              <li key={pillar.title} className="border border-slate-400/70 bg-paper p-8">
                 <p className="font-mono text-xs text-gold-ink">{i + 1}.</p>
                 <h3 className="mt-2 text-sm uppercase tracking-[0.2em] text-navy">{pillar.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted">{pillar.body}</p>
