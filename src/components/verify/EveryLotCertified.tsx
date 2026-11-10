@@ -38,8 +38,9 @@ export function EveryLotCertified() {
             aria-label="Search certificates"
             className="shrink-0 rounded-full transition-transform duration-150 hover:scale-[1.03] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-navy"
           >
-            {/* VeriCert-Emblem-Gray-Gold.svg as supplied (viewBox 0 0 303 309). */}
-            <Image src="/VeriCert-Emblem-Gray-Gold.svg" alt="" width={303} height={309} unoptimized className="h-24 w-auto sm:h-28" />
+            {/* The navy-and-gold emblem: VeriCert-Emblem-Navy-Gold.svg, extracted verbatim from
+                VeriCert-Peptides-Full-Color-RGB-V2.svg (viewBox 30.01 × 30.52; paths and fills unchanged). */}
+            <Image src="/VeriCert-Emblem-Navy-Gold.svg" alt="" width={300} height={305} unoptimized className="h-24 w-auto sm:h-28" />
           </button>
           <div className="max-w-2xl">
             <h2 id="every-lot-certified" className="font-serif text-3xl text-navy lg:text-4xl">Every Lot Certified</h2>
@@ -48,12 +49,17 @@ export function EveryLotCertified() {
               number or compound to access the original Certificate of Analysis and verify the reported results directly
               with the issuing laboratory.
             </p>
-            <p className="mt-4 font-serif text-lg italic text-gold-ink">Don&apos;t just trust our brand. Verify our standards.</p>
+            {/* The motto in the body family (Inter), upright and semibold, in the accessible text gold. */}
+            <p className="mt-5 font-sans text-base font-semibold leading-snug tracking-[0.01em] text-gold-ink sm:text-lg">
+              Don&apos;t just trust our brand. Verify our standards.
+            </p>
           </div>
         </div>
       </div>
+      {/* The search sits just under the photograph, on white (never over the image). The bottom padding leaves the
+          suggestions and results room to open in the flow of the page, so nothing is clipped. */}
       <div ref={searchWrap} className="scroll-mt-32 border-t border-hairline bg-paper">
-        <div className="mx-auto max-w-5xl px-6 py-10 lg:px-10">
+        <div className="mx-auto max-w-5xl px-6 pb-8 pt-5 sm:pt-6 lg:px-10">
           <VerifySearch ref={search} label="Search certificates by lot number or compound" />
         </div>
       </div>

@@ -148,7 +148,7 @@ export default function HowWeTestPage() {
       {/* Every Lot Certified: banner, with the certificate search beneath it. */}
       <EveryLotCertified />
 
-      <section className="mx-auto max-w-4xl px-6 py-20 lg:px-10">
+      <section className="mx-auto max-w-4xl px-6 pb-20 pt-10 sm:pt-12 lg:px-10">
         <div>
           <h3 className="font-serif text-xl text-navy">Still have a question?</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted">

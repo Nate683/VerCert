@@ -98,8 +98,10 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
       <label htmlFor="catalog-search" className="sr-only">
         Search the catalog by name or CAS number
       </label>
-      <div className="flex items-center gap-2 border border-white/15 bg-black/30 px-3 transition-colors focus-within:border-gold">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4 shrink-0 text-white/40" aria-hidden="true">
+      {/* A light tint of the header navy (not the old near-black well), a hairline edge, and a placeholder bright
+          enough to read (about 5:1 on this ground). Body family, like the rest of the header. */}
+      <div className="flex items-center gap-2 border border-white/20 bg-white/[0.07] px-3 font-sans transition-colors hover:border-white/30 focus-within:border-gold">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" strokeLinecap="round" />
         </svg>
@@ -124,7 +126,7 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
           aria-controls="catalog-search-results"
           role="combobox"
           aria-autocomplete="list"
-          className="w-full bg-transparent py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none"
+          className="w-full min-w-0 bg-transparent py-2.5 font-sans text-[13px] text-white placeholder:text-white/60 focus:outline-none"
         />
         {query && (
           <button
@@ -134,7 +136,7 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
               inputRef.current?.focus();
             }}
             aria-label="Clear search"
-            className="shrink-0 text-white/40 transition-colors hover:text-gold"
+            className="shrink-0 text-white/60 transition-colors hover:text-gold"
           >
             ×
           </button>

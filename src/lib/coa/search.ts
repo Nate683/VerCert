@@ -12,13 +12,39 @@ import type { PublicCertificate } from "./types";
 
 export type Searchable = PublicCertificate & { aliases: string[] };
 
+// A catalog product strength with no published certificate. Only ever built from the signed-in catalog (the same
+// active, priced products /api/catalog serves); it carries no certificate fields at all.
+export type CatalogCandidate = {
+  compoundName: string;
+  aliases: string[];
+  productSlug: string;
+  sizeLabel: string | null;
+};
+
+// One autocomplete row, grouped by compound + strength. "certificate" rows are backed by published certificates in
+// this same response (certificateIds point into exact/current/recent); "catalog" rows are products with no published
+// certificate and say so — they never imply anything was tested, verified or approved.
+export type Suggestion =
+  | {
+      kind: "certificate";
+      key: string;
+      compoundName: string;
+      sizeLabel: string | null;
+      skus: string[];
+      lotNumbers: string[];
+      certificateIds: string[];
+    }
+  | { kind: "catalog"; key: string; compoundName: string; sizeLabel: string | null };
+
 export type SearchResult = {
   query: string;
   exact: PublicCertificate[];
   current: PublicCertificate[];
   recent: PublicCertificate[];
-  suggestions: string[];
+  suggestions: Suggestion[];
 };
+
+const MAX_SUGGESTIONS = 8;
 
 const compact = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "");
 const words = (s: string) => s.toLowerCase().normalize("NFKD").split(/[^a-z0-9]+/).filter(Boolean);
@@ -41,7 +67,16 @@ export function editDistance(a: string, b: string, cap = 3): number {
 const tolerance = (len: number) => (len >= 8 ? 2 : len >= 4 ? 1 : 0);
 
 // How well one query token matches one certificate: 0 = no match; higher is better.
-function tokenScore(token: string, item: Searchable): number {
+type Matchable = {
+  compoundName: string;
+  aliases: string[];
+  productSlug: string | null;
+  sizeLabel: string | null;
+  sku?: string | null;
+  lotNumber?: string;
+};
+
+function tokenScore(token: string, item: Matchable): number {
   const t = compact(token);
   if (!t) return 1;
   const names = [item.compoundName, ...item.aliases, item.productSlug ?? ""].filter(Boolean);
@@ -67,11 +102,26 @@ function tokenScore(token: string, item: Searchable): number {
     if (k === t) best = Math.max(best, 100);
     else if (k.includes(t) && t.length >= 3) best = Math.max(best, 55);
   }
-  const lot = compact(item.lotNumber);
-  if (lot === t) best = Math.max(best, 100);
-  else if (lot.startsWith(t) && t.length >= 3) best = Math.max(best, 65);
+  const lot = compact(item.lotNumber ?? "");
+  if (lot) {
+    if (lot === t) best = Math.max(best, 100);
+    else if (lot.startsWith(t) && t.length >= 3) best = Math.max(best, 65);
+  }
   return best;
 }
+
+// The best of: the whole query as one token, every token AND-matched, and number+unit pairs joined ("10 mg").
+function queryScore(query: string, item: Matchable): number {
+  const whole = tokenScore(query, item);
+  const each = query.split(/\s+/).filter(Boolean).map((t) => tokenScore(t, item));
+  const andScore = each.every((s) => s > 0) ? each.reduce((a, b) => a + b, 0) / each.length : 0;
+  const joined = query.replace(/(\d)\s+mg\b/gi, "$1mg").split(/\s+/).filter(Boolean).map((t) => tokenScore(t, item));
+  const joinedScore = joined.every((s) => s > 0) ? joined.reduce((a, b) => a + b, 0) / joined.length : 0;
+  return Math.max(whole, andScore, joinedScore);
+}
+
+const groupKey = (compoundName: string, sizeLabel: string | null, productSlug: string | null) =>
+  `${productSlug ?? compact(compoundName)}|${compact(sizeLabel ?? "")}`;
 
 function cutoffDate(today: string): string {
   const d = new Date(`${today}T00:00:00Z`);
@@ -87,7 +137,9 @@ const byCompound = (a: PublicCertificate, b: PublicCertificate) =>
 
 const strip = ({ aliases: _a, ...cert }: Searchable): PublicCertificate => { void _a; return cert; };
 
-export function searchCertificates(raw: string, items: Searchable[], today: string): SearchResult {
+// `catalog` (optional) lists catalog product strengths for "no published certificate" suggestions. Pass it only for
+// a signed-in visitor: the catalog itself is gated (proxy.ts), so a signed-out visitor sees certificate rows only.
+export function searchCertificates(raw: string, items: Searchable[], today: string, catalog: CatalogCandidate[] = []): SearchResult {
   const query = raw.trim().slice(0, 80);
   const empty: SearchResult = { query, exact: [], current: [], recent: [], suggestions: [] };
   if (compact(query).length < 2) return empty;
@@ -95,17 +147,8 @@ export function searchCertificates(raw: string, items: Searchable[], today: stri
   const q = compact(query);
   const exact = items.filter((i) => compact(i.lotNumber) === q);
   // Allow "bpc 157 10mg", "BPC-157 10 mg", "bpc157": tokens AND-matched, with the whole query also tried as one.
-  const tokens = query.split(/\s+/).filter(Boolean);
   const scored = items
-    .map((item) => {
-      const whole = tokenScore(query, item);
-      const each = tokens.map((t) => tokenScore(t, item));
-      const andScore = each.every((s) => s > 0) ? each.reduce((a, b) => a + b, 0) / each.length : 0;
-      // "10 mg" splits into "10" and "mg"; join number+unit pairs before giving up.
-      const joined = query.replace(/(\d)\s+mg\b/gi, "$1mg").split(/\s+/).filter(Boolean).map((t) => tokenScore(t, item));
-      const joinedScore = joined.every((s) => s > 0) ? joined.reduce((a, b) => a + b, 0) / joined.length : 0;
-      return { item, score: Math.max(whole, andScore, joinedScore) };
-    })
+    .map((item) => ({ item, score: queryScore(query, item) }))
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score || byCompound(a.item, b.item));
 
@@ -117,11 +160,46 @@ export function searchCertificates(raw: string, items: Searchable[], today: stri
     .map((s) => strip(s.item))
     .sort(byCompound);
 
-  const suggestions: string[] = [];
-  for (const { item } of scored) {
-    const label = `${item.compoundName}${item.sizeLabel ? ` ${item.sizeLabel}` : ""}`;
-    if (!suggestions.includes(label)) suggestions.push(label);
-    if (suggestions.length >= 6) break;
+  // Certificate suggestions come only from certificates this response actually returns (so an old lot that is
+  // reachable only by its exact number never surfaces through a name search), grouped by compound + strength.
+  const returned = new Set([...exact, ...current, ...recent].map((c) => c.id));
+  const groups = new Map<string, Extract<Suggestion, { kind: "certificate" }>>();
+  const order: { key: string; score: number }[] = [];
+  for (const { item, score } of [...exact.map((item) => ({ item, score: 1000 })), ...scored]) {
+    if (!returned.has(item.id)) continue;
+    const key = groupKey(item.compoundName, item.sizeLabel, item.productSlug);
+    let g = groups.get(key);
+    if (!g) {
+      g = { kind: "certificate", key, compoundName: item.compoundName, sizeLabel: item.sizeLabel, skus: [], lotNumbers: [], certificateIds: [] };
+      groups.set(key, g);
+      order.push({ key, score });
+    }
+    if (g.certificateIds.includes(item.id)) continue;
+    g.certificateIds.push(item.id);
+    if (item.lotNumber && !g.lotNumbers.includes(item.lotNumber)) g.lotNumbers.push(item.lotNumber);
+    if (item.sku && !g.skus.includes(item.sku)) g.skus.push(item.sku);
   }
+  const suggestions: Suggestion[] = order.map(({ key }) => groups.get(key)!).slice(0, MAX_SUGGESTIONS);
+
+  // Catalog strengths with no published certificate at all (any age), after the certificate rows.
+  // Matched by slug + strength, and by name + strength for a certificate not linked to a product, so a strength that
+  // has a published certificate is never also offered as "no published certificate".
+  const nameKey = (name: string, size: string | null) => `${compact(name)}|${compact(size ?? "")}`;
+  const certified = new Set(items.flatMap((i) => [groupKey(i.compoundName, i.sizeLabel, i.productSlug), nameKey(i.compoundName, i.sizeLabel)]));
+  const catalogRows = catalog
+    .map((c) => ({ c, key: groupKey(c.compoundName, c.sizeLabel, c.productSlug), score: queryScore(query, c) }))
+    .filter((r) => r.score > 0 && !certified.has(r.key) && !certified.has(nameKey(r.c.compoundName, r.c.sizeLabel)))
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        a.c.compoundName.localeCompare(b.c.compoundName) ||
+        (a.c.sizeLabel ?? "").localeCompare(b.c.sizeLabel ?? "", undefined, { numeric: true })
+    );
+  for (const { c, key } of catalogRows) {
+    if (suggestions.length >= MAX_SUGGESTIONS) break;
+    if (suggestions.some((s) => s.key === key)) continue;
+    suggestions.push({ kind: "catalog", key, compoundName: c.compoundName, sizeLabel: c.sizeLabel });
+  }
+
   return { query, exact: exact.map(strip).sort(byCompound), current, recent, suggestions };
 }

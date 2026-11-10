@@ -76,17 +76,17 @@ export function Header() {
               </Link>
             );
           })}
+          {/* VERIFY BEFORE YOU BUY sits immediately after CONTACT on desktop. Below xl it has its own row (below). */}
+          <VerifyButton open={verifyOpen} onToggle={toggleVerify} />
         </nav>
 
-        {/* Search reads the catalog, which is for signed-in customers — so it
-            only appears once someone is signed in. The wrapper stays either
-            way to hold the layout. */}
-        <div className="ml-auto hidden w-full max-w-xs md:block">{user && <SearchBox />}</div>
+        {/* PRODUCT search (catalog only — a separate component and data source from the certificate search above).
+            The catalog is for signed-in customers, so it only appears once someone is signed in; the wrapper stays
+            either way to hold the layout. On desktop it takes the width left between VERIFY BEFORE YOU BUY and the
+            account controls, within limits, and never shrinks below a usable width. */}
+        <div className="ml-auto hidden w-full max-w-xs md:block xl:ml-2 xl:min-w-[10.5rem] xl:max-w-[16rem] xl:flex-1">{user && <SearchBox />}</div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
-          <div className="hidden lg:block">
-            <VerifyButton open={verifyOpen} onToggle={toggleVerify} />
-          </div>
           {user?.role && (
             <Link
               href={`/${user.role}`}
@@ -136,8 +136,8 @@ export function Header() {
         </div>
       </div>
 
-      {/* Below lg the top row is full, so VERIFY BEFORE YOU BUY gets its own slim row inside the header. */}
-      <div className="border-t border-white/10 px-4 lg:hidden">
+      {/* Below xl the top row is full, so VERIFY BEFORE YOU BUY gets its own slim row inside the header. */}
+      <div className="border-t border-white/10 px-4 xl:hidden">
         <VerifyButton open={verifyOpen} onToggle={toggleVerify} compact />
       </div>
 

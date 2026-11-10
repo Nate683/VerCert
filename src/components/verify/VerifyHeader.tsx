@@ -17,14 +17,25 @@ export function VerifyButton({ open, onToggle, compact = false }: { open: boolea
       onClick={onToggle}
       aria-expanded={open}
       aria-controls={VERIFY_PANEL_ID}
-      className={`group flex min-h-11 items-center gap-2 whitespace-nowrap text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
-        compact ? "w-full justify-center py-1.5" : "px-1"
+      className={`group flex min-h-11 items-center whitespace-nowrap text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold ${
+        compact ? "w-full justify-center gap-2.5 py-1.5" : ""
       }`}
     >
-      {/* The gray-and-gold emblem, as supplied (public/VeriCert-Emblem-Gray-Gold.svg, viewBox 303 × 309). */}
-      <Image src="/VeriCert-Emblem-Gray-Gold.svg" alt="" width={303} height={309} unoptimized className="h-7 w-auto shrink-0" />
-      <span className={`text-[11px] uppercase tracking-[0.16em] transition-colors ${open ? "text-gold" : "text-white/80 group-hover:text-white"} sm:text-[12px]`}>
-        Verify Before You Buy
+      {/* A thin, low-contrast gold frame (the brand gold at 45%, full gold on hover/open) around the gray-and-gold
+          emblem (public/VeriCert-Emblem-Gray-Gold.svg, viewBox 303 × 309) and the words. */}
+      <span
+        className={`flex items-center gap-2.5 border px-3 py-1.5 transition-colors ${
+          open ? "border-gold" : "border-gold/45 group-hover:border-gold"
+        }`}
+      >
+        <Image src="/VeriCert-Emblem-Gray-Gold.svg" alt="" width={303} height={309} unoptimized className="h-8 w-auto shrink-0" />
+        <span
+          className={`text-[12px] uppercase tracking-[0.14em] transition-colors sm:text-[13px] ${
+            open ? "text-gold" : "text-white/70 group-hover:text-gold"
+          }`}
+        >
+          Verify Before You Buy
+        </span>
       </span>
     </button>
   );
@@ -40,15 +51,29 @@ export function VerifyPanel({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div id={VERIFY_PANEL_ID} className="border-t border-gold/20 bg-paper text-navy">
-      <div className="mx-auto max-h-[calc(100dvh-8rem)] max-w-7xl overflow-y-auto px-4 py-5 sm:px-6 lg:px-10">
-        <div className="mb-3 flex items-baseline justify-between gap-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-gold-ink">Verify before you buy</p>
-          <button type="button" onClick={onClose} className="min-h-11 px-2 text-xs uppercase tracking-[0.14em] text-muted hover:text-navy">
-            Close
-          </button>
+    <div id={VERIFY_PANEL_ID} role="region" aria-labelledby={`${VERIFY_PANEL_ID}-title`} className="border-t border-gold/20 bg-paper font-sans text-navy">
+      {/* Scrolls inside itself, so long results never push past the viewport or sit over the page below. */}
+      <div className="mx-auto max-h-[calc(100dvh-8rem)] max-w-7xl overflow-y-auto px-4 pb-6 pt-4 sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <div>
+              <p id={`${VERIFY_PANEL_ID}-title`} className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-ink">
+                Verify before you buy
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted">
+                Find the published Certificate of Analysis for a compound, strength or lot.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-11 shrink-0 px-2 text-xs uppercase tracking-[0.14em] text-muted transition-colors hover:text-navy"
+            >
+              Close
+            </button>
+          </div>
+          <VerifySearch autoFocus />
         </div>
-        <VerifySearch autoFocus />
       </div>
     </div>
   );

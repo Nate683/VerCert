@@ -3,7 +3,8 @@ import { withStock } from "@/lib/inventory";
 import { availabilityStatus } from "@/lib/products/availability";
 import type { Product } from "@/lib/types";
 import { listPublishedRecords } from "./store";
-import { searchCertificates, type Searchable, type SearchResult } from "./search";
+import { pricedSizes } from "@/lib/products/pricing";
+import { searchCertificates, type CatalogCandidate, type Searchable, type SearchResult } from "./search";
 import type { CoaRecord, LotAvailability, PublicCertificate } from "./types";
 
 // Server-only. What the public can see of the certificate records, and nothing more.
@@ -62,10 +63,22 @@ async function publishedWithProducts(): Promise<{ record: CoaRecord; product: Pr
   return records.map((record) => ({ record, product: record.productSlug ? bySlug.get(record.productSlug) : undefined }));
 }
 
-export async function searchPublic(q: string): Promise<SearchResult> {
-  const rows = await publishedWithProducts();
+// `signedIn` adds "no published certificate" suggestions for catalog strengths. The catalog is gated (proxy.ts), so
+// it is drawn from exactly what /api/catalog gives a signed-in customer: active, on-sale products and their priced
+// sizes — names, aliases and strengths only. A signed-out search never reads the catalog at all.
+export async function searchPublic(q: string, options: { signedIn?: boolean } = {}): Promise<SearchResult> {
+  const [rows, catalog] = await Promise.all([publishedWithProducts(), options.signedIn ? listProducts() : Promise.resolve([])]);
   const items: Searchable[] = rows.map(({ record, product }) => ({ ...toPublic(record, product), aliases: product?.alternateNames ?? [] }));
-  return searchCertificates(q, items, new Date().toISOString().slice(0, 10));
+  const candidates: CatalogCandidate[] = catalog.flatMap((p) => {
+    const sizes = pricedSizes(p);
+    return (sizes.length ? sizes.map((s) => s.label) : [null]).map((sizeLabel) => ({
+      compoundName: p.name,
+      aliases: p.alternateNames ?? [],
+      productSlug: p.slug,
+      sizeLabel,
+    }));
+  });
+  return searchCertificates(q, items, new Date().toISOString().slice(0, 10), candidates);
 }
 
 // Every published certificate for one lot number (a lot can carry a retest), for the permanent lot page.
