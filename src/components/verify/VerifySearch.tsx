@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 import type { SearchResult, Suggestion } from "@/lib/coa/search";
@@ -153,7 +154,9 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
   }, [term, searchable, selected]);
 
   const suggestions = result && suggestOpen && searchable ? result.suggestions : [];
-  const dropdownOpen = suggestOpen && searchable && !error && (loading || result !== null);
+  // The list opens only to show suggestions (or "Searching…" while the first answer is on its way). When nothing
+  // matches it stays shut, and the one no-results message below says so — never two messages for the same thing.
+  const dropdownOpen = suggestOpen && searchable && !error && (suggestions.length > 0 || loading);
   const total = result ? result.exact.length + result.current.length + result.recent.length : 0;
   const activeId = active >= 0 && active < suggestions.length ? `${baseId}-opt-${active}` : undefined;
 
@@ -198,10 +201,16 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
   return (
     <div className="font-sans">
       <div className="relative">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-        </svg>
+        {/* Inside the field, left to right: the navy-and-gold emblem (VeriCert-Emblem-Navy-Gold.svg, 24px tall at its
+            own 30.01 × 30.52 proportions), the gray magnifying glass, then the text — which starts at 66px, clear of
+            both. Identical in both entry points (header panel and Every Lot Certified). */}
+        <span className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5" aria-hidden="true">
+          <Image src="/VeriCert-Emblem-Navy-Gold.svg" alt="" width={300} height={305} unoptimized className="h-6 w-auto shrink-0" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4 shrink-0 text-muted">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+          </svg>
+        </span>
         <input
           ref={inputRef}
           type="search"
@@ -224,7 +233,7 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
           aria-autocomplete="list"
           aria-activedescendant={activeId}
           aria-label={inputLabel}
-          className="w-full border border-control bg-paper py-3 pl-11 pr-4 font-sans text-base text-navy placeholder:text-muted focus:border-gold-ink focus:outline-none focus-visible:ring-1 focus-visible:ring-gold-ink"
+          className="w-full border border-control bg-paper py-3 pl-[66px] pr-4 font-sans text-base text-navy placeholder:text-muted focus:border-gold-ink focus:outline-none focus-visible:ring-1 focus-visible:ring-gold-ink"
         />
       </div>
 
@@ -266,7 +275,7 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
             </ul>
           ) : (
             <p id={listId} role="status" className="px-4 py-3 text-sm text-muted">
-              {loading ? "Searching…" : "No suggestions for this search."}
+              Searching…
             </p>
           )}
         </div>
@@ -288,9 +297,9 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
           />
         )}
 
-        {!error && !selected && result && !loading && total === 0 && (
-          // Honest empty state: nothing has been published for this search. Not an error, and no hint that a
-          // certificate should have turned up.
+        {!error && !selected && result && !loading && total === 0 && result.suggestions.length === 0 && (
+          // Honest empty state, shown only when nothing at all matches: no certificate and no suggestion. When there
+          // are suggestions (including signed-in "No published certificate" rows) they speak for themselves.
           <p className="text-muted">
             No published certificate matches &ldquo;{result.query}&rdquo;. Certificates are published as each lot is released.
           </p>

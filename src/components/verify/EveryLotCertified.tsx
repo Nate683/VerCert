@@ -51,15 +51,16 @@ export function EveryLotCertified() {
             </p>
             {/* The motto in the body family (Inter), upright and semibold, in the accessible text gold. */}
             <p className="mt-5 font-sans text-base font-semibold leading-snug tracking-[0.01em] text-gold-ink sm:text-lg">
-              Don&apos;t just trust our brand. Verify our standards.
+              &ldquo;Don&rsquo;t just trust our brand. Verify our standards.&rdquo;
             </p>
           </div>
         </div>
       </div>
-      {/* The search sits just under the photograph, on white (never over the image). The bottom padding leaves the
-          suggestions and results room to open in the flow of the page, so nothing is clipped. */}
+      {/* The search sits just under the photograph, on white (never over the image). Suggestions and results open in
+          the normal flow of the page and push the content below down, so nothing is clipped or overlapped; idle, the
+          section stays compact. */}
       <div ref={searchWrap} className="scroll-mt-32 border-t border-hairline bg-paper">
-        <div className="mx-auto max-w-5xl px-6 pb-8 pt-5 sm:pt-6 lg:px-10">
+        <div className="mx-auto max-w-5xl px-6 pb-2 pt-2.5 sm:pt-3 lg:px-10">
           <VerifySearch ref={search} label="Search certificates by lot number or compound" />
         </div>
       </div>

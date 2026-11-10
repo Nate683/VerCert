@@ -99,8 +99,9 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
         Search the catalog by name or CAS number
       </label>
       {/* A light tint of the header navy (not the old near-black well), a hairline edge, and a placeholder bright
-          enough to read (about 5:1 on this ground). Body family, like the rest of the header. */}
-      <div className="flex items-center gap-2 border border-white/20 bg-white/[0.07] px-3 font-sans transition-colors hover:border-white/30 focus-within:border-gold">
+          enough to read on this ground (lifted slightly: ground 7% → 10% white, placeholder 60% → 72% white). Body
+          family, like the rest of the header. */}
+      <div className="flex items-center gap-2 border border-white/20 bg-white/[0.10] px-3 font-sans transition-colors hover:border-white/30 focus-within:border-gold">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-4 w-4 shrink-0 text-white/60" aria-hidden="true">
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-3.5-3.5" strokeLinecap="round" />
@@ -121,12 +122,12 @@ export function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
             setOpen(true);
           }}
           onKeyDown={handleKeyDown}
-          placeholder="Search name or CAS number"
+          placeholder="Search name or CAS #"
           aria-expanded={showPanel}
           aria-controls="catalog-search-results"
           role="combobox"
           aria-autocomplete="list"
-          className="w-full min-w-0 bg-transparent py-2.5 font-sans text-[13px] text-white placeholder:text-white/60 focus:outline-none"
+          className="w-full min-w-0 bg-transparent py-2.5 font-sans text-[13px] text-white placeholder:text-white/[0.72] focus:outline-none"
         />
         {query && (
           <button

@@ -82,9 +82,9 @@ export function Header() {
 
         {/* PRODUCT search (catalog only — a separate component and data source from the certificate search above).
             The catalog is for signed-in customers, so it only appears once someone is signed in; the wrapper stays
-            either way to hold the layout. On desktop it takes the width left between VERIFY BEFORE YOU BUY and the
-            account controls, within limits, and never shrinks below a usable width. */}
-        <div className="ml-auto hidden w-full max-w-xs md:block xl:ml-2 xl:min-w-[10.5rem] xl:max-w-[16rem] xl:flex-1">{user && <SearchBox />}</div>
+            either way to hold the layout. On desktop it is sized to its content: the icon, the whole placeholder
+            ("Search name or CAS #") and a little padding — no wider. */}
+        <div className="ml-auto hidden w-full max-w-xs md:block xl:ml-2 xl:w-[12.25rem] xl:max-w-none xl:shrink-0">{user && <SearchBox />}</div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
           {user?.role && (
