@@ -10,7 +10,9 @@ import type { Laboratory } from "./types";
 //   bare search URL (a path ending in /search or a query holding nothing but a search term);
 // - and it must identify this certificate: the laboratory report number or the VeriCert lot number appears in the
 //   link itself, or (checked on the server, lib/coa/url-check.ts) on the page the link opens.
-// Anything else is invalid, and the public site then says plainly that online verification is unavailable.
+// Anything else is invalid: it blocks approval (lib/coa/validate.ts) and is never shown publicly; a certificate
+// without a usable link simply shows no verification link. The one exception, a Vanguard record page the server
+// check can't read, is defined in lib/coa/lab-record-rules.ts.
 // This function is the structural part; a link is only marked valid after the server-side check.
 
 export type UrlCheck = { ok: true; identifierInUrl: boolean } | { ok: false; reason: string };

@@ -1,8 +1,9 @@
 import type { PublicCertificate } from "@/lib/coa/types";
 
 // The certificate actions, used everywhere a certificate is shown (search results and the permanent lot page).
-// VIEW VERICERT COA opens the original laboratory PDF from our storage; VERIFY AT LABORATORY opens the laboratory's
-// own record for this certificate, in a new tab. When both exist they carry equal weight.
+// VIEW VERICERT COA opens the original laboratory PDF from our storage; VERIFY AT LAB opens the laboratory's own
+// record for this certificate, in a new tab. When both exist they carry equal weight. "Verify at Lab" (not
+// "…Laboratory") keeps the label on one line when the two buttons share the 384px search-results column (188px each).
 //
 // With a laboratory link, the report number and VeriCert lot are shown exactly as stored on our record (whitespace
 // preserved, nothing reformatted) with a note telling the visitor how to check it at the laboratory. The note never
@@ -27,7 +28,7 @@ export function CertificateActions({
         )}
         {cert.verificationUrl && (
           <a href={cert.verificationUrl} target="_blank" rel="noopener noreferrer" className={BUTTON}>
-            Verify at Laboratory
+            Verify at Lab
           </a>
         )}
       </div>

@@ -126,7 +126,7 @@ export function validateRecord(
   if (record.verificationUrl && record.verificationStatus !== "valid" && isUnreadableLabRecord(record, ctx.labs)) {
     warn("verification_link_manual", `The laboratory's page can't be read automatically. Open the link and confirm it shows report ${record.labReportId ?? "—"} before approving.`);
   } else if (record.verificationUrl && record.verificationStatus !== "valid") {
-    err("verification_link", `The laboratory verification link is ${record.verificationStatus === "invalid" ? "invalid" : "not checked yet"}${record.verificationNote ? `: ${record.verificationNote}` : ""}. Check it, or remove it so the site says online verification is unavailable.`);
+    err("verification_link", `The laboratory verification link is ${record.verificationStatus === "invalid" ? "invalid" : "not checked yet"}${record.verificationNote ? `: ${record.verificationNote.replace(/\.\s*$/, "")}` : ""}. The link must pass before approval. If it hasn't been checked, press Check link. If it points to the wrong record, correct it and check it again. Clear it only if this certificate has no record on the laboratory's site; the public page then shows no verification link.`);
   }
 
   // Extraction findings the administrator should see.
