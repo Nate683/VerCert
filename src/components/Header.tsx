@@ -37,7 +37,7 @@ export function Header() {
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-[7.15px] sm:gap-4 sm:px-6 sm:py-[10.6px] lg:px-10">
         <Link
           href="/"
-          className="flex h-[58.32px] shrink-0 items-center sm:h-[64.8px] xl:mr-2"
+          className="flex h-[58.32px] shrink-0 items-center max-sm:min-w-0 max-sm:shrink sm:h-[64.8px] xl:mr-2"
           aria-label="VeriCert home"
         >
           {/* The one-colour gray-and-gold lockup, as a vector. The artwork
@@ -49,7 +49,11 @@ export function Header() {
               -translate-y-[6px] lifts the artwork optically; from xl, where the
               nav labels sit beside it, 10px puts the gap between VeriCert and
               PEPTIDES at about SHOP's centreline. A transform, so the layout
-              and header height don't move. */}
+              and header height don't move.
+              Sized by width (119.63px = the 57.37px height × 282/135.24) with max-w-full: below sm the link may
+              shrink (max-sm:shrink + min-w-0), so on a 320px phone with ACCOUNT, cart and menu the logo scales
+              down (~101px) instead of pushing the menu button past the screen edge. Wherever the row has room it
+              stays full size; from sm the link is shrink-0 as before. */}
           <Image
             src="/VeriCert-Peptides-One-Color-Gray-Gold.svg"
             alt="VeriCert Peptides"
@@ -57,7 +61,7 @@ export function Header() {
             height={135}
             unoptimized
             priority
-            className="mt-[2.92px] h-[57.37px] w-auto -translate-y-[6px] xl:-translate-y-[10px]"
+            className="mt-[2.92px] h-auto w-[119.63px] max-w-full -translate-y-[6px] xl:-translate-y-[10px]"
           />
         </Link>
 
