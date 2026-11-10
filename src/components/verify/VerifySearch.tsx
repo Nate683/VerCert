@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 import type { SearchResult, Suggestion } from "@/lib/coa/search";
 import { LOT_AVAILABILITY_LABELS, type PublicCertificate } from "@/lib/coa/types";
 import { CertificateActions } from "./CertificateActions";
@@ -19,6 +19,18 @@ import { CertificateActions } from "./CertificateActions";
 export type VerifySearchHandle = { focus: () => void };
 
 const NO_CERTIFICATE = "No published certificate is currently available for this selection.";
+
+// The full placeholder is cut off on a phone, so below sm (640px) a shorter one is used. A placeholder is an
+// attribute, not styleable by CSS, so this reads the media query; the server render uses the full text.
+const PLACEHOLDER = "Compound, strength, SKU or lot number — e.g. BPC-157 10mg";
+const PLACEHOLDER_SHORT = "Compound, SKU or lot"; // fits a 320px phone (strength still matches; it's just not named)
+const NARROW = "(max-width: 639px)";
+function subscribeNarrow(onChange: () => void) {
+  const mq = window.matchMedia(NARROW);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+const useNarrow = () => useSyncExternalStore(subscribeNarrow, () => window.matchMedia(NARROW).matches, () => false);
 
 function formatDate(d: string | null): string {
   if (!d) return "—";
@@ -96,6 +108,7 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [selected, setSelected] = useState<Suggestion | null>(null);
+  const narrow = useNarrow();
 
   useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }), []);
   useEffect(() => {
@@ -202,7 +215,7 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
           onFocus={() => setSuggestOpen(true)}
           onBlur={() => setSuggestOpen(false)}
           onKeyDown={onKeyDown}
-          placeholder="Compound, strength, SKU or lot number — e.g. BPC-157 10mg"
+          placeholder={narrow ? PLACEHOLDER_SHORT : PLACEHOLDER}
           autoComplete="off"
           spellCheck={false}
           role="combobox"
