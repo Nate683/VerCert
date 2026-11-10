@@ -2,10 +2,11 @@ import { listProducts } from "@/lib/products/store";
 import { withStock } from "@/lib/inventory";
 import { availabilityStatus } from "@/lib/products/availability";
 import type { Product } from "@/lib/types";
-import { listPublishedRecords } from "./store";
+import { listLabs, listPublishedRecords } from "./store";
+import { isUnreadableLabRecord } from "./lab-record-rules";
 import { pricedSizes } from "@/lib/products/pricing";
 import { searchCertificates, type CatalogCandidate, type Searchable, type SearchResult } from "./search";
-import type { CoaRecord, LotAvailability, PublicCertificate } from "./types";
+import type { CoaRecord, Laboratory, LotAvailability, PublicCertificate } from "./types";
 
 // Server-only. What the public can see of the certificate records, and nothing more.
 //
@@ -33,7 +34,7 @@ export function lotAvailability(record: CoaRecord, product: Product | undefined)
   return sold ? "available" : "unavailable";
 }
 
-export function toPublic(record: CoaRecord, product: Product | undefined): PublicCertificate {
+export function toPublic(record: CoaRecord, product: Product | undefined, labs: Laboratory[]): PublicCertificate {
   return {
     id: record.id,
     lotNumber: record.lotNumber ?? "",
@@ -49,18 +50,20 @@ export function toPublic(record: CoaRecord, product: Product | undefined): Publi
     quantityResult: record.quantityResult,
     availability: lotAvailability(record, product),
     hasPdf: Boolean(record.fileId),
-    // Only a link the server checked and marked valid. Otherwise the site says verification is unavailable.
-    verificationUrl: record.verificationStatus === "valid" ? record.verificationUrl : null,
+    // A link the server checked and marked valid, or a laboratory record the check can't read but which meets every
+    // fixed condition in lib/coa/lab-record-rules.ts (the same rule that let it be approved). Otherwise no link.
+    verificationUrl: record.verificationStatus === "valid" || isUnreadableLabRecord(record, labs) ? record.verificationUrl : null,
   };
 }
 
-async function publishedWithProducts(): Promise<{ record: CoaRecord; product: Product | undefined }[]> {
-  const [records, products] = await Promise.all([
+async function publishedWithProducts(): Promise<{ record: CoaRecord; product: Product | undefined; labs: Laboratory[] }[]> {
+  const [records, products, labs] = await Promise.all([
     listPublishedRecords(includeTestRecords()),
     listProducts({ includeInactive: true }).then(withStock),
+    listLabs(),
   ]);
   const bySlug = new Map(products.map((p) => [p.slug, p]));
-  return records.map((record) => ({ record, product: record.productSlug ? bySlug.get(record.productSlug) : undefined }));
+  return records.map((record) => ({ record, product: record.productSlug ? bySlug.get(record.productSlug) : undefined, labs }));
 }
 
 // `signedIn` adds "no published certificate" suggestions for catalog strengths. The catalog is gated (proxy.ts), so
@@ -68,7 +71,7 @@ async function publishedWithProducts(): Promise<{ record: CoaRecord; product: Pr
 // sizes — names, aliases and strengths only. A signed-out search never reads the catalog at all.
 export async function searchPublic(q: string, options: { signedIn?: boolean } = {}): Promise<SearchResult> {
   const [rows, catalog] = await Promise.all([publishedWithProducts(), options.signedIn ? listProducts() : Promise.resolve([])]);
-  const items: Searchable[] = rows.map(({ record, product }) => ({ ...toPublic(record, product), aliases: product?.alternateNames ?? [] }));
+  const items: Searchable[] = rows.map(({ record, product, labs }) => ({ ...toPublic(record, product, labs), aliases: product?.alternateNames ?? [] }));
   const candidates: CatalogCandidate[] = catalog.flatMap((p) => {
     const sizes = pricedSizes(p);
     return (sizes.length ? sizes.map((s) => s.label) : [null]).map((sizeLabel) => ({
@@ -86,7 +89,7 @@ export async function publicCertificatesForLot(lot: string): Promise<PublicCerti
   const rows = await publishedWithProducts();
   return rows
     .filter(({ record }) => norm(record.lotNumber) === norm(lot))
-    .map(({ record, product }) => toPublic(record, product))
+    .map(({ record, product, labs }) => toPublic(record, product, labs))
     .sort((a, b) => (b.issuedOn ?? "").localeCompare(a.issuedOn ?? ""));
 }
 

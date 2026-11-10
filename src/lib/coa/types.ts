@@ -146,5 +146,5 @@ export type PublicCertificate = {
   quantityResult: string | null;
   availability: LotAvailability;
   hasPdf: boolean;
-  verificationUrl: string | null; // only a validated, exact laboratory record
+  verificationUrl: string | null; // a validated laboratory record, or one allowed by lib/coa/lab-record-rules.ts
 };

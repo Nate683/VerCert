@@ -1,4 +1,5 @@
 import { criteriaFor, evaluateCriteria, type CriterionCheck } from "./criteria";
+import { isUnreadableLabRecord } from "./lab-record-rules";
 import type { AcceptanceCriteria, CoaRecord, Laboratory } from "./types";
 
 // Everything that decides whether a certificate record may be approved. Pure; client-safe.
@@ -119,8 +120,12 @@ export function validateRecord(
     else if (t.status === "requires_review" || t.status === "pending") err(`test_open_${t.key}`, `${t.name} is "${t.status.replace("_", " ")}". Set its status from the certificate before approving.`);
   }
 
-  // Verification link.
-  if (record.verificationUrl && record.verificationStatus !== "valid") {
+  // Verification link. A link the automatic check can't read (a Vanguard per-certificate record that loads but is
+  // rendered in the browser — every condition in lib/coa/lab-record-rules.ts) doesn't block approval: the approver
+  // opens it and compares. Every other link must have been checked and marked valid.
+  if (record.verificationUrl && record.verificationStatus !== "valid" && isUnreadableLabRecord(record, ctx.labs)) {
+    warn("verification_link_manual", `The laboratory's page can't be read automatically. Open the link and confirm it shows report ${record.labReportId ?? "—"} before approving.`);
+  } else if (record.verificationUrl && record.verificationStatus !== "valid") {
     err("verification_link", `The laboratory verification link is ${record.verificationStatus === "invalid" ? "invalid" : "not checked yet"}${record.verificationNote ? `: ${record.verificationNote}` : ""}. Check it, or remove it so the site says online verification is unavailable.`);
   }
 
