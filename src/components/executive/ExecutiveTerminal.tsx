@@ -182,7 +182,7 @@ export function ExecutiveTerminal({
         <nav
           role="tablist"
           aria-label="Terminal sections"
-          className="flex items-end gap-x-1 overflow-x-auto border-b border-[var(--x-border)] lg:flex-wrap lg:overflow-visible"
+          className="flex flex-wrap items-end gap-x-1 border-b border-[var(--x-border)]"
         >
           {TABS.map((t) => (
             <button
