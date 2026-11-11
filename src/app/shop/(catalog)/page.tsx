@@ -16,7 +16,12 @@ export const metadata = buildMetadata({
 // Products tab, so this page is rendered on demand rather than prebuilt.
 export const dynamic = "force-dynamic";
 
-export default async function ShopPage() {
+export default async function ShopPage({ searchParams }: { searchParams: Promise<{ q?: string | string[] }> }) {
+  // ?q= (a search started from the header's SEE ALL RESULTS) is read here and passed down, rather than read with
+  // useSearchParams in the client: that hook suspends during server rendering, which streamed a skeleton first and
+  // swapped the catalog in a moment later (the flash on load and refresh).
+  const { q } = await searchParams;
+  const urlQuery = typeof q === "string" ? q : "";
   const [products, orderingEnabled] = await Promise.all([
     listProducts().then(withStock).then(withCertifiedPurity),
     isOrderingEnabled(),
@@ -34,7 +39,7 @@ export default async function ShopPage() {
         </p>
       </div>
       <div className="pt-8">
-        <ShopClient products={products.map(toStorefrontProduct)} orderingEnabled={orderingEnabled} />
+        <ShopClient products={products.map(toStorefrontProduct)} orderingEnabled={orderingEnabled} urlQuery={urlQuery} />
       </div>
     </div>
   );

@@ -32,7 +32,8 @@ export default async function AboutPage() {
 
         {/* Motto: the page's own serif, set apart by size and colour only. */}
         <p className="mt-16 text-center font-serif text-xl text-gold-ink sm:text-2xl">
-          Don&apos;t just trust our brand. Verify our standards.
+          {/* Same typographic quotes and apostrophe as the Every Lot Certified motto on /how-we-test. */}
+          &ldquo;Don&rsquo;t just trust our brand. Verify our standards.&rdquo;
         </p>
 
         <section className="pt-20">

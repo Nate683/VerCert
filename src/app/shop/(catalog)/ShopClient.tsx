@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { CATEGORIES } from "@/lib/products";
 import { pricedSizes } from "@/lib/products/pricing";
 import type { Product } from "@/lib/types";
@@ -36,20 +35,17 @@ function matchesQuery(product: Product, query: string): boolean {
   return searchScore(product, query) !== null;
 }
 
-export function ShopClient({ products, orderingEnabled }: { products: Product[]; orderingEnabled: boolean }) {
-  return (
-    <Suspense fallback={<CatalogSkeleton />}>
-      <ShopCatalog products={products} orderingEnabled={orderingEnabled} />
-    </Suspense>
-  );
+// urlQuery is ?q=, read by the server page (page.tsx) — not useSearchParams, which suspends during server rendering
+// and made the catalog stream in behind a skeleton. Every navigation to /shop?q=… re-renders the page, so a new
+// search arrives here as a new urlQuery.
+export function ShopClient({ products, orderingEnabled, urlQuery }: { products: Product[]; orderingEnabled: boolean; urlQuery: string }) {
+  return <ShopCatalog products={products} orderingEnabled={orderingEnabled} urlQuery={urlQuery} />;
 }
 
-function ShopCatalog({ products, orderingEnabled }: { products: Product[]; orderingEnabled: boolean }) {
-  const searchParams = useSearchParams();
+function ShopCatalog({ products, orderingEnabled, urlQuery }: { products: Product[]; orderingEnabled: boolean; urlQuery: string }) {
   // A search started from the header lands here as ?q= — pick it up so the
   // customer sees the same query they typed, already applied. Adjusted during
   // render rather than in an effect, so the first paint is already filtered.
-  const urlQuery = searchParams.get("q") ?? "";
   const [appliedUrlQuery, setAppliedUrlQuery] = useState(urlQuery);
   const [query, setQuery] = useState(urlQuery);
   if (urlQuery !== appliedUrlQuery) {
@@ -262,19 +258,3 @@ function ShopCatalog({ products, orderingEnabled }: { products: Product[]; order
   );
 }
 
-function CatalogSkeleton() {
-  return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-      {[0, 1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="border border-hairline">
-          <div className="skeleton aspect-square w-full" />
-          <div className="space-y-3 p-6">
-            <div className="skeleton h-3 w-24" />
-            <div className="skeleton h-5 w-40" />
-            <div className="skeleton h-3 w-28" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}

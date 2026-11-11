@@ -61,7 +61,12 @@ export function EveryLotCertified() {
           section stays compact. */}
       <div ref={searchWrap} className="scroll-mt-32 border-t border-hairline bg-paper">
         <div className="mx-auto max-w-5xl px-6 pb-2 pt-2.5 sm:pt-3 lg:px-10">
-          <VerifySearch ref={search} label="Search certificates by lot number or compound" />
+          {/* Desktop only (lg, 1024px+): the whole search — field, suggestions, message and results — is one 710px
+              column, centred (about 75% of the 944px column), so everything under the field lines up with it. Below lg
+              the layout is unchanged (full column width). */}
+          <div className="lg:mx-auto lg:max-w-[710px]">
+            <VerifySearch ref={search} label="Search certificates by lot number or compound" />
+          </div>
         </div>
       </div>
     </section>

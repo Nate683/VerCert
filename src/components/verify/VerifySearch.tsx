@@ -12,7 +12,8 @@ import { CertificateActions } from "./CertificateActions";
 // No sign-in. Type a compound, SKU, strength or lot number; suggestions appear as you type. A suggestion either
 // has published certificates behind it (choosing it shows them, each with its certificate actions) or is a catalog
 // strength with no published certificate (choosing it says so, neutrally). The endpoint returns approved,
-// published, non-test certificates only; catalog rows come only for a signed-in visitor (the catalog is gated).
+// published, non-test certificates only. Catalog rows are the same for everyone, signed in or not, and carry only
+// compound, strength and SKU — no price, stock, product link or certificate data (lib/coa/public.ts).
 //
 // This is a separate component and data source from the header's product search (components/SearchBox.tsx), which
 // searches the catalog only. Neither falls through to the other.
@@ -41,7 +42,7 @@ function formatDate(d: string | null): string {
 const label = (s: { compoundName: string; sizeLabel: string | null }) => `${s.compoundName}${s.sizeLabel ? ` ${s.sizeLabel}` : ""}`;
 
 function suggestionMeta(s: Suggestion): string | null {
-  if (s.kind !== "certificate") return null;
+  if (s.kind === "catalog") return s.sku ? `SKU ${s.sku}` : null;
   const lots = s.lotNumbers.length === 1 ? `Lot ${s.lotNumbers[0]}` : s.lotNumbers.length > 1 ? `${s.lotNumbers.length} lots` : null;
   const sku = s.skus.length === 1 ? `SKU ${s.skus[0]}` : null;
   return [lots, sku].filter(Boolean).join(" · ") || null;

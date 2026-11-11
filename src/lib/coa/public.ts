@@ -66,11 +66,17 @@ async function publishedWithProducts(): Promise<{ record: CoaRecord; product: Pr
   return records.map((record) => ({ record, product: record.productSlug ? bySlug.get(record.productSlug) : undefined, labs }));
 }
 
-// `signedIn` adds "no published certificate" suggestions for catalog strengths. The catalog is gated (proxy.ts), so
-// it is drawn from exactly what /api/catalog gives a signed-in customer: active, on-sale products and their priced
-// sizes — names, aliases and strengths only. A signed-out search never reads the catalog at all.
-export async function searchPublic(q: string, options: { signedIn?: boolean } = {}): Promise<SearchResult> {
-  const [rows, catalog] = await Promise.all([publishedWithProducts(), options.signedIn ? listProducts() : Promise.resolve([])]);
+// Public certificate search, identical for every visitor (signed in or not — public certificate lookup needs no
+// account). Two sources:
+//  - certificates: approved, published, non-test records only (publishedWithProducts);
+//  - "no published certificate" suggestions for catalog strengths, from the active, on-sale products (the same set
+//    customers can buy). Only the name, aliases and strength labels are read into the matcher, plus a SKU built the
+//    way certificate SKUs are (lib/coa/admin.ts: slug-strength, upper case). The public suggestion built from them
+//    carries compound, strength and SKU only — never price, stock, slug or a link (lib/coa/search.ts).
+// The catalog API itself (/api/catalog) stays gated; this reads the product store server-side and returns nothing
+// else from it.
+export async function searchPublic(q: string): Promise<SearchResult> {
+  const [rows, catalog] = await Promise.all([publishedWithProducts(), listProducts()]);
   const items: Searchable[] = rows.map(({ record, product, labs }) => ({ ...toPublic(record, product, labs), aliases: product?.alternateNames ?? [] }));
   const candidates: CatalogCandidate[] = catalog.flatMap((p) => {
     const sizes = pricedSizes(p);
@@ -79,6 +85,7 @@ export async function searchPublic(q: string, options: { signedIn?: boolean } = 
       aliases: p.alternateNames ?? [],
       productSlug: p.slug,
       sizeLabel,
+      sku: sizeLabel ? `${p.slug}-${sizeLabel}`.toUpperCase().replace(/\s+/g, "") : null,
     }));
   });
   return searchCertificates(q, items, new Date().toISOString().slice(0, 10), candidates);

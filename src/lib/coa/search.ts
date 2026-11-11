@@ -12,13 +12,15 @@ import type { PublicCertificate } from "./types";
 
 export type Searchable = PublicCertificate & { aliases: string[] };
 
-// A catalog product strength with no published certificate. Only ever built from the signed-in catalog (the same
-// active, priced products /api/catalog serves); it carries no certificate fields at all.
+// A catalog product strength with no published certificate, built server-side from the active, on-sale products
+// (lib/coa/public.ts). productSlug and aliases are used for matching only and never leave the server; the public
+// suggestion built from it carries compound, strength and SKU only.
 export type CatalogCandidate = {
   compoundName: string;
   aliases: string[];
   productSlug: string;
   sizeLabel: string | null;
+  sku: string | null;
 };
 
 // One autocomplete row, grouped by compound + strength. "certificate" rows are backed by published certificates in
@@ -34,7 +36,7 @@ export type Suggestion =
       lotNumbers: string[];
       certificateIds: string[];
     }
-  | { kind: "catalog"; key: string; compoundName: string; sizeLabel: string | null };
+  | { kind: "catalog"; key: string; compoundName: string; sizeLabel: string | null; sku: string | null };
 
 export type SearchResult = {
   query: string;
@@ -137,8 +139,8 @@ const byCompound = (a: PublicCertificate, b: PublicCertificate) =>
 
 const strip = ({ aliases: _a, ...cert }: Searchable): PublicCertificate => { void _a; return cert; };
 
-// `catalog` (optional) lists catalog product strengths for "no published certificate" suggestions. Pass it only for
-// a signed-in visitor: the catalog itself is gated (proxy.ts), so a signed-out visitor sees certificate rows only.
+// `catalog` (optional) lists catalog product strengths for "no published certificate" suggestions — the same for
+// every visitor. Their rows expose compound, strength and SKU only (no slug, price, stock or link).
 export function searchCertificates(raw: string, items: Searchable[], today: string, catalog: CatalogCandidate[] = []): SearchResult {
   const query = raw.trim().slice(0, 80);
   const empty: SearchResult = { query, exact: [], current: [], recent: [], suggestions: [] };
@@ -198,7 +200,10 @@ export function searchCertificates(raw: string, items: Searchable[], today: stri
   for (const { c, key } of catalogRows) {
     if (suggestions.length >= MAX_SUGGESTIONS) break;
     if (suggestions.some((s) => s.key === key)) continue;
-    suggestions.push({ kind: "catalog", key, compoundName: c.compoundName, sizeLabel: c.sizeLabel });
+    // The public row's key is built from the name and strength, not the internal product slug.
+    const publicKey = `catalog|${nameKey(c.compoundName, c.sizeLabel)}`;
+    if (suggestions.some((s) => s.key === publicKey)) continue;
+    suggestions.push({ kind: "catalog", key: publicKey, compoundName: c.compoundName, sizeLabel: c.sizeLabel, sku: c.sku });
   }
 
   return { query, exact: exact.map(strip).sort(byCompound), current, recent, suggestions };
