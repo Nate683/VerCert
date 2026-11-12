@@ -38,11 +38,11 @@ function matchesQuery(product: Product, query: string): boolean {
 // urlQuery is ?q=, read by the server page (page.tsx) — not useSearchParams, which suspends during server rendering
 // and made the catalog stream in behind a skeleton. Every navigation to /shop?q=… re-renders the page, so a new
 // search arrives here as a new urlQuery.
-export function ShopClient({ products, orderingEnabled, urlQuery }: { products: Product[]; orderingEnabled: boolean; urlQuery: string }) {
-  return <ShopCatalog products={products} orderingEnabled={orderingEnabled} urlQuery={urlQuery} />;
+export function ShopClient({ products, urlQuery }: { products: Product[]; urlQuery: string }) {
+  return <ShopCatalog products={products} urlQuery={urlQuery} />;
 }
 
-function ShopCatalog({ products, orderingEnabled, urlQuery }: { products: Product[]; orderingEnabled: boolean; urlQuery: string }) {
+function ShopCatalog({ products, urlQuery }: { products: Product[]; urlQuery: string }) {
   // A search started from the header lands here as ?q= — pick it up so the
   // customer sees the same query they typed, already applied. Adjusted during
   // render rather than in an effect, so the first paint is already filtered.
@@ -231,7 +231,7 @@ function ShopCatalog({ products, orderingEnabled, urlQuery }: { products: Produc
           {filtered.length > 0 ? (
             <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((product) => (
-                <ProductCard key={product.slug} product={product} orderingEnabled={orderingEnabled} />
+                <ProductCard key={product.slug} product={product} />
               ))}
             </div>
           ) : (

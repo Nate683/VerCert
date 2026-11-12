@@ -10,15 +10,7 @@ import type { Product } from "@/lib/types";
 // drag-reorderable; dropping saves the new explicit order to
 // featured_products.slugs (auto-selection is "pinned" into an explicit list
 // the first time an admin reorders).
-export function HomeFeaturedGrid({
-  products,
-  pricingLocked = false,
-  orderingEnabled,
-}: {
-  products: Product[];
-  pricingLocked?: boolean;
-  orderingEnabled: boolean;
-}) {
+export function HomeFeaturedGrid({ products, pricingLocked = false }: { products: Product[]; pricingLocked?: boolean }) {
   const { execMode, beginSave, endSave } = useExecMode();
   const router = useRouter();
   const [order, setOrder] = useState(products.map((p) => p.slug));
@@ -66,10 +58,10 @@ export function HomeFeaturedGrid({
             onDrop={() => handleDrop(product.slug)}
             className="cursor-move outline-dashed outline-1 outline-transparent transition-colors hover:outline-gold/60"
           >
-            <ProductCard product={product} pricingLocked={pricingLocked} orderingEnabled={orderingEnabled} />
+            <ProductCard product={product} pricingLocked={pricingLocked} />
           </div>
         ) : (
-          <ProductCard key={product.slug} product={product} pricingLocked={pricingLocked} orderingEnabled={orderingEnabled} />
+          <ProductCard key={product.slug} product={product} pricingLocked={pricingLocked} />
         )
       )}
     </div>

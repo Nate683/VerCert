@@ -3,7 +3,6 @@ import { toStorefrontProduct } from "@/lib/products/storefront";
 import { withStock } from "@/lib/inventory";
 import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { ShopClient } from "./ShopClient";
-import { isOrderingEnabled } from "@/lib/ordering";
 import { buildMetadata } from "@/lib/seo";
 
 export const metadata = buildMetadata({
@@ -22,10 +21,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   // swapped the catalog in a moment later (the flash on load and refresh).
   const { q } = await searchParams;
   const urlQuery = typeof q === "string" ? q : "";
-  const [products, orderingEnabled] = await Promise.all([
-    listProducts().then(withStock).then(withCertifiedPurity),
-    isOrderingEnabled(),
-  ]);
+  const products = await listProducts().then(withStock).then(withCertifiedPurity);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
@@ -39,7 +35,7 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
         </p>
       </div>
       <div className="pt-8">
-        <ShopClient products={products.map(toStorefrontProduct)} orderingEnabled={orderingEnabled} urlQuery={urlQuery} />
+        <ShopClient products={products.map(toStorefrontProduct)} urlQuery={urlQuery} />
       </div>
     </div>
   );

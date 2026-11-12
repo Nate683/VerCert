@@ -10,7 +10,16 @@ import type { Product } from "@/lib/types";
 import type { BlendComponentInfo } from "@/lib/products/blend-components";
 import { VialGlyph } from "@/components/VialGlyph";
 import { intervalLabel, subscriptionUnitPrice } from "@/lib/subscriptions/rules";
-import { AVAILABILITY_LABELS, availabilityStatus, isPurchasable } from "@/lib/products/availability";
+import { AVAILABILITY_LABELS, availabilityStatus, isPurchasable, type AvailabilityStatus } from "@/lib/products/availability";
+
+// The purchase button's wording for a product that isn't In Stock (shown
+// disabled). Only the button's own words: the stored values and the status
+// labels elsewhere (AVAILABILITY_LABELS) are unchanged.
+const UNAVAILABLE_BUTTON_LABELS: Record<Exclude<AvailabilityStatus, "in_stock">, string> = {
+  coming_soon: "Coming Soon",
+  pending_testing: "In Independent Testing",
+  out_of_stock: "Out of Stock",
+};
 
 export function AddToCartPanel({
   product,
@@ -274,6 +283,9 @@ export function AddToCartPanel({
           )}
         </div>
 
+        {/* Quantity and the running total are purchase controls: shown only
+            while the selected size can actually be added. The price stays. */}
+        {purchasable && (
         <div>
           <label
             htmlFor="quantity"
@@ -313,22 +325,27 @@ export function AddToCartPanel({
             </button>
           </div>
         </div>
+        )}
       </div>
 
-      {nextTier && (
+      {purchasable && nextTier && (
         <p className="mt-4 border border-gold/25 bg-gold/5 px-3 py-2 text-xs text-muted">
           Add {nextTier.minQuantity - quantity} more to pay ${nextTier.priceUsd.toFixed(2)} each.
         </p>
       )}
 
-      <div className="mt-5 flex items-baseline justify-between border-t border-hairline pt-4 text-sm">
-        <span className="text-muted">
-          Total{quantity > 1 ? ` (${quantity} × $${unitPrice.toFixed(2)})` : ""}
-        </span>
-        <span className="font-mono text-lg text-navy">${lineTotal.toFixed(2)}</span>
-      </div>
-      {saving > 0 && (
-        <p className="mt-1 text-right text-xs text-gold-ink">You save ${saving.toFixed(2)}</p>
+      {purchasable && (
+        <>
+          <div className="mt-5 flex items-baseline justify-between border-t border-hairline pt-4 text-sm">
+            <span className="text-muted">
+              Total{quantity > 1 ? ` (${quantity} × $${unitPrice.toFixed(2)})` : ""}
+            </span>
+            <span className="font-mono text-lg text-navy">${lineTotal.toFixed(2)}</span>
+          </div>
+          {saving > 0 && (
+            <p className="mt-1 text-right text-xs text-gold-ink">You save ${saving.toFixed(2)}</p>
+          )}
+        </>
       )}
 
       <button
@@ -338,7 +355,7 @@ export function AddToCartPanel({
         className="mt-5 w-full border border-gold bg-gold py-3 text-sm uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-gold-ink disabled:cursor-not-allowed disabled:border-hairline disabled:bg-surface disabled:text-muted"
       >
         {status !== "in_stock"
-          ? AVAILABILITY_LABELS[status]
+          ? UNAVAILABLE_BUTTON_LABELS[status]
           : outOfStock
             ? "Out of Stock"
             : !orderingEnabled

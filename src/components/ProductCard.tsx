@@ -7,7 +7,7 @@ import { ProductImage } from "./ProductImage";
 import { useExecMode } from "@/lib/exec-mode-context";
 import { productImageAlt, productImageSources } from "@/lib/products/images";
 import { pricedSizes } from "@/lib/products/pricing";
-import { availabilityLabel, availabilityStatus, isPurchasable } from "@/lib/products/availability";
+import { availabilityLabel, availabilityStatus } from "@/lib/products/availability";
 
 // The tile's unit price. One size (or the one a signed-out homepage tile
 // carries, see withPublicPrice): "$64.99 / 10mg vial". Several: the range,
@@ -25,19 +25,11 @@ function unitPrice(product: Product): string | null {
 
 // pricingLocked is for signed-out visitors: the tile shows at most one unit
 // price, and the whole tile leads to registration rather than the product page.
-// orderingEnabled is the site-wide ordering switch (lib/ordering.ts): with it,
-// the product's own status decides the button — SELECT OPTIONS when it can be
-// bought now (isPurchasable: In Stock, units left, ordering on), VIEW DETAILS
-// otherwise. Both go to the same product page.
-export function ProductCard({
-  product,
-  pricingLocked = false,
-  orderingEnabled,
-}: {
-  product: Product;
-  pricingLocked?: boolean;
-  orderingEnabled: boolean;
-}) {
+// Otherwise the button reads SELECT OPTIONS on every card, whatever the status:
+// it only opens the product page, where the size is chosen and the purchase
+// button reflects status, stock and the ordering switch. The card never adds
+// to the cart.
+export function ProductCard({ product, pricingLocked = false }: { product: Product; pricingLocked?: boolean }) {
   const { execMode, beginSave, endSave } = useExecMode();
   const [active, setActive] = useState(product.active ?? true);
   const [priceDraft, setPriceDraft] = useState(String(product.sizes[0]?.priceUsd ?? ""));
@@ -141,11 +133,7 @@ export function ProductCard({
             {/* A span, not a button: the whole tile is already one link, and a
                 nested interactive element would be invalid and unreachable. */}
             <span className="block border border-gold/50 px-4 py-2.5 text-center text-[11px] uppercase tracking-[0.18em] text-gold transition-colors group-hover:bg-gold group-hover:text-black">
-              {pricingLocked
-                ? "Verify Account to Order"
-                : active && isPurchasable(product, product.stock, orderingEnabled)
-                  ? "Select options"
-                  : "View details"}
+              {pricingLocked ? "Verify Account to Order" : "Select options"}
             </span>
           </div>
         </div>
