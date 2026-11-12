@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { NewsletterSignup } from "./NewsletterSignup";
 import { Watermark } from "./Watermark";
+import { LinkPending } from "./LinkPending";
 import { NEWSLETTER_DESCRIPTION, NEWSLETTER_NOTE } from "@/lib/newsletter/consent";
 import type { ContactContent } from "@/lib/site-content";
 
@@ -26,14 +27,16 @@ export function Footer({ contact }: { contact: ContactContent }) {
                 tighter-cropped artwork (297 × 147, art 267 × 118) at 134px wide
                 shows ≈120.5 × 53.2 of logo, 12.5% larger than the old padded
                 file did at 177px (107.2 × 47.3). Where the column is narrower
-                (around 1024px) it shrinks to fit, keeping its proportions. */}
+                (around 1024px) it shrinks to fit, keeping its proportions.
+                Phones (below sm, the one-column footer): 160.8px, 120% of the
+                134px; max-w-full still caps it at the column. */}
             <Image
               src="/VeriCert-Peptides-One-Color-Gold.svg"
               alt="VeriCert Peptides"
               width={297}
               height={147}
               unoptimized
-              className="h-auto w-[134px] max-w-full"
+              className="h-auto w-[134px] max-w-full max-sm:w-[160.8px]"
             />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
               Research compounds for laboratory use, with third-party
@@ -44,30 +47,30 @@ export function Footer({ contact }: { contact: ContactContent }) {
           <div>
             <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Shop</h4>
             <ul className="mt-2 space-y-0.5 text-sm text-white/60">
-              <li><Link href="/shop" className="inline-block py-2 hover:text-white">All Products</Link></li>
-              <li><Link href="/how-we-test" className="inline-block py-2 hover:text-white">How We Test</Link></li>
-              <li><Link href="/cart" className="inline-block py-2 hover:text-white">Cart</Link></li>
-              <li><Link href="/order-status" className="inline-block py-2 hover:text-white">Order Status</Link></li>
+              <li><Link href="/shop" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">All Products</LinkPending></Link></li>
+              <li><Link href="/how-we-test" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">How We Test</LinkPending></Link></li>
+              <li><Link href="/cart" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">Cart</LinkPending></Link></li>
+              <li><Link href="/order-status" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">Order Status</LinkPending></Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Company</h4>
             <ul className="mt-2 space-y-0.5 text-sm text-white/60">
-              <li><Link href="/about" className="inline-block py-2 hover:text-white">About</Link></li>
-              <li><Link href="/contact" className="inline-block py-2 hover:text-white">Contact</Link></li>
-              <li><Link href="/faq" className="inline-block py-2 hover:text-white">FAQ</Link></li>
+              <li><Link href="/about" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">About</LinkPending></Link></li>
+              <li><Link href="/contact" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">Contact</LinkPending></Link></li>
+              <li><Link href="/faq" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">FAQ</LinkPending></Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-xs uppercase tracking-[0.25em] text-gold">Legal</h4>
             <ul className="mt-2 space-y-0.5 text-sm text-white/60">
-              <li><Link href="/terms" className="inline-block py-2 hover:text-white">Terms of Sale</Link></li>
-              <li><Link href="/privacy-policy" className="inline-block py-2 hover:text-white">Privacy Policy</Link></li>
-              <li><Link href="/refund-policy" className="inline-block py-2 hover:text-white">Refund Policy</Link></li>
-              <li><Link href="/shipping-policy" className="inline-block py-2 hover:text-white">Shipping Policy</Link></li>
-              <li><Link href="/dashboard-policy" className="inline-block py-2 hover:text-white">Dashboard Policy</Link></li>
+              <li><Link href="/terms" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">Terms of Sale</LinkPending></Link></li>
+              <li><Link href="/privacy-policy" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">Privacy Policy</LinkPending></Link></li>
+              <li><Link href="/refund-policy" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">Refund Policy</LinkPending></Link></li>
+              <li><Link href="/shipping-policy" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">Shipping Policy</LinkPending></Link></li>
+              <li><Link href="/dashboard-policy" className="inline-block py-2 hover:text-white"><LinkPending tone="footer">Dashboard Policy</LinkPending></Link></li>
             </ul>
           </div>
 

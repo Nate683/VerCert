@@ -1270,3 +1270,43 @@ input[type="search"]::-webkit-search-cancel-button {
     margin-top: 0;
   }
 }
+
+/* Touch devices: no focus zoom on text entry (every page, storefront and
+   executive). iOS Safari magnifies the page when a focused field's text is
+   under 16px, and often leaves it magnified after the keyboard closes. Every
+   field here is 12–14px (text-sm / text-xs / text-[13px]), so on touch
+   screens they are raised to 16px. Zoom itself is never disabled: the
+   viewport stays user-scalable and pinch-to-zoom works as before.
+   - Scoped to touch-first devices, (hover: none) and (pointer: coarse), so
+     mouse and trackpad desktops keep their sizes exactly.
+   - Unlayered, so it beats Tailwind's text-* utilities. Fields already at
+     16px or more (text-base: the certificate searches; text-lg / text-2xl:
+     the 2FA code inputs) are left exactly as they are.
+   - line-height 1.25 = 20px at 16px, the line box text-sm already gave these
+     fields, so their heights do not change; fields with their own leading-*
+     keep it. */
+@media (hover: none) and (pointer: coarse) {
+  :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="submit"], [type="button"], [type="reset"], [type="image"], [type="hidden"]), textarea, select):not(.text-base, .text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl) {
+    font-size: 16px;
+  }
+  :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="submit"], [type="button"], [type="reset"], [type="image"], [type="hidden"]), textarea, select):not(.text-base, .text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl, [class*="leading-"]) {
+    line-height: 1.25;
+  }
+}
+
+/* Pending link (components/LinkPending.tsx): the tapped link, while its route
+   is still on its way from the server, shows the colour it would have on
+   hover. Static, no animation. The hamburger menu exists only below xl, so its
+   cue applies wherever it shows; the footer is shared with desktop, so its
+   cue is limited to touch screens (desktop keeps the hover it already has). */
+.link-pending-menu[data-pending] {
+  color: var(--gold);
+}
+.link-pending-exec[data-pending] {
+  color: var(--foreground);
+}
+@media (hover: none) and (pointer: coarse) {
+  .link-pending-footer[data-pending] {
+    color: var(--foreground);
+  }
+}

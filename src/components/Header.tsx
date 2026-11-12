@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 import Image from "next/image";
 import { SearchBox } from "./SearchBox";
 import { VerifyButton, VerifyPanel } from "./verify/VerifyHeader";
+import { LinkPending } from "./LinkPending";
 
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
@@ -25,6 +26,18 @@ export function Header() {
   const [openedAt, setOpenedAt] = useState<string | null>(null);
   const menuOpen = openedAt === pathname;
   const setMenuOpen = (open: boolean) => setOpenedAt(open ? pathname : null);
+  // Forget the menu once the route changes. Menu links no longer clear it on tap (see the menu below), and without
+  // this a later Back to the page it was opened on would show it open again. Adjusted during render (React's
+  // "storing information from previous renders"), so it is settled before paint, with no effect or timer.
+  const [menuPath, setMenuPath] = useState(pathname);
+  if (menuPath !== pathname) {
+    setMenuPath(pathname);
+    if (openedAt !== null) setOpenedAt(null);
+  }
+  // A menu link to the page already shown navigates nowhere new, so nothing else would close the menu.
+  const closeIfCurrent = (href: string) => {
+    if (href === pathname) setMenuOpen(false);
+  };
   // The VERIFY BEFORE YOU BUY search panel, keyed to the route the same way, so it closes on navigation.
   const [verifyAt, setVerifyAt] = useState<string | null>(null);
   const verifyOpen = verifyAt === pathname;
@@ -147,6 +160,11 @@ export function Header() {
 
       {verifyOpen && <VerifyPanel onClose={() => setVerifyAt(null)} />}
 
+      {/* Menu links do not close the menu on tap. The routes are rendered on demand, so the current page stays
+          until the server answers; closing first left that old page uncovered and looking frozen for most of a
+          second on a phone. The menu now stays put, the tapped link takes its hover colour (LinkPending), and the
+          menu closes when the new route commits (it is keyed to pathname, above), together with the new page
+          appearing. A tap on the page you are already on changes no pathname, so that one still closes it. */}
       {menuOpen && (
         <div className="pop-in border-t border-white/10 px-6 py-4 xl:hidden">
           {user && (
@@ -159,27 +177,27 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setMenuOpen(false)}
+                onClick={() => closeIfCurrent(link.href)}
                 className="border-b border-white/5 py-3 text-sm uppercase tracking-[0.15em] text-white/80 hover:text-gold"
               >
-                {link.label}
+                <LinkPending tone="menu">{link.label}</LinkPending>
               </Link>
             ))}
             {user?.role && (
               <Link
                 href={`/${user.role}`}
-                onClick={() => setMenuOpen(false)}
+                onClick={() => closeIfCurrent(`/${user.role}`)}
                 className="border-b border-white/5 py-3 text-sm uppercase tracking-[0.15em] text-gold hover:text-white"
               >
-                Executive
+                <LinkPending tone="exec">Executive</LinkPending>
               </Link>
             )}
             <Link
               href={user ? "/account" : "/login"}
-              onClick={() => setMenuOpen(false)}
+              onClick={() => closeIfCurrent(user ? "/account" : "/login")}
               className="py-3 text-sm uppercase tracking-[0.15em] text-white/80 hover:text-gold"
             >
-              {user ? "Account" : "Sign In"}
+              <LinkPending tone="menu">{user ? "Account" : "Sign In"}</LinkPending>
             </Link>
           </nav>
         </div>

@@ -73,7 +73,7 @@ const COA_FIELDS: { field: string; meaning: string | null }[] = [
   },
   {
     field: "Appearance",
-    meaning: "The physical description of the material as received — colour, form, and condition of the lyophilised cake or powder.",
+    meaning: "The physical description of the material as received — color, form, and condition of the lyophilized cake or powder.",
   },
   { field: "Additional Quality Testing", meaning: null },
 ];

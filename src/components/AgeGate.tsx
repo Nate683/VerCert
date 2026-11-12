@@ -117,8 +117,11 @@ export function AgeGate() {
           aria-describedby="age-gate-body"
           className="w-full max-w-lg border border-hairline bg-paper px-7 py-10 text-center shadow-2xl sm:px-10"
         >
-          {/* 20% larger than the old h-11 (44px). */}
-          <VeriCertLogo className="mx-auto h-[52.8px] w-auto" ground="light" />
+          {/* 225% of the previous size (52.8px tall ≈ 120px wide): 270px wide,
+              h-auto keeps the 441:194 artwork ratio. max-w-full caps it at the
+              card's content width, so on the narrowest phones (224px of room at
+              320px) it scales down instead of overflowing. */}
+          <VeriCertLogo className="mx-auto h-auto w-[270px] max-w-full" ground="light" />
 
           <p className="mt-7 text-xs uppercase tracking-[0.35em] text-gold-ink">
             Research Use Only

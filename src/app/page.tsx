@@ -107,12 +107,14 @@ export default async function Home() {
               height, centred on it. It spans the hero's full width (100cqw of
               the section, which excludes the scrollbar) so the crop is measured
               from the page edge: 45% off the edge from 1400px, 75% from lg to
-              1399px; hidden below lg. Decorative only: behind the content, no
+              1399px. Below lg (phones and tablets) it is 62% of the group's
+              height with 58% off the edge, so the visible part sits at the left
+              margin behind the headline. Decorative only: behind the content, no
               pointer events, hidden from assistive tech, 4% opacity on the
               emblem alone. */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute top-[110px] bottom-[136px] left-1/2 -z-[1] hidden w-[100cqw] -translate-x-1/2 select-none sm:top-[91.5px] lg:block"
+            className="pointer-events-none absolute top-[110px] bottom-[136px] left-1/2 -z-[1] w-[100cqw] -translate-x-1/2 select-none max-sm:bottom-28 sm:top-[91.5px] lg:block"
           >
             <Image
               src="/VeriCert-Emblem-Gray.svg"
@@ -120,7 +122,7 @@ export default async function Home() {
               width={312}
               height={345}
               unoptimized
-              className="absolute top-1/2 left-0 h-[87.5%] w-auto max-w-none -translate-x-[75%] -translate-y-1/2 opacity-4 min-[1400px]:-translate-x-[45%]"
+              className="absolute top-1/2 left-0 h-[87.5%] w-auto max-w-none -translate-x-[75%] -translate-y-1/2 opacity-4 max-lg:h-[62%] max-lg:-translate-x-[58%] min-[1400px]:-translate-x-[45%]"
             />
           </div>
           {/* Full-colour lockup, as a vector. The artwork fills 267 × 118 of
@@ -182,7 +184,11 @@ export default async function Home() {
             - xl to 1439px: same size; 37% right, 15% bottom, so the circle
               keeps ~30px clear of the paragraph and the headline's second line.
             - lg to xl: 425px wide → ≈375px circle; 37% right, 12% bottom.
-            Hidden below lg. Decorative. */}
+            - Below lg (phones and tablets): 240px wide, 34% past the right
+              edge and 60% past the bottom, so what shows stays inside the clear
+              space under the button (≈106px tall vs the 112px gap) and never
+              sits behind it.
+            Decorative. */}
         <Image
           src="/VeriCert-Emblem-Gray.svg"
           alt=""
@@ -190,7 +196,7 @@ export default async function Home() {
           width={312}
           height={345}
           unoptimized
-          className="pointer-events-none absolute right-[-166px] bottom-[-80px] -z-[1] hidden h-auto w-[425px] max-w-none select-none opacity-6 lg:block xl:right-[-235px] xl:bottom-[-130px] xl:w-[602px] min-[90rem]:right-[-171px] min-[90rem]:bottom-[-114px]"
+          className="pointer-events-none absolute right-[-166px] bottom-[-80px] -z-[1] h-auto w-[425px] max-w-none select-none opacity-6 max-lg:right-0 max-lg:bottom-0 max-lg:w-[240px] max-lg:translate-x-[34%] max-lg:translate-y-[60%] lg:block xl:right-[-235px] xl:bottom-[-130px] xl:w-[602px] min-[90rem]:right-[-171px] min-[90rem]:bottom-[-114px]"
         />
       </section>
 
