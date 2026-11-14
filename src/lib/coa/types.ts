@@ -90,6 +90,71 @@ export type CoaRecord = {
   updatedBy: string;
   approvedAt: string | null;
   approvedBy: string | null;
+  // The deliberate PUBLISH (public_visibility = public is set in the same statement).
+  publishedAt: string | null;
+  publishedBy: string | null;
+  // A person opened the laboratory link and confirmed it shows this report. Valid only while the stored URL and
+  // report number still equal what was confirmed (linkConfirmed()).
+  linkConfirmedUrl: string | null;
+  linkConfirmedBy: string | null;
+  linkConfirmedAt: string | null;
+  linkConfirmedReportId: string | null;
+  // Advisory quality warnings the owner acknowledged (code + exact message), so a changed finding needs a new one.
+  warningsAcknowledged: AcknowledgedWarning[];
+  warningsAcknowledgedBy: string | null;
+  warningsAcknowledgedAt: string | null;
+  // Recoverable deletion: never public once set.
+  deletedAt: string | null;
+  deletedBy: string | null;
+  // Fields an administrator set by hand. Extraction never overwrites them.
+  manualFields: string[];
+};
+
+export type AcknowledgedWarning = { code: string; message: string };
+
+// A lot's immutable chronology (coa_lots): when the lot number was first uploaded.
+export type CoaLot = {
+  id: string;
+  lotKey: string;
+  lotNumber: string;
+  productSlug: string | null;
+  sizeLabel: string | null;
+  firstUploadedAt: string;
+  chronologySource: "upload" | "backfill";
+  needsReview: boolean;
+  reviewNote: string | null;
+};
+
+// A pending correction (new PDF) or edit (field changes) to a published report. The published version stays public
+// until the revision is published.
+export type CoaRevision = {
+  id: string;
+  recordId: string;
+  kind: "correction" | "edit";
+  fileId: string | null;
+  patch: Record<string, unknown>;
+  status: "pending" | "published" | "discarded";
+  previous: Record<string, unknown> | null;
+  createdAt: string;
+  createdBy: string;
+  decidedAt: string | null;
+  decidedBy: string | null;
+};
+
+// QUALITY ALERT — REVIEW INVENTORY: open until an administrator acknowledges it.
+export type InventoryAlert = {
+  id: string;
+  recordId: string;
+  productSlug: string | null;
+  sizeLabel: string | null;
+  lotNumber: string | null;
+  reason: string;
+  details: unknown;
+  createdAt: string;
+  createdBy: string;
+  acknowledgedAt: string | null;
+  acknowledgedBy: string | null;
+  acknowledgmentNote: string | null;
 };
 
 // What extraction found, field by field, with the exact text it came from. Values that could not be found in the
@@ -130,21 +195,31 @@ export const LOT_AVAILABILITY_LABELS: Record<LotAvailability, string> = {
   historical: "Historical lot",
 };
 
-// One certificate as the public sees it: only fields printed on the certificate or held in the catalog.
-export type PublicCertificate = {
+// One published laboratory report as the public sees it. Deliberately no analytical values (purity, quantity,
+// endotoxins, sterility…): the customer reads the full report through the two verification links. Those values are
+// kept for the later product-page phase.
+export type PublicReport = {
   id: string;
   lotNumber: string;
+  laboratoryName: string | null;
+  labReportId: string | null;
+  testedOn: string | null;
+  issuedOn: string | null;
+  testing: "original" | "retest" | null; // only where the dates support it
+  pdfUrl: string; // VERIFY VERICERT COA — the original laboratory PDF, served by VeriCert
+  verificationUrl: string | null; // VERIFY WITH [LABORATORY] — the exact stored, manually confirmed laboratory URL
+};
+
+export type PublicLot = { lotNumber: string; reports: PublicReport[] };
+
+// One product + strength: its current lot and its historical lots (lib/coa/chronology.ts).
+export type CertificateGroup = {
+  key: string;
   compoundName: string;
   sizeLabel: string | null;
   sku: string | null;
-  productSlug: string | null;
-  laboratoryName: string | null;
-  labReportId: string | null;
-  issuedOn: string | null;
-  testedOn: string | null;
-  purityResult: string | null;
-  quantityResult: string | null;
-  availability: LotAvailability;
-  hasPdf: boolean;
-  verificationUrl: string | null; // a validated laboratory record, or one allowed by lib/coa/lab-record-rules.ts
+  current: PublicLot | null;
+  historical: PublicLot[];
+  matchedLots: string[]; // lot numbers the query matched (to point the customer at them); empty for a name search
+  preview?: boolean; // administrative PREVIEW / NOT PUBLIC only — never set on public results
 };

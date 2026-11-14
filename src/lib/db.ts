@@ -27,6 +27,12 @@ function getSql(): SqlFn {
   return sql;
 }
 
+// Several parameterized statements as one transaction: all of them apply, or none do.
+export async function transaction(statements: { text: string; params?: unknown[] }[]): Promise<void> {
+  const sql = getSql();
+  await sql.transaction(statements.map((s) => sql.query(s.text, s.params ?? [])));
+}
+
 // Generic parameterized query helper — use numbered placeholders ($1, $2, ...).
 export async function query<T = Record<string, unknown>>(
   text: string,

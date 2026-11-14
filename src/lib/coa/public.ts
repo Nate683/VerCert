@@ -2,27 +2,29 @@ import { listProducts } from "@/lib/products/store";
 import { withStock } from "@/lib/inventory";
 import { availabilityStatus } from "@/lib/products/availability";
 import type { Product } from "@/lib/types";
-import { listLabs, listPublishedRecords } from "./store";
-import { isUnreadableLabRecord } from "./lab-record-rules";
+import { getRecord, listLabs, listLots, listPublishedRecords, pendingRevision } from "./store";
 import { pricedSizes } from "@/lib/products/pricing";
-import { searchCertificates, type CatalogCandidate, type Searchable, type SearchResult } from "./search";
-import type { CoaRecord, Laboratory, LotAvailability, PublicCertificate } from "./types";
+import { buildGroups, searchCertificates, type CatalogCandidate, type Searchable, type SearchResult } from "./search";
+import { linkConfirmed } from "./validate";
+import { checkVerificationUrl } from "./verification-url";
+import type { CertificateGroup, CoaRecord, Laboratory, LotAvailability } from "./types";
 
 // Server-only. What the public can see of the certificate records, and nothing more.
 //
-// A record is public only when it is approved AND published. Test data (is_test) is never public. The single
-// exception is a local `next dev` session started with COA_INCLUDE_TEST_RECORDS=1, so the public flow can be
-// exercised end to end with synthetic records in a private environment; NODE_ENV is "production" in every built
-// deployment (including Vercel previews), where the flag has no effect.
+// A record is public only when it was deliberately PUBLISHED (approved + public + published_at, lib/coa/store.ts
+// PUBLISHED_WHERE), is not deleted, and is not test data. Draft, pending, rejected, unpublished, deleted, superseded
+// (a corrected report replaces its record's file and values atomically) and synthetic records never reach any public
+// path: search, autocomplete, lot pages or the PDF route. The single exception for test data is a local `next dev`
+// session started with COA_INCLUDE_TEST_RECORDS=1; NODE_ENV is "production" in every built deployment (including
+// Vercel previews), where the flag has no effect.
 export function includeTestRecords(): boolean {
   return process.env.NODE_ENV === "development" && process.env.COA_INCLUDE_TEST_RECORDS === "1";
 }
 
 const norm = (s: string | null | undefined) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
-// Whether a lot is currently sold, from the catalog and inventory (unless an administrator set it explicitly):
-// available = the product is listed and In Stock, this lot is one of its current lots, and this size has units.
-// A lot that has left the product's lot list (or is marked historical) is historical.
+// Whether a lot is currently sold, from the catalog and inventory (unless an administrator set it explicitly). Kept
+// for administrative display; the public results don't use it (current/historical comes from upload chronology).
 export function lotAvailability(record: CoaRecord, product: Product | undefined): LotAvailability {
   if (record.historical) return "historical";
   if (record.inventoryStatus === "available") return "available";
@@ -34,50 +36,51 @@ export function lotAvailability(record: CoaRecord, product: Product | undefined)
   return sold ? "available" : "unavailable";
 }
 
-export function toPublic(record: CoaRecord, product: Product | undefined, labs: Laboratory[]): PublicCertificate {
+// The laboratory link the public may follow: the exact stored URL, only while a person's confirmation still matches
+// it and it still passes the address rules (https, the laboratory's allowlisted host, a specific record page).
+function publicLabUrl(record: CoaRecord, labs: Laboratory[]): string | null {
+  if (!record.verificationUrl || !linkConfirmed(record)) return null;
+  const lab = labs.find((l) => l.id === record.laboratoryId) ?? null;
+  return checkVerificationUrl(record.verificationUrl, lab, record).ok ? record.verificationUrl : null;
+}
+
+function toSearchable(record: CoaRecord, product: Product | undefined, labs: Laboratory[], pdfUrl: string): Searchable {
+  // The product's current name, plus the name stored on the certificate when it was associated — so a renamed product
+  // stays findable by its earlier name. The PDF is never altered.
+  const name = product?.name ?? record.compoundName ?? "Unknown compound";
+  const aliases = [...(product?.alternateNames ?? []), ...(record.compoundName && record.compoundName !== name ? [record.compoundName] : [])];
   return {
     id: record.id,
     lotNumber: record.lotNumber ?? "",
-    compoundName: (product?.name ?? record.compoundName ?? "Unknown compound") + (record.isTest ? " [TEST DATA]" : ""),
+    laboratoryName: record.laboratoryName,
+    labReportId: record.labReportId,
+    testedOn: record.testedOn,
+    issuedOn: record.issuedOn,
+    pdfUrl,
+    verificationUrl: publicLabUrl(record, labs),
+    compoundName: name + (record.isTest ? " [TEST DATA]" : ""),
     sizeLabel: record.sizeLabel,
     sku: record.sku,
     productSlug: record.productSlug,
-    laboratoryName: record.laboratoryName,
-    labReportId: record.labReportId,
-    issuedOn: record.issuedOn,
-    testedOn: record.testedOn,
-    purityResult: record.purityResult,
-    quantityResult: record.quantityResult,
-    availability: lotAvailability(record, product),
-    hasPdf: Boolean(record.fileId),
-    // A link the server checked and marked valid, or a laboratory record the check can't read but which meets every
-    // fixed condition in lib/coa/lab-record-rules.ts (the same rule that let it be approved). Otherwise no link.
-    verificationUrl: record.verificationStatus === "valid" || isUnreadableLabRecord(record, labs) ? record.verificationUrl : null,
+    aliases,
+    createdAt: record.createdAt,
   };
 }
 
-async function publishedWithProducts(): Promise<{ record: CoaRecord; product: Product | undefined; labs: Laboratory[] }[]> {
-  const [records, products, labs] = await Promise.all([
-    listPublishedRecords(includeTestRecords()),
-    listProducts({ includeInactive: true }).then(withStock),
-    listLabs(),
-  ]);
+async function publishedSearchables(): Promise<Searchable[]> {
+  const [records, products, labs] = await Promise.all([listPublishedRecords(includeTestRecords()), listProducts({ includeInactive: true }).then(withStock), listLabs()]);
   const bySlug = new Map(products.map((p) => [p.slug, p]));
-  return records.map((record) => ({ record, product: record.productSlug ? bySlug.get(record.productSlug) : undefined, labs }));
+  // Published regardless of catalog state: in stock, coming soon, out of stock, hidden or discontinued.
+  return records
+    .filter((r) => r.lotNumber)
+    .map((r) => toSearchable(r, r.productSlug ? bySlug.get(r.productSlug) : undefined, labs, `/api/verify/certificate/${r.id}`));
 }
 
-// Public certificate search, identical for every visitor (signed in or not — public certificate lookup needs no
-// account). Two sources:
-//  - certificates: approved, published, non-test records only (publishedWithProducts);
-//  - "no published certificate" suggestions for catalog strengths, from the active, on-sale products (the same set
-//    customers can buy). Only the name, aliases and strength labels are read into the matcher, plus a SKU built the
-//    way certificate SKUs are (lib/coa/admin.ts: slug-strength, upper case). The public suggestion built from them
-//    carries compound, strength and SKU only — never price, stock, slug or a link (lib/coa/search.ts).
-// The catalog API itself (/api/catalog) stays gated; this reads the product store server-side and returns nothing
-// else from it.
+// Public certificate search — identical for every visitor, signed in or not (public certificate lookup needs no
+// account). The "no published certificate" catalog suggestions come from the active, on-sale products and carry
+// compound, strength and SKU only (no price, stock, slug or link). The catalog API itself stays gated.
 export async function searchPublic(q: string): Promise<SearchResult> {
-  const [rows, catalog] = await Promise.all([publishedWithProducts(), listProducts()]);
-  const items: Searchable[] = rows.map(({ record, product, labs }) => ({ ...toPublic(record, product, labs), aliases: product?.alternateNames ?? [] }));
+  const [items, catalog, lots] = await Promise.all([publishedSearchables(), listProducts(), listLots()]);
   const candidates: CatalogCandidate[] = catalog.flatMap((p) => {
     const sizes = pricedSizes(p);
     return (sizes.length ? sizes.map((s) => s.label) : [null]).map((sizeLabel) => ({
@@ -88,22 +91,19 @@ export async function searchPublic(q: string): Promise<SearchResult> {
       sku: sizeLabel ? `${p.slug}-${sizeLabel}`.toUpperCase().replace(/\s+/g, "") : null,
     }));
   });
-  return searchCertificates(q, items, new Date().toISOString().slice(0, 10), candidates);
+  return searchCertificates(q, items, lots, candidates);
 }
 
-// Every published certificate for one lot number (a lot can carry a retest), for the permanent lot page.
-export async function publicCertificatesForLot(lot: string): Promise<PublicCertificate[]> {
-  const rows = await publishedWithProducts();
-  return rows
-    .filter(({ record }) => norm(record.lotNumber) === norm(lot))
-    .map(({ record, product, labs }) => toPublic(record, product, labs))
-    .sort((a, b) => (b.issuedOn ?? "").localeCompare(a.issuedOn ?? ""));
+// The product + strength groups holding one lot number, for the permanent lot page (/lot/<lot>).
+export async function publicGroupsForLot(lot: string): Promise<CertificateGroup[]> {
+  const [items, lots] = await Promise.all([publishedSearchables(), listLots()]);
+  const keys = new Set(items.filter((i) => norm(i.lotNumber) === norm(lot)).map((i) => `${i.productSlug ?? norm(i.compoundName)}|${norm(i.sizeLabel)}`));
+  const inGroups = items.filter((i) => keys.has(`${i.productSlug ?? norm(i.compoundName)}|${norm(i.sizeLabel)}`));
+  return buildGroups(inGroups, lots).map((g) => ({ ...g, matchedLots: [lot] }));
 }
 
-// "slug|lot" for every lot with a published certificate — for product pages (link a lot to its certificate) and
-// the purity rule (a purity figure is shown only with a published certificate behind the lot customers receive).
-// Fails closed: if the certificate tables can't be read, no lot counts as certified (purity figures are hidden and
-// lots aren't linked) and the product pages still render.
+// "slug|lot" for every lot with a published certificate — for product pages (link a lot to its certificate) and the
+// purity rule. Fails closed: if the certificate tables can't be read, no lot counts as certified.
 export async function publishedLotKeys(): Promise<Set<string>> {
   try {
     const records = await listPublishedRecords(includeTestRecords());
@@ -118,8 +118,30 @@ export function lotKey(slug: string, lot: string): string {
   return `${slug}|${norm(lot)}`;
 }
 
-// The record behind a public certificate id, only if it is currently public.
+// The record behind a public certificate id, only if it is currently published (and not test data / deleted).
 export async function publicRecordById(id: string): Promise<CoaRecord | null> {
-  const rows = await publishedWithProducts();
-  return rows.find(({ record }) => record.id === id)?.record ?? null;
+  const records = await listPublishedRecords(includeTestRecords());
+  return records.find((r) => r.id === id) ?? null;
+}
+
+// ADMINISTRATIVE PREVIEW (Executive Office only — the caller must have checked the executive session). The real
+// customer-facing groups for this record's product + strength: what is published now, plus this record as it would
+// read once published (with its pending revision applied, if any). Works for drafts, pending revisions and synthetic
+// records. Changes nothing; the PDF links point at the administrator-only PDF route.
+export async function previewGroupsForRecord(id: string): Promise<CertificateGroup[] | null> {
+  const record = await getRecord(id);
+  if (!record || record.deletedAt) return null;
+  const revision = await pendingRevision(id);
+  const shown: CoaRecord = revision ? { ...record, ...(revision.patch as Partial<CoaRecord>), fileId: revision.fileId ?? record.fileId } : record;
+  if (!shown.lotNumber) return [];
+  const [published, products, labs, lots] = await Promise.all([listPublishedRecords(false), listProducts({ includeInactive: true }), listLabs(), listLots()]);
+  const bySlug = new Map(products.map((p) => [p.slug, p]));
+  const same = (r: CoaRecord) => r.productSlug === shown.productSlug && norm(r.sizeLabel) === norm(shown.sizeLabel);
+  const items = [
+    ...published.filter((r) => r.id !== id && same(r)).map((r) => toSearchable(r, bySlug.get(r.productSlug ?? ""), labs, `/api/verify/certificate/${r.id}`)),
+    // Preview shows the link as stored, confirmed or not, so the administrator can see what customers will open.
+    { ...toSearchable(shown, bySlug.get(shown.productSlug ?? ""), labs, `/api/executive/certificates/${id}/pdf${revision?.fileId ? "?revision=1" : ""}`), verificationUrl: shown.verificationUrl },
+  ];
+  // A preview of a record whose lot is new isn't in coa_lots yet: treat it as uploaded when the record was.
+  return buildGroups(items, lots).map((g) => ({ ...g, matchedLots: [shown.lotNumber!], preview: true }));
 }

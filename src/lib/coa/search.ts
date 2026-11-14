@@ -1,52 +1,49 @@
-import type { PublicCertificate } from "./types";
+import { groupLots, lotKey } from "./chronology";
+import type { CertificateGroup, CoaLot, PublicReport } from "./types";
 
-// The one certificate search, used by the header's VERIFY BEFORE YOU BUY panel and the Every Lot Certified search
-// on /how-we-test (both through /api/verify/search). Pure; runs on the server over published records only.
+// The one certificate search, used by the header's VERIFY BEFORE YOU BUY panel and the Every Lot Certified search on
+// /how-we-test (both through /api/verify/search, both rendering the same component). Pure; runs on the server over
+// published, non-synthetic, non-deleted records only (lib/coa/public.ts).
 //
-// Matches compound names, product aliases, SKU, strength and lot numbers, with partial matching and tolerance for
-// small spelling mistakes. Results are grouped:
-//   exact   — the lot number typed exactly (any age: old certificates stay reachable by exact lot number)
-//   current — lots currently sold
-//   recent  — approved lots not currently sold, issued within the last 12 months (shown on request)
-// Older certificates only come back for an exact lot number. Nothing is deleted after 12 months.
+// Matches: product name and aliases (including a product's earlier name, kept on its certificates), name + strength,
+// SKU, complete or partial VeriCert lot number, complete or partial laboratory report number. Harmless differences in
+// capitalization, spacing and punctuation are ignored. Small spelling mistakes are tolerated in product NAMES only —
+// never in lot or report numbers, which are matched exactly or by prefix/substring, so a similar lot number is never
+// presented as the one typed.
+//
+// Results are grouped by product + strength: its CURRENT lot and its HISTORICAL lots (lib/coa/chronology.ts), with
+// every published report under each lot. When several products, strengths or lots match, all are listed — nothing is
+// chosen arbitrarily.
 
-export type Searchable = PublicCertificate & { aliases: string[] };
-
-// A catalog product strength with no published certificate, built server-side from the active, on-sale products
-// (lib/coa/public.ts). productSlug and aliases are used for matching only and never leave the server; the public
-// suggestion built from it carries compound, strength and SKU only.
-export type CatalogCandidate = {
+// A published report plus what search matches on. productSlug, aliases and createdAt never leave the server.
+export type Searchable = Omit<PublicReport, "testing"> & {
   compoundName: string;
-  aliases: string[];
-  productSlug: string;
   sizeLabel: string | null;
   sku: string | null;
+  productSlug: string | null;
+  aliases: string[];
+  createdAt: string;
 };
 
-// One autocomplete row, grouped by compound + strength. "certificate" rows are backed by published certificates in
-// this same response (certificateIds point into exact/current/recent); "catalog" rows are products with no published
-// certificate and say so — they never imply anything was tested, verified or approved.
+// A catalog product strength with no published certificate, built server-side from the active, on-sale products
+// (lib/coa/public.ts). Its public row carries compound, strength and SKU only.
+export type CatalogCandidate = { compoundName: string; aliases: string[]; productSlug: string; sizeLabel: string | null; sku: string | null };
+
+// One autocomplete row. "certificate" rows are groups in this same response; "catalog" rows are products with no
+// published certificate and say so — they never imply anything was tested, verified or approved.
 export type Suggestion =
-  | {
-      kind: "certificate";
-      key: string;
-      compoundName: string;
-      sizeLabel: string | null;
-      skus: string[];
-      lotNumbers: string[];
-      certificateIds: string[];
-    }
+  | { kind: "certificate"; key: string; compoundName: string; sizeLabel: string | null; lotNumbers: string[] }
   | { kind: "catalog"; key: string; compoundName: string; sizeLabel: string | null; sku: string | null };
 
 export type SearchResult = {
   query: string;
-  exact: PublicCertificate[];
-  current: PublicCertificate[];
-  recent: PublicCertificate[];
+  groups: CertificateGroup[];
+  exactLot: boolean; // the query is exactly a published lot number
   suggestions: Suggestion[];
 };
 
 const MAX_SUGGESTIONS = 8;
+const MAX_GROUPS = 12;
 
 const compact = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]/g, "");
 const words = (s: string) => s.toLowerCase().normalize("NFKD").split(/[^a-z0-9]+/).filter(Boolean);
@@ -68,7 +65,6 @@ export function editDistance(a: string, b: string, cap = 3): number {
 
 const tolerance = (len: number) => (len >= 8 ? 2 : len >= 4 ? 1 : 0);
 
-// How well one query token matches one certificate: 0 = no match; higher is better.
 type Matchable = {
   compoundName: string;
   aliases: string[];
@@ -76,8 +72,10 @@ type Matchable = {
   sizeLabel: string | null;
   sku?: string | null;
   lotNumber?: string;
+  labReportId?: string | null;
 };
 
+// How well one query token matches one item: 0 = no match; higher is better.
 function tokenScore(token: string, item: Matchable): number {
   const t = compact(token);
   if (!t) return 1;
@@ -104,10 +102,13 @@ function tokenScore(token: string, item: Matchable): number {
     if (k === t) best = Math.max(best, 100);
     else if (k.includes(t) && t.length >= 3) best = Math.max(best, 55);
   }
-  const lot = compact(item.lotNumber ?? "");
-  if (lot) {
-    if (lot === t) best = Math.max(best, 100);
-    else if (lot.startsWith(t) && t.length >= 3) best = Math.max(best, 65);
+  // Lot and report numbers: exact, prefix or substring — never approximate.
+  for (const id of [item.lotNumber, item.labReportId]) {
+    const v = compact(id ?? "");
+    if (!v) continue;
+    if (v === t) best = Math.max(best, 100);
+    else if (v.startsWith(t) && t.length >= 3) best = Math.max(best, 75);
+    else if (v.includes(t) && t.length >= 4) best = Math.max(best, 65);
   }
   return best;
 }
@@ -122,89 +123,102 @@ function queryScore(query: string, item: Matchable): number {
   return Math.max(whole, andScore, joinedScore);
 }
 
-const groupKey = (compoundName: string, sizeLabel: string | null, productSlug: string | null) =>
-  `${productSlug ?? compact(compoundName)}|${compact(sizeLabel ?? "")}`;
+const groupKeyOf = (i: { compoundName: string; sizeLabel: string | null; productSlug: string | null }) =>
+  `${i.productSlug ?? compact(i.compoundName)}|${compact(i.sizeLabel ?? "")}`;
 
-function cutoffDate(today: string): string {
-  const d = new Date(`${today}T00:00:00Z`);
-  d.setUTCFullYear(d.getUTCFullYear() - 1);
-  return d.toISOString().slice(0, 10);
+// Was the query aimed at a lot/report number (rather than a name)? Then only the matching lots are flagged. A query
+// that matches the product's name or an alias (e.g. "kpv", when lot numbers also start "KPV…") is a name search and
+// flags nothing.
+const isIdMatch = (query: string, item: Matchable) => {
+  const q = compact(query);
+  const names = [item.compoundName, ...item.aliases, item.productSlug ?? ""].map(compact).filter(Boolean);
+  if (names.some((n) => n.startsWith(q))) return false;
+  return [item.lotNumber, item.labReportId].some((v) => {
+    const c = compact(v ?? "");
+    return c && q.length >= 3 && (c === q || c.startsWith(q) || (q.length >= 4 && c.includes(q)));
+  });
+};
+
+// Builds the customer-facing groups for a set of published reports (also used, with preview reports added, by the
+// administrative preview so both render identically).
+export function buildGroups(items: Searchable[], lots: CoaLot[], matched?: Map<string, Set<string>>): CertificateGroup[] {
+  const byGroup = new Map<string, Searchable[]>();
+  for (const i of items) byGroup.set(groupKeyOf(i), [...(byGroup.get(groupKeyOf(i)) ?? []), i]);
+  return [...byGroup.entries()].map(([key, rs]) => {
+    const { current, historical } = groupLots(rs, lots);
+    const toLot = (g: NonNullable<typeof current>) => ({
+      lotNumber: g.lotNumber,
+      reports: g.reports.map((r) => ({
+        id: r.id,
+        lotNumber: r.lotNumber,
+        laboratoryName: r.laboratoryName,
+        labReportId: r.labReportId,
+        testedOn: r.testedOn,
+        issuedOn: r.issuedOn,
+        testing: r.testing,
+        pdfUrl: r.pdfUrl,
+        verificationUrl: r.verificationUrl,
+      })),
+    });
+    const first = rs[0];
+    return {
+      key,
+      compoundName: first.compoundName,
+      sizeLabel: first.sizeLabel,
+      sku: rs.find((r) => r.sku)?.sku ?? null,
+      current: current ? toLot(current) : null,
+      historical: historical.map(toLot),
+      matchedLots: [...(matched?.get(key) ?? [])],
+    };
+  });
 }
 
-const byCompound = (a: PublicCertificate, b: PublicCertificate) =>
-  a.compoundName.localeCompare(b.compoundName) ||
-  (a.sizeLabel ?? "").localeCompare(b.sizeLabel ?? "", undefined, { numeric: true }) ||
-  (b.issuedOn ?? "").localeCompare(a.issuedOn ?? "") ||
-  a.lotNumber.localeCompare(b.lotNumber);
-
-const strip = ({ aliases: _a, ...cert }: Searchable): PublicCertificate => { void _a; return cert; };
-
-// `catalog` (optional) lists catalog product strengths for "no published certificate" suggestions — the same for
-// every visitor. Their rows expose compound, strength and SKU only (no slug, price, stock or link).
-export function searchCertificates(raw: string, items: Searchable[], today: string, catalog: CatalogCandidate[] = []): SearchResult {
+// `catalog` lists catalog strengths for "no published certificate" suggestions — the same for every visitor.
+export function searchCertificates(raw: string, items: Searchable[], lots: CoaLot[], catalog: CatalogCandidate[] = []): SearchResult {
   const query = raw.trim().slice(0, 80);
-  const empty: SearchResult = { query, exact: [], current: [], recent: [], suggestions: [] };
+  const empty: SearchResult = { query, groups: [], exactLot: false, suggestions: [] };
   if (compact(query).length < 2) return empty;
-
   const q = compact(query);
-  const exact = items.filter((i) => compact(i.lotNumber) === q);
-  // Allow "bpc 157 10mg", "BPC-157 10 mg", "bpc157": tokens AND-matched, with the whole query also tried as one.
+
   const scored = items
     .map((item) => ({ item, score: queryScore(query, item) }))
     .filter((s) => s.score > 0)
-    .sort((a, b) => b.score - a.score || byCompound(a.item, b.item));
+    .sort((a, b) => b.score - a.score || a.item.compoundName.localeCompare(b.item.compoundName));
 
-  const cutoff = cutoffDate(today);
-  const exactIds = new Set(exact.map((e) => e.id));
-  const current = scored.filter((s) => s.item.availability === "available" && !exactIds.has(s.item.id)).map((s) => strip(s.item)).sort(byCompound);
-  const recent = scored
-    .filter((s) => s.item.availability !== "available" && !exactIds.has(s.item.id) && (s.item.issuedOn ?? s.item.testedOn ?? "") >= cutoff)
-    .map((s) => strip(s.item))
-    .sort(byCompound);
-
-  // Certificate suggestions come only from certificates this response actually returns (so an old lot that is
-  // reachable only by its exact number never surfaces through a name search), grouped by compound + strength.
-  const returned = new Set([...exact, ...current, ...recent].map((c) => c.id));
-  const groups = new Map<string, Extract<Suggestion, { kind: "certificate" }>>();
-  const order: { key: string; score: number }[] = [];
-  for (const { item, score } of [...exact.map((item) => ({ item, score: 1000 })), ...scored]) {
-    if (!returned.has(item.id)) continue;
-    const key = groupKey(item.compoundName, item.sizeLabel, item.productSlug);
-    let g = groups.get(key);
-    if (!g) {
-      g = { kind: "certificate", key, compoundName: item.compoundName, sizeLabel: item.sizeLabel, skus: [], lotNumbers: [], certificateIds: [] };
-      groups.set(key, g);
-      order.push({ key, score });
-    }
-    if (g.certificateIds.includes(item.id)) continue;
-    g.certificateIds.push(item.id);
-    if (item.lotNumber && !g.lotNumbers.includes(item.lotNumber)) g.lotNumbers.push(item.lotNumber);
-    if (item.sku && !g.skus.includes(item.sku)) g.skus.push(item.sku);
+  // Every group with a match is shown in full (current + historical lots); a lot/report-number query flags the lots it
+  // matched so the customer can tell them apart.
+  const matched = new Map<string, Set<string>>();
+  const order: string[] = [];
+  for (const { item } of scored) {
+    const key = groupKeyOf(item);
+    if (!matched.has(key)) { matched.set(key, new Set()); order.push(key); }
+    if (isIdMatch(query, item)) matched.get(key)!.add(item.lotNumber);
   }
-  const suggestions: Suggestion[] = order.map(({ key }) => groups.get(key)!).slice(0, MAX_SUGGESTIONS);
+  const keep = new Set(order.slice(0, MAX_GROUPS));
+  const groups = buildGroups(items.filter((i) => keep.has(groupKeyOf(i))), lots, matched).sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
+  const exactLot = items.some((i) => lotKey(i.lotNumber).replace(/[^A-Z0-9]/g, "") === q.toUpperCase());
 
-  // Catalog strengths with no published certificate at all (any age), after the certificate rows.
-  // Matched by slug + strength, and by name + strength for a certificate not linked to a product, so a strength that
-  // has a published certificate is never also offered as "no published certificate".
+  const suggestions: Suggestion[] = groups.slice(0, MAX_SUGGESTIONS).map((g) => ({
+    kind: "certificate",
+    key: g.key,
+    compoundName: g.compoundName,
+    sizeLabel: g.sizeLabel,
+    lotNumbers: [...(g.matchedLots.length ? g.matchedLots : [g.current?.lotNumber].filter((x): x is string => Boolean(x)))],
+  }));
+
+  // Catalog strengths with no published certificate at all, after the certificate rows; a strength that has a
+  // published certificate is never also offered as "no published certificate".
   const nameKey = (name: string, size: string | null) => `${compact(name)}|${compact(size ?? "")}`;
-  const certified = new Set(items.flatMap((i) => [groupKey(i.compoundName, i.sizeLabel, i.productSlug), nameKey(i.compoundName, i.sizeLabel)]));
+  const certified = new Set(items.flatMap((i) => [groupKeyOf(i), nameKey(i.compoundName, i.sizeLabel)]));
   const catalogRows = catalog
-    .map((c) => ({ c, key: groupKey(c.compoundName, c.sizeLabel, c.productSlug), score: queryScore(query, c) }))
+    .map((c) => ({ c, key: groupKeyOf(c), score: queryScore(query, c) }))
     .filter((r) => r.score > 0 && !certified.has(r.key) && !certified.has(nameKey(r.c.compoundName, r.c.sizeLabel)))
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        a.c.compoundName.localeCompare(b.c.compoundName) ||
-        (a.c.sizeLabel ?? "").localeCompare(b.c.sizeLabel ?? "", undefined, { numeric: true })
-    );
-  for (const { c, key } of catalogRows) {
+    .sort((a, b) => b.score - a.score || a.c.compoundName.localeCompare(b.c.compoundName) || (a.c.sizeLabel ?? "").localeCompare(b.c.sizeLabel ?? "", undefined, { numeric: true }));
+  for (const { c } of catalogRows) {
     if (suggestions.length >= MAX_SUGGESTIONS) break;
-    if (suggestions.some((s) => s.key === key)) continue;
-    // The public row's key is built from the name and strength, not the internal product slug.
     const publicKey = `catalog|${nameKey(c.compoundName, c.sizeLabel)}`;
     if (suggestions.some((s) => s.key === publicKey)) continue;
     suggestions.push({ kind: "catalog", key: publicKey, compoundName: c.compoundName, sizeLabel: c.sizeLabel, sku: c.sku });
   }
-
-  return { query, exact: exact.map(strip).sort(byCompound), current, recent, suggestions };
+  return { query, groups, exactLot, suggestions };
 }

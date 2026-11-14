@@ -6,9 +6,11 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ id: string }> };
 
-// VIEW VERICERT COA: the original laboratory PDF, byte-for-byte as uploaded (its SHA-256 is checked on every read).
-// Public, no account — but only for a certificate that is approved and published; anything else is a plain 404, so
-// staging and rejected records can't be probed. ?download=1 serves it as a download instead of inline.
+// VERIFY VERICERT COA: the original laboratory PDF, byte-for-byte as uploaded (its SHA-256 is checked on every read).
+// Public, no account — but only for a certificate that is currently PUBLISHED, not deleted and not test data; anything
+// else is a plain 404, so drafts, unpublished, deleted, synthetic and rejected records can't be probed. A corrected
+// report replaces its record's file atomically, so this URL then serves only the corrected PDF: the superseded one has
+// no public URL. ?download=1 serves it as a download instead of inline.
 export const GET = withApiErrorHandling(async (request: Request, { params }: Params) => {
   const { id } = await params;
   const record = /^[0-9a-f-]{36}$/i.test(id) ? await publicRecordById(id) : null;
@@ -23,8 +25,9 @@ export const GET = withApiErrorHandling(async (request: Request, { params }: Par
       "Content-Length": String(file.bytes.byteLength),
       "Content-Disposition": `${download ? "attachment" : "inline"}; filename="VeriCert-COA-${safeLot}.pdf"`,
       "X-Content-Type-Options": "nosniff",
-      // Short, so unpublishing takes effect quickly.
-      "Cache-Control": "public, max-age=60",
+      // Never cached by a CDN or kept by the browser (owner decision D5): unpublishing, deleting or replacing a
+      // certificate takes effect on the very next request.
+      "Cache-Control": "private, no-store",
       ETag: `"${file.sha256}"`,
     },
   });

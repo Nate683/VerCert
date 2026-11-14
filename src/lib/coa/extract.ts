@@ -235,18 +235,56 @@ export function proposeByRules(text: string): Proposal {
     }
     return null;
   };
+  // A printed date on a label's own line, or — when the label line carries no value ("Date Reported:") — on one of the
+  // next few lines. The date still goes through parsePrintedDate, which refuses ambiguous day/month orders.
+  const DATE_TOKEN = /(\d{4}-\d{1,2}-\d{1,2}|\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{1,2}\s+[A-Za-z]{3,9}\.?\s+\d{4}|[A-Za-z]{3,9}\.?\s+\d{1,2},?\s+\d{4})/;
+  const pickDate = (labels: RegExp): { value: string; source: string } | null => {
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(new RegExp(`(?:${labels.source})\\s*[:#]?\\s*(.*)$`, "i"));
+      if (!m) continue;
+      const own = m[1].match(DATE_TOKEN);
+      if (own) return { value: own[1].trim(), source: lines[i] };
+      if (m[1].trim()) continue; // a label followed by something that isn't a date
+      for (const next of lines.slice(i + 1, i + 13)) {
+        const d = next.match(DATE_TOKEN);
+        if (d) return { value: d[1].trim(), source: next };
+      }
+    }
+    return null;
+  };
+  // A report or lot identifier: the rest of the label's line when it is ID-like (letters, digits, dots, dashes and
+  // single spaces between groups, e.g. "V260211-4 016" or "LS-KPV102.V.2026"), never cut at a dot or a space.
+  const ID_VALUE = /^([A-Za-z0-9](?:[A-Za-z0-9.\-]|\s(?=[A-Za-z0-9]))*[A-Za-z0-9])\s*$/;
+  const compound = pick(/\b(?:sample|product|compound|material)\s*(?:name)?/);
+  const strengthFromName = (() => {
+    if (!compound) return null;
+    const esc = compound.value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    for (const line of lines) {
+      const m = line.match(new RegExp(`^${esc}\\s+(\\d+(?:\\.\\d+)?\\s*mg)\\s*$`, "i"));
+      if (m) return { value: m[1], source: line };
+    }
+    return null;
+  })();
   const fields: Proposal["fields"] = {
-    compoundName: pick(/(?:sample|product|compound|material)\s*(?:name)?/),
-    strength: pick(/(?:label(?:ed)?\s*(?:claim|strength)|strength|declared\s*(?:content|amount))/, /(\d+(?:\.\d+)?\s*mg)\b/i),
-    lotNumber: pick(/(?:client\s*)?(?:lot|batch)\s*(?:no\.?|number|#)?/, /([A-Za-z0-9][A-Za-z0-9-]{2,})/),
-    labReportId: pick(/(?:report|certificate|coa)\s*(?:no\.?|number|id|#)/, /([A-Za-z0-9][A-Za-z0-9-]{2,})/),
-    laboratoryName: pick(/(?:laboratory|testing\s*lab(?:oratory)?|issued\s*by)/),
-    testedOn: pick(/(?:date\s*(?:of\s*)?(?:test(?:ed|ing)?|analy[sz](?:ed|is)))/),
-    issuedOn: pick(/(?:date\s*(?:of\s*)?(?:issue|issued|report)|issue\s*date|report\s*date)/),
-    purityResult: pick(/(?:purity(?:\s*\((?:hplc|uplc)\))?|hplc\s*purity)/, /(\d{1,3}(?:\.\d+)?\s*%)/),
-    quantityResult: pick(/(?:quantity|content|assay\s*\(mg\)|peptide\s*content|amount\s*found)/, /(\d+(?:\.\d+)?\s*mg)\b/i),
-    appearance: pick(/appearance/),
-    verificationUrl: pick(/(?:verify|verification)(?:\s*(?:at|url|link))?/, /(https?:\/\/\S+)/i),
+    compoundName: compound,
+    // The labeled strength: "Label claim / Labeled strength / Declared content", a client's stated quantity
+    // ("LabSourced Quantity: 10 mg"), or a heading line "<compound> 10 mg".
+    strength:
+      pick(/\b(?:label(?:ed)?\s*(?:claim|strength)|strength|declared\s*(?:content|amount)|(?:labsourced|client|declared|labeled|label)\s*quantity)/, /(\d+(?:\.\d+)?\s*mg)\b/i) ??
+      strengthFromName,
+    lotNumber: pick(/\b(?:client\s*)?(?:lot|batch)\s*(?:no\.?|number|#)?/, ID_VALUE),
+    // The laboratory's own report number. Not "certificate #" (that is how accreditation lines cite the lab's
+    // accreditation certificate, e.g. "A2LA Certificate #6377.01.01").
+    labReportId: pick(/\b(?:laboratory\s*id|lab\s*id|report\s*(?:no\.?|number|id|#)|coa\s*(?:no\.?|number|#)|certificate\s*(?:no\.?|number)(?!\s*#))/, ID_VALUE),
+    // "Laboratory: X" — but not "Laboratory ID:", "Laboratory Director", or "Laboratory Quality …".
+    laboratoryName: pick(/\b(?:laboratory|testing\s*lab(?:oratory)?|issued\s*by)(?!\s*(?:id|no\.?|number|#|director|quality|manager))\s*:/),
+    testedOn: pickDate(/\bdate\s*(?:of\s*)?(?:test(?:ed|ing)?|analy[sz](?:ed|is))\b/),
+    issuedOn: pickDate(/\b(?:date\s*(?:of\s*)?(?:issue|issued|reported|report)|issue\s*date|report\s*date)\b/),
+    purityResult: pick(/\b(?:purity(?:\s*\((?:hplc|uplc)\))?|hplc\s*purity)/, /(\d{1,3}(?:\.\d+)?\s*%)/),
+    // The measured quantity — never the client's stated quantity (that is the strength).
+    quantityResult: pick(/(?<!labsourced\s)(?<!client\s)(?<!declared\s)(?<!labeled\s)(?<!label\s)\b(?:quantity|content|assay\s*\(mg\)|peptide\s*content|amount\s*found)/, /(\d+(?:\.\d+)?\s*mg)\b/i),
+    appearance: pick(/\bappearance/),
+    verificationUrl: pick(/\b(?:verify|verification)(?:\s*(?:at|url|link))?/, /(https?:\/\/\S+)/i),
   };
   const tests: Proposal["tests"] = [];
   for (const line of lines) {

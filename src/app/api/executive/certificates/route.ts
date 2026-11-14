@@ -26,7 +26,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   if (!(file instanceof File)) return NextResponse.json({ error: "Attach a PDF file." }, { status: 400 });
   const actor = (await getCurrentCustomer())!;
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const outcome = await uploadCertificate(bytes, file.name, form?.get("isTest") === "1", actor.email);
-  if (!outcome.ok) return NextResponse.json({ error: outcome.error, recordId: outcome.recordId }, { status: outcome.status });
+  // asNew=1: the administrator saw that this lot already has a report with the same number and chose to keep the
+  // upload as a separate record anyway (it is then flagged as a duplicate until corrected).
+  const outcome = await uploadCertificate(bytes, file.name, form?.get("isTest") === "1", actor.email, { asNew: form?.get("asNew") === "1" });
+  if (!outcome.ok) return NextResponse.json({ error: outcome.error, recordId: outcome.recordId, conflict: outcome.conflict }, { status: outcome.status });
   return NextResponse.json({ record: outcome.record }, { status: 201 });
 });

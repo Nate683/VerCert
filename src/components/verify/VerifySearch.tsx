@@ -1,19 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { forwardRef, useEffect, useId, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
+import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 import type { SearchResult, Suggestion } from "@/lib/coa/search";
-import { LOT_AVAILABILITY_LABELS, type PublicCertificate } from "@/lib/coa/types";
-import { CertificateActions } from "./CertificateActions";
+import type { CertificateGroup } from "@/lib/coa/types";
+import { CertificateResultsDialog } from "./CertificateResults";
 
-// THE certificate search. One component, one endpoint (/api/verify/search), one set of records and actions —
-// used by the header's VERIFY BEFORE YOU BUY panel and by the Every Lot Certified search on /how-we-test.
-// No sign-in. Type a compound, SKU, strength or lot number; suggestions appear as you type. A suggestion either
-// has published certificates behind it (choosing it shows them, each with its certificate actions) or is a catalog
-// strength with no published certificate (choosing it says so, neutrally). The endpoint returns approved,
-// published, non-test certificates only. Catalog rows are the same for everyone, signed in or not, and carry only
-// compound, strength and SKU — no price, stock, product link or certificate data (lib/coa/public.ts).
+// THE certificate search. One component, one endpoint (/api/verify/search), one results interface
+// (CertificateResults) — used by the header's VERIFY BEFORE YOU BUY panel and by the Every Lot Certified search on
+// /how-we-test. No sign-in. Type a product, strength, SKU, lot number or laboratory report number; suggestions appear
+// as you type. Choosing a suggestion with published certificates — or pressing Enter — opens the results dialog:
+// product — strength, its current lot and historical lots, each report with its two verification actions. Several
+// matches are listed together; nothing is chosen arbitrarily. A catalog strength with no published certificate says so,
+// neutrally. The endpoint returns published, non-test, non-deleted certificates only; catalog rows carry compound,
+// strength and SKU only — no price, stock, product link or certificate data (lib/coa/public.ts).
 //
 // This is a separate component and data source from the header's product search (components/SearchBox.tsx), which
 // searches the catalog only. Neither falls through to the other.
@@ -21,6 +21,14 @@ import { CertificateActions } from "./CertificateActions";
 export type VerifySearchHandle = { focus: () => void };
 
 const NO_CERTIFICATE = "No published certificate is currently available for this selection.";
+
+// The empty state never says whether an unpublished, pending, synthetic or deleted record exists.
+function noResults(query: string): string {
+  const lotLike = /\d/.test(query) && /[a-z]/i.test(query) && query.replace(/[^a-z0-9]/gi, "").length >= 5 && !/\s\d+\s*mg$/i.test(query);
+  return lotLike
+    ? "No published certificate found for this lot number. Please verify the lot number printed on your vial. If the number is correct, contact VeriCert Peptides for assistance."
+    : `No published certificate found for “${query}”. Please check the product name, strength or lot number. If it is correct, contact VeriCert Peptides for assistance.`;
+}
 
 // The full placeholder is cut off on a phone, so below sm (640px) a shorter one is used. A placeholder is an
 // attribute, not styleable by CSS, so this reads the media query; the server render uses the full text.
@@ -34,65 +42,11 @@ function subscribeNarrow(onChange: () => void) {
 }
 const useNarrow = () => useSyncExternalStore(subscribeNarrow, () => window.matchMedia(NARROW).matches, () => false);
 
-function formatDate(d: string | null): string {
-  if (!d) return "—";
-  return new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
-}
-
 const label = (s: { compoundName: string; sizeLabel: string | null }) => `${s.compoundName}${s.sizeLabel ? ` ${s.sizeLabel}` : ""}`;
 
 function suggestionMeta(s: Suggestion): string | null {
   if (s.kind === "catalog") return s.sku ? `SKU ${s.sku}` : null;
-  const lots = s.lotNumbers.length === 1 ? `Lot ${s.lotNumbers[0]}` : s.lotNumbers.length > 1 ? `${s.lotNumbers.length} lots` : null;
-  const sku = s.skus.length === 1 ? `SKU ${s.skus[0]}` : null;
-  return [lots, sku].filter(Boolean).join(" · ") || null;
-}
-
-function Result({ cert }: { cert: PublicCertificate }) {
-  return (
-    <li className="border-t border-hairline py-5 first:border-t-0 first:pt-3">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-8">
-        <div className="min-w-0">
-          <p className="text-base font-semibold text-navy">
-            {cert.compoundName}
-            {cert.sizeLabel && <span className="font-normal text-muted"> · {cert.sizeLabel}</span>}
-          </p>
-          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-5 gap-y-1 text-sm leading-relaxed">
-            <dt className="text-muted">Lot</dt>
-            <dd className="tabular-nums text-navy">
-              <Link href={`/lot/${encodeURIComponent(cert.lotNumber)}`} className="underline underline-offset-2 hover:text-gold-ink">
-                {cert.lotNumber}
-              </Link>
-            </dd>
-            {cert.sku && (
-              <>
-                <dt className="text-muted">SKU</dt>
-                <dd className="text-navy">{cert.sku}</dd>
-              </>
-            )}
-            <dt className="text-muted">Laboratory</dt>
-            <dd className="text-navy">{cert.laboratoryName ?? "—"}</dd>
-            <dt className="text-muted">Issued</dt>
-            <dd className="text-navy">{formatDate(cert.issuedOn)}</dd>
-            <dt className="text-muted">Status</dt>
-            <dd className="text-navy">{LOT_AVAILABILITY_LABELS[cert.availability]}</dd>
-          </dl>
-        </div>
-        <div className="w-full md:max-w-sm md:shrink-0">
-          <CertificateActions cert={cert} />
-        </div>
-      </div>
-    </li>
-  );
-}
-
-function Group({ title, certs }: { title: string; certs: PublicCertificate[] }) {
-  return (
-    <section>
-      <h3 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-ink">{title}</h3>
-      <ul className="mt-1">{certs.map((c) => <Result key={c.id} cert={c} />)}</ul>
-    </section>
-  );
+  return s.lotNumbers.length === 1 ? `Lot ${s.lotNumbers[0]}` : s.lotNumbers.length > 1 ? `${s.lotNumbers.length} lots` : null;
 }
 
 export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean; label?: string }>(function VerifySearch(
@@ -106,7 +60,8 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
   const [result, setResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showRecent, setShowRecent] = useState(false);
+  const [dialog, setDialog] = useState<{ title: string; groups: CertificateGroup[] } | null>(null);
+  const closeDialog = useCallback(() => setDialog(null), []);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [selected, setSelected] = useState<Suggestion | null>(null);
@@ -141,7 +96,6 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
         if (!res.ok) throw new Error(res.status === 429 ? "Too many searches — wait a moment and try again." : "Search is unavailable right now.");
         setResult(await res.json());
         setError(null);
-        setShowRecent(false);
       } catch (err) {
         if (!controller.signal.aborted) setError(err instanceof Error ? err.message : "Search is unavailable right now.");
       } finally {
@@ -158,15 +112,28 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
   // The list opens only to show suggestions (or "Searching…" while the first answer is on its way). When nothing
   // matches it stays shut, and the one no-results message below says so — never two messages for the same thing.
   const dropdownOpen = suggestOpen && searchable && !error && (suggestions.length > 0 || loading);
-  const total = result ? result.exact.length + result.current.length + result.recent.length : 0;
+  const total = result ? result.groups.length : 0;
   const activeId = active >= 0 && active < suggestions.length ? `${baseId}-opt-${active}` : undefined;
+
+  function openAll() {
+    if (!result || !result.groups.length) return;
+    setDialog({
+      title: result.groups.length === 1 ? label(result.groups[0]) : `${result.groups.length} matches for “${result.query}”`,
+      groups: result.groups,
+    });
+  }
 
   function choose(s: Suggestion) {
     setSelected(s);
     setQ(label(s));
     setSuggestOpen(false);
     setActive(-1);
-    inputRef.current?.focus();
+    if (s.kind === "certificate" && result) {
+      const group = result.groups.find((g) => g.key === s.key);
+      if (group) setDialog({ title: label(group), groups: [group] });
+    } else {
+      inputRef.current?.focus();
+    }
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -190,14 +157,13 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (active >= 0 && active < suggestions.length) choose(suggestions[active]);
-      else setSuggestOpen(false); // Enter with nothing highlighted shows the full results for what was typed.
+      else {
+        // Enter with nothing highlighted: every match for what was typed, listed together.
+        setSuggestOpen(false);
+        openAll();
+      }
     }
   }
-
-  // The certificates behind a chosen certificate suggestion, from the same response that offered it.
-  const all = result ? [...result.exact, ...result.current, ...result.recent] : [];
-  const chosenCerts =
-    selected?.kind === "certificate" ? selected.certificateIds.map((id) => all.find((c) => c.id === id)).filter((c): c is PublicCertificate => Boolean(c)) : [];
 
   return (
     <div className="font-sans">
@@ -264,9 +230,7 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
                       {meta && <span className="block text-xs tabular-nums text-muted">{meta}</span>}
                     </span>
                     {s.kind === "certificate" ? (
-                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-ink">
-                        Published certificate{s.certificateIds.length > 1 ? `s · ${s.certificateIds.length}` : ""}
-                      </span>
+                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.12em] text-gold-ink">Published certificate</span>
                     ) : (
                       <span className="shrink-0 text-[11px] uppercase tracking-[0.12em] text-muted">No published certificate</span>
                     )}
@@ -291,37 +255,22 @@ export const VerifySearch = forwardRef<VerifySearchHandle, { autoFocus?: boolean
           </p>
         )}
 
-        {!error && selected?.kind === "certificate" && chosenCerts.length > 0 && (
-          <Group
-            title={`${label(selected)} — ${chosenCerts.length} published certificate${chosenCerts.length === 1 ? "" : "s"}`}
-            certs={chosenCerts}
-          />
-        )}
-
         {!error && !selected && result && !loading && total === 0 && result.suggestions.length === 0 && (
-          // Honest empty state, shown only when nothing at all matches: no certificate and no suggestion. When there
-          // are suggestions (including signed-in "No published certificate" rows) they speak for themselves.
-          <p className="text-muted">
-            No published certificate matches &ldquo;{result.query}&rdquo;. Certificates are published as each lot is released.
-          </p>
+          // The empty state, shown only when nothing at all matches. When there are suggestions (including "No published
+          // certificate" catalog rows) they speak for themselves.
+          <p className="text-muted">{noResults(result.query)}</p>
         )}
 
-        {!error && !selected && result && total > 0 && (
-          <div className="space-y-6">
-            {result.exact.length > 0 && <Group title={`Lot ${result.exact[0].lotNumber}`} certs={result.exact} />}
-            {result.current.length > 0 && <Group title="Currently available lots" certs={result.current} />}
-            {result.recent.length > 0 &&
-              (showRecent ? (
-                <Group title="Earlier lots — last 12 months" certs={result.recent} />
-              ) : (
-                <button type="button" onClick={() => setShowRecent(true)} className="text-navy underline underline-offset-2 hover:text-gold-ink">
-                  Show {result.recent.length} earlier lot{result.recent.length === 1 ? "" : "s"} from the last 12 months
-                </button>
-              ))}
-            <p className="text-xs text-muted">Older certificates remain available by their exact lot number.</p>
-          </div>
+        {!error && selected?.kind !== "catalog" && result && !loading && total > 0 && (
+          <button type="button" onClick={openAll} className="text-navy underline underline-offset-2 hover:text-gold-ink">
+            {total === 1
+              ? `View published certificates — ${label(result.groups[0])}`
+              : `View ${total} matching products and strengths`}
+          </button>
         )}
       </div>
+
+      {dialog && <CertificateResultsDialog title={dialog.title} groups={dialog.groups} onClose={closeDialog} />}
     </div>
   );
 });
