@@ -19,6 +19,13 @@ export const TWO_FACTOR_CHALLENGE_TTL_MS = 15 * 60 * 1000; // 15 minutes
 // marker alone.
 const TWO_FACTOR_MARKER = "~2fa";
 
+// A customer (non-two-factor) session's payload is "<userId>~s~<signed-in ms>".
+// The sign-in time is carried unchanged through every renewal (proxy.ts), so a
+// password change can turn away every session that signed in before it, even
+// one renewed since. Sessions minted before this was added are the bare
+// userId; their sign-in time is taken as their issue time (expiresAt - TTL).
+const CUSTOMER_MARKER = "s";
+
 // Falls back to a fixed dev secret so auth works out of the box locally.
 // Set SESSION_SECRET in production to invalidate this default.
 function getSecret(): string {
@@ -70,7 +77,7 @@ export function sessionTtlMs(opts: SessionOptions = {}): number {
 export async function createCustomerSessionToken(userId: string, opts: SessionOptions = {}): Promise<string> {
   const payload = opts.twoFactorVerified
     ? `${userId}${TWO_FACTOR_MARKER}~${opts.signedInAt ?? Date.now()}`
-    : userId;
+    : `${userId}~${CUSTOMER_MARKER}~${opts.signedInAt ?? Date.now()}`;
   return createExpiringToken(getSecret(), payload, sessionTtlMs(opts));
 }
 
@@ -81,14 +88,20 @@ export async function verifyCustomerSessionToken(
   if (!verified) return null;
   const { payload, expiresAt } = verified;
   const [userId, marker, signedInRaw] = payload.split("~");
-  if (`~${marker}` !== TWO_FACTOR_MARKER) return { userId: payload, twoFactorVerified: false, expiresAt };
   const signedInAt = Number(signedInRaw);
-  return {
-    userId,
-    twoFactorVerified: true,
-    expiresAt,
-    ...(Number.isFinite(signedInAt) && signedInAt > 0 ? { signedInAt } : {}),
-  };
+  const withSignedIn = Number.isFinite(signedInAt) && signedInAt > 0 ? { signedInAt } : {};
+  if (marker === CUSTOMER_MARKER) return { userId, twoFactorVerified: false, expiresAt, ...withSignedIn };
+  if (`~${marker}` !== TWO_FACTOR_MARKER) return { userId: payload, twoFactorVerified: false, expiresAt };
+  return { userId, twoFactorVerified: true, expiresAt, ...withSignedIn };
+}
+
+// When the person behind this session signed in, for comparing against
+// users.sessions_valid_after. Tokens without a recorded time count from when
+// they were issued: a customer token's expiry minus its fixed 30-day TTL; a
+// two-factor token is at most one idle window old (as keepalive assumes).
+export function sessionSignedInAt(session: CustomerSession): number {
+  if (session.signedInAt) return session.signedInAt;
+  return session.expiresAt - (session.twoFactorVerified ? STAFF_IDLE_TIMEOUT_MS : SESSION_TTL_MS);
 }
 
 export async function createTwoFactorChallengeToken(userId: string): Promise<string> {

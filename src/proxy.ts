@@ -6,6 +6,7 @@ import {
   SESSION_TTL_MS,
   createCustomerSessionToken,
   sessionCookieOptions,
+  sessionSignedInAt,
   verifyCustomerSessionToken,
 } from "@/lib/users/session";
 import { captureAttribution } from "@/lib/marketing/attribution";
@@ -114,7 +115,9 @@ export async function proxy(request: NextRequest) {
     if (session && !session.twoFactorVerified && !isApi && sessionAge > SESSION_RENEW_AFTER_MS) {
       response.cookies.set(
         CUSTOMER_SESSION_COOKIE,
-        await createCustomerSessionToken(session.userId),
+        // Keeps the original sign-in time, so a renewal never makes a session
+        // signed in before a password change look newer than it (current-user.ts).
+        await createCustomerSessionToken(session.userId, { signedInAt: sessionSignedInAt(session) }),
         sessionCookieOptions(SESSION_TTL_MS)
       );
     }

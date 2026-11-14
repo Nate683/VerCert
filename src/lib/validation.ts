@@ -64,6 +64,13 @@ export const accountDeleteSchema = z.object({
   confirm: z.literal("DELETE"),
 });
 
+// Account Settings → Change Password. The current password is re-verified on
+// the server; the new one goes through passwordProblem() like registration.
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Enter your current password.").max(200),
+  newPassword: z.string().min(1, "Choose a new password.").max(PASSWORD_MAX_LENGTH),
+});
+
 export const forgotPasswordSchema = z.object({
   email: z.string().trim().toLowerCase().email().optional().or(z.literal("")),
 });

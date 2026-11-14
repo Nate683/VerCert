@@ -41,6 +41,7 @@ type UserRow = {
   research_prompt_resolved_at: string | null;
   affiliate_id: string | null;
   attribution: string | null;
+  sessions_valid_after: string | null;
 };
 
 function parseAttribution(raw: string | null): Attribution | undefined {
@@ -89,6 +90,7 @@ function rowToUser(row: UserRow): Customer {
     researchPromptResolvedAt: row.research_prompt_resolved_at ?? undefined,
     affiliateId: row.affiliate_id ?? undefined,
     attribution: parseAttribution(row.attribution),
+    sessionsValidAfter: row.sessions_valid_after ?? undefined,
   };
 }
 
@@ -291,6 +293,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   researchPromptResolvedAt: "research_prompt_resolved_at",
   affiliateId: "affiliate_id",
   attribution: "attribution",
+  sessionsValidAfter: "sessions_valid_after",
 };
 
 const JSON_FIELDS = new Set(["savedAddress", "attribution"]);

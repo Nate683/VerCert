@@ -11,6 +11,7 @@ import { NotificationPreferences } from "./NotificationPreferences";
 import { ResendVerification } from "./ResendVerification";
 import { AccountLogoutButton } from "./AccountLogoutButton";
 import { EmailChangeForm } from "./EmailChangeForm";
+import { PasswordChangeForm } from "./PasswordChangeForm";
 import { ReorderButton } from "./ReorderButton";
 import { AccountDataSection } from "./AccountDataSection";
 import { SubscriptionsSection } from "./SubscriptionsSection";
@@ -234,6 +235,13 @@ export default async function AccountPage() {
         <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Email Address</h2>
         <div className="mt-4">
           <EmailChangeForm pendingEmail={customer.pendingEmail} />
+        </div>
+      </section>
+
+      <section className="mt-8 border-t border-hairline pt-8">
+        <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Change Password</h2>
+        <div className="mt-4">
+          <PasswordChangeForm email={customer.email} firstName={customer.firstName} lastName={customer.lastName} />
         </div>
       </section>
 

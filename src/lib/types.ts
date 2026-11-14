@@ -269,6 +269,9 @@ export type Customer = {
   // or their promo code on a first order), and the first-visit source.
   affiliateId?: string;
   attribution?: Attribution;
+  // Sessions that signed in before this instant (ISO) are no longer accepted
+  // (lib/users/current-user.ts). Set by a password change; absent = no cut-off.
+  sessionsValidAfter?: string;
 };
 
 // Where a marketing consent decision was last made.

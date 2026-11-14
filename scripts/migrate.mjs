@@ -512,6 +512,10 @@ async function main() {
   // first-visit source (referral code, UTM tags, referring site) as JSON.
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS affiliate_id TEXT`;
   await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS attribution TEXT`;
+  // Sessions signed in before this instant (ISO) no longer count: set when the
+  // password is changed, so other browsers are signed out. Null = no cut-off.
+  // (scripts/sessions-valid-after.mjs adds it to production.)
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS sessions_valid_after TEXT`;
 
   // Signed-in browsing (product views, cart activity) is tied to the account.
   await sql`ALTER TABLE analytics_events ADD COLUMN IF NOT EXISTS user_id TEXT`;

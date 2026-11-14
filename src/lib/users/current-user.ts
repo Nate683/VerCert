@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { CUSTOMER_SESSION_COOKIE, verifyCustomerSessionToken } from "./session";
+import { CUSTOMER_SESSION_COOKIE, sessionSignedInAt, verifyCustomerSessionToken } from "./session";
 import { getUserById } from "./store";
 import { requiresTwoFactor } from "@/lib/two-factor/store";
 import type { Customer } from "@/lib/types";
@@ -15,5 +15,8 @@ export async function getCurrentCustomer(): Promise<Customer | null> {
   // is where two-factor is enforced: an executive session that didn't pass it
   // (e.g. one issued before 2FA was required) counts as signed out.
   if (requiresTwoFactor(user) && !session.twoFactorVerified) return null;
+  // After a password change, sessions that signed in before it count as
+  // signed out (every account page and API resolves the user through here).
+  if (user.sessionsValidAfter && sessionSignedInAt(session) < Date.parse(user.sessionsValidAfter)) return null;
   return user;
 }

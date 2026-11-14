@@ -81,13 +81,13 @@ export default async function ProductDetailPage({
   // Unset values are left out entirely rather than shown as 0 or blank.
   const purity = formatPurity(product.purityPercent);
   const specs = [
-    { label: "CAS Number", value: specText(product.casNumber), mono: true },
-    { label: "Molecular Formula", value: specText(product.molecularFormula), mono: true },
-    { label: "Molecular Weight", value: specText(product.molecularWeight), mono: true },
-    { label: "Purity", value: purity, mono: true },
-    { label: "Sequence / Form", value: specText(product.sequenceOrForm), mono: false },
-    { label: "Storage", value: specText(product.storage), mono: false },
-  ].filter((spec): spec is { label: string; value: string; mono: boolean } => spec.value !== null);
+    { label: "CAS Number", value: specText(product.casNumber) },
+    { label: "Molecular Formula", value: specText(product.molecularFormula) },
+    { label: "Molecular Weight", value: specText(product.molecularWeight) },
+    { label: "Purity", value: purity },
+    { label: "Sequence / Form", value: specText(product.sequenceOrForm) },
+    { label: "Storage", value: specText(product.storage) },
+  ].filter((spec): spec is { label: string; value: string } => spec.value !== null);
 
   const primaryBatch = product.batchNumbers[0];
   const prices = pricedSizes(product).map((s) => s.priceUsd);
@@ -182,12 +182,12 @@ export default async function ProductDetailPage({
                 (hasCertificate(primaryBatch) ? (
                   <Link
                     href={`/lot/${encodeURIComponent(primaryBatch)}`}
-                    className="inline-block py-1.5 font-mono text-xs text-muted underline-offset-4 hover:underline"
+                    className="inline-block py-1.5 text-xs text-muted underline-offset-4 hover:underline"
                   >
                     You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
                   </Link>
                 ) : (
-                  <span className="inline-block py-1.5 font-mono text-xs text-muted">
+                  <span className="inline-block py-1.5 text-xs text-muted">
                     You&apos;ll receive lot <span className="text-navy">{primaryBatch}</span>
                   </span>
                 ))}
@@ -239,11 +239,11 @@ export default async function ProductDetailPage({
                         href={`/lot/${encodeURIComponent(batch)}`}
                         className="flex items-center justify-between border border-hairline bg-paper px-4 py-3 text-sm text-muted transition-colors hover:border-gold hover:text-gold-ink"
                       >
-                        <span className="font-mono">{batch}</span>
+                        <span>{batch}</span>
                         <span className="text-xs uppercase tracking-[0.15em]">View COA →</span>
                       </Link>
                     ) : (
-                      <span className="block border border-hairline bg-paper px-4 py-3 font-mono text-sm text-muted">{batch}</span>
+                      <span className="block border border-hairline bg-paper px-4 py-3 text-sm text-muted">{batch}</span>
                     )}
                   </li>
                 ))}
@@ -260,9 +260,10 @@ export default async function ProductDetailPage({
                   key={spec.label}
                   className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between"
                 >
-                  {/* Labels in the COA headings' gold-ink (5.31:1 on this white ground); values stay navy. */}
+                  {/* Label and value both in the COA headings' gold-ink (5.31:1 on this
+                      white ground); the value in the body font like the rest of the page. */}
                   <dt className="text-xs uppercase tracking-[0.15em] text-gold-ink">{spec.label}</dt>
-                  <dd className={`text-sm text-navy sm:text-right ${spec.mono ? "font-mono" : ""}`}>
+                  <dd className="text-sm text-gold-ink sm:text-right">
                     {spec.value}
                   </dd>
                 </div>

@@ -187,7 +187,7 @@ export function ProductGallery({
                 <span aria-hidden="true">{delta < 0 ? "‹" : "›"}</span>
               </button>
             ))}
-            <span className="pointer-events-none absolute bottom-3 left-3 border border-white/20 bg-black/60 px-2 py-1 font-mono text-[11px] text-white/80">
+            <span className="pointer-events-none absolute bottom-3 left-3 border border-white/20 bg-black/60 px-2 py-1 text-[11px] text-white/80">
               {images.indexOf(current) + 1} / {images.length}
             </span>
           </>

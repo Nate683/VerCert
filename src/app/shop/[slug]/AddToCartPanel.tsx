@@ -125,7 +125,7 @@ export function AddToCartPanel({
                   )}
                   {s.label}
                 </span>
-                <span className={`font-mono text-xs ${selected ? "text-white/80" : "text-muted"}`}>
+                <span className={`text-xs ${selected ? "text-white/80" : "text-muted"}`}>
                   ${s.priceUsd.toFixed(2)}
                 </span>
               </button>
@@ -153,7 +153,7 @@ export function AddToCartPanel({
                   </div>
                   <div className="p-3">
                     <p className="text-sm text-navy">{c.name}</p>
-                    <p className="font-mono text-xs text-muted">{c.amount}</p>
+                    <p className="text-xs text-muted">{c.amount}</p>
                     {info.href && (
                       <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-navy underline-offset-4 group-hover:underline">
                         View compound →
@@ -225,7 +225,7 @@ export function AddToCartPanel({
                 />
                 One-time purchase
               </span>
-              <span className="font-mono text-navy">${tierPrice.toFixed(2)}</span>
+              <span className="text-navy">${tierPrice.toFixed(2)}</span>
             </label>
             <div
               className={`border-2 bg-paper px-4 py-3 text-sm ${
@@ -243,7 +243,7 @@ export function AddToCartPanel({
                   />
                   Subscribe &amp; save {subscription.discountPercent}%
                 </span>
-                <span className="font-mono text-navy">
+                <span className="text-navy">
                   ${subscriptionUnitPrice(tierPrice, subscription.discountPercent).toFixed(2)}
                 </span>
               </label>
@@ -284,7 +284,7 @@ export function AddToCartPanel({
             <span className="ml-1 font-sans text-xs tracking-wide text-muted">each</span>
           </p>
           {unitPrice !== listPrice && (
-            <p className="font-mono text-xs text-muted">
+            <p className="text-xs text-muted">
               <span className="line-through">${listPrice.toFixed(2)}</span>
               <span className="ml-2 text-gold-ink">
                 {subscribing ? `subscription price${tierPrice !== listPrice ? " + bulk" : ""}` : "bulk price applied"}
@@ -350,7 +350,7 @@ export function AddToCartPanel({
             <span className="text-muted">
               Total{quantity > 1 ? ` (${quantity} × $${unitPrice.toFixed(2)})` : ""}
             </span>
-            <span className="font-mono text-lg text-navy">${lineTotal.toFixed(2)}</span>
+            <span className="text-lg text-navy">${lineTotal.toFixed(2)}</span>
           </div>
           {saving > 0 && (
             <p className="mt-1 text-right text-xs text-gold-ink">You save ${saving.toFixed(2)}</p>
