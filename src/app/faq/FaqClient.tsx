@@ -5,7 +5,8 @@ import type { FaqItem } from "@/lib/site-content";
 import { EditableText } from "@/components/EditableText";
 
 export default function FaqClient({ items }: { items: FaqItem[] }) {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  // Every question starts collapsed.
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [localItems, setLocalItems] = useState(items);
 
   async function saveItems(next: FaqItem[]) {

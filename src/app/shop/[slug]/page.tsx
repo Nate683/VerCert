@@ -256,7 +256,8 @@ export default async function ProductDetailPage({
                   key={spec.label}
                   className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between"
                 >
-                  <dt className="text-xs uppercase tracking-[0.15em] text-muted">{spec.label}</dt>
+                  {/* Labels in the COA headings' gold-ink (5.31:1 on this white ground); values stay navy. */}
+                  <dt className="text-xs uppercase tracking-[0.15em] text-gold-ink">{spec.label}</dt>
                   <dd className={`text-sm text-navy sm:text-right ${spec.mono ? "font-mono" : ""}`}>
                     {spec.value}
                   </dd>

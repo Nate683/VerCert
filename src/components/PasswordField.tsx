@@ -9,6 +9,61 @@ import {
   type PasswordContext,
 } from "@/lib/users/password-policy";
 
+// The confirmation input that sits under a PasswordField. A usability guard
+// only: it never leaves the browser, and the server's password checks are
+// unchanged. Empty or mismatched marks the input invalid (required +
+// setCustomValidity), so the browser won't submit the form; forms with a
+// submit path that skips form validation must also compare the two values.
+// The mismatch note shows once the typed confirmation stops matching the
+// start of the password, or after leaving the field.
+export function ConfirmPasswordField({
+  id,
+  value,
+  onChange,
+  password,
+  placeholder = "Confirm password",
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  password: string;
+  placeholder?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [blurred, setBlurred] = useState(false);
+  const mismatch = value !== "" && value !== password;
+
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(mismatch ? "Passwords don't match." : "");
+  }, [mismatch]);
+
+  const showMismatch = mismatch && (blurred || !password.startsWith(value));
+
+  return (
+    <div>
+      <input
+        ref={inputRef}
+        id={id}
+        required
+        type="password"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={() => setBlurred(true)}
+        placeholder={placeholder}
+        aria-label={placeholder}
+        aria-invalid={showMismatch || undefined}
+        aria-describedby={`${id}-match`}
+        autoComplete="new-password"
+        className="input-field-light"
+      />
+      {/* Always in the DOM (so screen readers announce the change); no margin while empty. */}
+      <p id={`${id}-match`} aria-live="polite" className={showMismatch ? "mt-1.5 text-xs leading-relaxed text-red-700" : ""}>
+        {showMismatch ? "Passwords don't match." : ""}
+      </p>
+    </div>
+  );
+}
+
 // A new-password input with live strength feedback. A refused password marks
 // the input invalid, so the browser won't submit the form; the server runs
 // the same check regardless.

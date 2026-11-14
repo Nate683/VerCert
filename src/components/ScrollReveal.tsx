@@ -23,17 +23,27 @@ export function ScrollReveal({
       setVisible(true);
       return;
     }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.15 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
+    // Reveal when 15% of the element is on screen, OR when the element fills
+    // 15% of the viewport's height, whichever comes first. The second rule is
+    // for elements taller than the screen: on a phone the featured grid is
+    // ~2,800px tall, so 15% of it (~420px) could be on screen, first vial
+    // included, while the wrapper stayed at opacity 0, and a Back navigation
+    // restored straight into that state. For anything shorter than the
+    // viewport the first rule always fires first, so its timing is unchanged.
+    const reveal = ([entry]: IntersectionObserverEntry[]) => {
+      if (!entry.isIntersecting) return;
+      setVisible(true);
+      byElement.disconnect();
+      byViewport.disconnect();
+    };
+    const byElement = new IntersectionObserver(reveal, { threshold: 0.15 });
+    const byViewport = new IntersectionObserver(reveal, { rootMargin: "-15% 0px -15% 0px", threshold: 0 });
+    byElement.observe(el);
+    byViewport.observe(el);
+    return () => {
+      byElement.disconnect();
+      byViewport.disconnect();
+    };
   }, []);
 
   return (

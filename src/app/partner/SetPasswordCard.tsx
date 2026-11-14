@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PasswordField } from "@/components/PasswordField";
+import { ConfirmPasswordField, PasswordField } from "@/components/PasswordField";
 
 // Tidies the address without re-rendering the page, which would remove this
 // card before its confirmation could be read. A reload then shows no card.
@@ -15,6 +15,7 @@ function dropWelcomeFromUrl() {
 // the normal reset-password endpoint and its password rules.
 export function SetPasswordCard({ token, email }: { token: string; email: string }) {
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -22,6 +23,11 @@ export function SetPasswordCard({ token, email }: { token: string; email: string
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Typo guard only (never sent); the server's password rules are unchanged.
+    if (!confirmPassword || confirmPassword !== password) {
+      setError("Passwords don't match.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -68,6 +74,13 @@ export function SetPasswordCard({ token, email }: { token: string; email: string
           onChange={setPassword}
           context={{ email }}
           placeholder="New password"
+        />
+        <ConfirmPasswordField
+          id="partner-new-password-confirm"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          password={password}
+          placeholder="Confirm new password"
         />
         {error && (
           <p role="alert" className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">

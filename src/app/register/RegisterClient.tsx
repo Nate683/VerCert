@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { safeNextPath } from "@/lib/safe-next";
-import { PasswordField } from "@/components/PasswordField";
+import { ConfirmPasswordField, PasswordField } from "@/components/PasswordField";
 import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
 import { AcknowledgmentText } from "@/components/AcknowledgmentText";
 
@@ -35,6 +35,7 @@ function RegisterForm() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [researchCategory, setResearchCategory] = useState("");
   const [phone, setPhone] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
@@ -53,6 +54,14 @@ function RegisterForm() {
   const next = safeNextPath(searchParams.get("next")) ?? "/shop";
 
   async function submit(asAffiliate: boolean) {
+    // The confirmation is a typo guard only, checked here too because
+    // "Create a customer account instead" submits without form validation.
+    // It is never sent; the server's password rules are unchanged.
+    if (!confirmPassword || confirmPassword !== password) {
+      setError("Passwords don't match.");
+      setInvalidCode(false);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     setInvalidCode(false);
@@ -219,6 +228,12 @@ function RegisterForm() {
             value={password}
             onChange={setPassword}
             context={{ email, firstName, lastName }}
+          />
+          <ConfirmPasswordField
+            id="register-password-confirm"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            password={password}
           />
           <label className="flex items-start gap-3 text-xs leading-relaxed text-muted">
             <input

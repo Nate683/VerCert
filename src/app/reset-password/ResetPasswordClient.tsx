@@ -3,19 +3,25 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PasswordField } from "@/components/PasswordField";
+import { ConfirmPasswordField, PasswordField } from "@/components/PasswordField";
 
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Typo guard only (never sent); the server's password rules are unchanged.
+    if (!confirmPassword || confirmPassword !== password) {
+      setError("Passwords don't match.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -73,6 +79,13 @@ function ResetPasswordForm() {
           onChange={setPassword}
           placeholder="New password"
           autoFocus
+        />
+        <ConfirmPasswordField
+          id="reset-password-confirm"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          password={password}
+          placeholder="Confirm new password"
         />
         {error && (
           <p role="alert" className="border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-700">
