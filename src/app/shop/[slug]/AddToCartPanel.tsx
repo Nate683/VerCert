@@ -27,11 +27,15 @@ export function AddToCartPanel({
   subscription = null,
   orderingEnabled,
   orderingUnavailableLabel,
+  estimatedAvailability = null,
 }: {
   product: Product;
   // The ordering switch (lib/ordering.ts) and its heading, read on the server.
   orderingEnabled: boolean;
   orderingUnavailableLabel: string;
+  // "November 25, 2026", or null to show nothing. Decided on the server
+  // (estimatedAvailabilityLabel); informational only, never affects buying.
+  estimatedAvailability?: string | null;
   components?: Record<string, BlendComponentInfo>;
   // Set only when subscribe-and-save is on and this product qualifies.
   subscription?: { discountPercent: number; intervalDays: number[] } | null;
@@ -175,10 +179,16 @@ export function AddToCartPanel({
       )}
 
       {status !== "in_stock" ? (
-        <p className="mt-6 flex items-center gap-2 text-sm text-muted">
-          <span aria-hidden="true" className="h-2 w-2 rounded-full bg-muted" />
-          {AVAILABILITY_LABELS[status]}
-        </p>
+        <>
+          <p className="mt-6 flex items-center gap-2 text-sm text-muted">
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-muted" />
+            {AVAILABILITY_LABELS[status]}
+          </p>
+          {/* Under the status, aligned with its text (past the dot). */}
+          {estimatedAvailability && (
+            <p className="mt-1 pl-4 text-sm text-muted">Estimated availability: {estimatedAvailability}</p>
+          )}
+        </>
       ) : stock && (
         <p className={`mt-6 flex items-center gap-2 text-sm ${stock.status === "out" ? "text-muted" : "text-navy"}`}>
           <span

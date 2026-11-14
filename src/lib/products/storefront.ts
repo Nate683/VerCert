@@ -10,6 +10,10 @@ export function toStorefrontProduct(product: Product): Product {
   const sizes = pricedSizes(product).map(({ costUsd, ...size }) => size);
   const storefront = { ...product, sizes };
   delete storefront.costUsd;
+  // The product page sends the computed "Estimated availability" text
+  // (estimatedAvailabilityLabel, decided on the server against US Central's
+  // date), so the raw date never needs to reach the browser.
+  delete storefront.estimatedAvailableOn;
   return storefront;
 }
 

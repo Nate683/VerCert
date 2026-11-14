@@ -2,6 +2,7 @@ import { query } from "@/lib/db";
 import type { Product } from "@/lib/types";
 import { DEFAULT_AVAILABILITY_STATUS, type AvailabilityStatus } from "./availability";
 import { pricedSizes } from "./pricing";
+import { toDateOnly } from "./estimated-availability";
 
 // Server-only Postgres-backed product catalog store.
 
@@ -26,6 +27,8 @@ type ProductRow = {
   sort_order: number;
   active: boolean;
   availability_status: AvailabilityStatus | null;
+  // DATE: the driver returns a Date at the server's local midnight (see toDateOnly).
+  estimated_available_on: Date | string | null;
   cost_usd: number | null;
   created_at: string;
   updated_at: string;
@@ -53,6 +56,7 @@ function rowToProduct(row: ProductRow): Product {
     sortOrder: row.sort_order,
     active: row.active,
     availabilityStatus: row.availability_status ?? DEFAULT_AVAILABILITY_STATUS,
+    estimatedAvailableOn: toDateOnly(row.estimated_available_on),
     costUsd: row.cost_usd ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -104,6 +108,7 @@ export type CreateProductInput = {
   sortOrder?: number;
   active?: boolean;
   availabilityStatus?: AvailabilityStatus;
+  estimatedAvailableOn?: string | null;
   costUsd?: number;
 };
 
@@ -111,8 +116,8 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
   const now = new Date().toISOString();
   await query(
     `INSERT INTO products
-      (slug, name, category, alternate_names, cas_number, molecular_formula, molecular_weight, purity_percent, sequence_or_form, storage, sizes, batch_numbers, summary, description, sort_order, active, availability_status, cost_usd, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
+      (slug, name, category, alternate_names, cas_number, molecular_formula, molecular_weight, purity_percent, sequence_or_form, storage, sizes, batch_numbers, summary, description, sort_order, active, availability_status, estimated_available_on, cost_usd, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`,
     [
       input.slug,
       input.name,
@@ -131,6 +136,7 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
       input.sortOrder ?? 0,
       input.active ?? true,
       input.availabilityStatus ?? DEFAULT_AVAILABILITY_STATUS,
+      input.estimatedAvailableOn ?? null,
       input.costUsd ?? null,
       now,
       now,
@@ -160,6 +166,7 @@ const PATCHABLE_COLUMNS: Record<string, string> = {
   sortOrder: "sort_order",
   active: "active",
   availabilityStatus: "availability_status",
+  estimatedAvailableOn: "estimated_available_on",
   costUsd: "cost_usd",
 };
 

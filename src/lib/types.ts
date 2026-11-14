@@ -54,6 +54,11 @@ export type Product = {
   // Coming Soon / Pending Independent Testing / In Stock / Out of Stock
   // (lib/products/availability.ts). Only In Stock can be bought.
   availabilityStatus?: import("./products/availability").AvailabilityStatus;
+  // Optional estimated availability date, "YYYY-MM-DD" (a DATE column; no
+  // time, no zone). Informational only: shown on the product page for Coming
+  // Soon / In Independent Testing until it passes (US Central); never changes
+  // status, visibility or purchasing. lib/products/estimated-availability.ts.
+  estimatedAvailableOn?: string | null;
   costUsd?: number;
   createdAt?: string;
   updatedAt?: string;

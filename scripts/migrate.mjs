@@ -570,6 +570,10 @@ async function main() {
       END IF;
     END $$
   `;
+  // Optional estimated availability date: DATE, nullable, no default
+  // (scripts/estimated-availability.mjs applied this to production, 2026-11-13).
+  await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS estimated_available_on DATE`;
+  await sql`COMMENT ON COLUMN products.estimated_available_on IS 'Optional estimated availability date, entered by an executive. Informational only: never changes status, visibility or purchasing.'`;
 
   // The research-use attestation ticked at checkout, recorded per order: the
   // exact wording shown, when, and from which IP. Null on orders placed

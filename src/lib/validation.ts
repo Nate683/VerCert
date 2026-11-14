@@ -193,6 +193,17 @@ export const productSchema = z.object({
   sizeStock: z.record(z.string().trim().min(1).max(50), z.number().int().min(0).max(1000000).nullable()).optional(),
   active: z.boolean().optional(),
   availabilityStatus: z.enum(AVAILABILITY_STATUSES).optional(),
+  // Optional estimated availability date, "YYYY-MM-DD"; null clears it.
+  estimatedAvailableOn: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date like 2026-11-25.")
+    .refine((d) => {
+      const [y, m, day] = d.split("-").map(Number);
+      const t = new Date(Date.UTC(y, m - 1, day));
+      return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === day;
+    }, "That date doesn't exist.")
+    .nullable()
+    .optional(),
   costUsd: z.number().min(0).max(1000000).optional(),
 });
 

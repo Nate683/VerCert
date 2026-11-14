@@ -44,6 +44,7 @@ type FormState = {
   initialStock: string;
   active: boolean;
   availabilityStatus: AvailabilityStatus;
+  estimatedAvailableOn: string; // "YYYY-MM-DD", or "" for none
   costUsd: string;
 };
 
@@ -67,6 +68,7 @@ function emptyForm(): FormState {
     initialStock: "0",
     active: true,
     availabilityStatus: DEFAULT_AVAILABILITY_STATUS,
+    estimatedAvailableOn: "",
     costUsd: "",
   };
 }
@@ -96,6 +98,7 @@ function productToForm(p: ProductWithStock): FormState {
     initialStock: String(p.stock?.quantity ?? 0),
     active: p.active ?? true,
     availabilityStatus: availabilityStatus(p),
+    estimatedAvailableOn: p.estimatedAvailableOn ?? "",
     costUsd: p.costUsd !== undefined ? String(p.costUsd) : "",
   };
 }
@@ -153,6 +156,8 @@ function formToPayload(form: FormState) {
     ),
     active: form.active,
     availabilityStatus: form.availabilityStatus,
+    // Sent every save: a date, or null to clear. Never changed by a status change.
+    estimatedAvailableOn: form.estimatedAvailableOn || null,
     costUsd: form.costUsd.trim() ? Number(form.costUsd) : undefined,
   };
 }
@@ -502,6 +507,36 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                 ))}
               </select>
             </label>
+            {/* Optional, informational only: shown on the product page under
+                Coming Soon / In Independent Testing until the date passes
+                (US Central). Never changes the status or what can be bought,
+                and a status change leaves it as it is. */}
+            {/* Full width, so the fields after it keep their places in the two-column grid. */}
+            <div className="sm:col-span-2">
+              <label htmlFor="product-estimated-available-on" className="text-[10px] uppercase tracking-[0.1em] text-white/40">
+                Estimated Availability Date (optional)
+              </label>
+              <div className="mt-1 flex max-w-md gap-2">
+                <input
+                  id="product-estimated-available-on"
+                  type="date"
+                  value={form.estimatedAvailableOn}
+                  onChange={(e) => setForm((f) => ({ ...f, estimatedAvailableOn: e.target.value }))}
+                  className="input-field flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, estimatedAvailableOn: "" }))}
+                  disabled={!form.estimatedAvailableOn}
+                  className="border border-white/20 px-3 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold disabled:opacity-30"
+                >
+                  Clear
+                </button>
+              </div>
+              <p className="mt-1 text-[11px] text-white/40">
+                Shown for Coming Soon and Pending Independent Testing only, through the end of that day (US Central). Informational only.
+              </p>
+            </div>
             <label className="input-field flex items-center gap-3">
               <input
                 type="checkbox"

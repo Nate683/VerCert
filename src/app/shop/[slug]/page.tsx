@@ -17,6 +17,7 @@ import { withStock } from "@/lib/inventory";
 import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { SCHEMA_AVAILABILITY } from "@/lib/products/stock";
 import { availabilityStatus } from "@/lib/products/availability";
+import { estimatedAvailabilityLabel } from "@/lib/products/estimated-availability";
 import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
 import { getContent } from "@/lib/site-content";
 import { DEFAULT_SUBSCRIPTION_SETTINGS, isSubscribable, subscriptionsEnabled } from "@/lib/subscriptions/rules";
@@ -201,6 +202,9 @@ export default async function ProductDetailPage({
               components={components}
               orderingEnabled={orderingEnabled}
               orderingUnavailableLabel={ORDERING_UNAVAILABLE.heading}
+              // Decided here, per request (this page is force-dynamic), against
+              // today's date in US Central, not the server clock's zone.
+              estimatedAvailability={estimatedAvailabilityLabel(product)}
               subscription={
                 subscriptionsEnabled(subscriptionSettings) && isSubscribable(product)
                   ? { discountPercent: subscriptionSettings.discountPercent, intervalDays: subscriptionSettings.intervalDays }
