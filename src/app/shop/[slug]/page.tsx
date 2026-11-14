@@ -18,6 +18,7 @@ import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { SCHEMA_AVAILABILITY } from "@/lib/products/stock";
 import { availabilityStatus } from "@/lib/products/availability";
 import { estimatedAvailabilityLabel } from "@/lib/products/estimated-availability";
+import { getCurrentCustomer, requireCustomerForPage } from "@/lib/users/current-user";
 import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
 import { getContent } from "@/lib/site-content";
 import { DEFAULT_SUBSCRIPTION_SETTINGS, isSubscribable, subscriptionsEnabled } from "@/lib/subscriptions/rules";
@@ -39,6 +40,8 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  // Signed-in only (the page itself redirects); nothing about the product without a valid session.
+  if (!(await getCurrentCustomer())) return buildMetadata({ title: "VeriCert", noIndex: true });
   const product = await getProductBySlug(slug);
   if (!product || !isOnSale(product))
     return buildMetadata({ title: "Product Not Found | VeriCert", noIndex: true });
@@ -55,6 +58,9 @@ export default async function ProductDetailPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
+  // Signed-in only, checked before anything is looked up (so a signed-out
+  // session can't learn which products exist); goes to /register like the proxy.
+  await requireCustomerForPage(`/shop/${slug}`);
   // Inactive products are fetched too, only so a blend's component card can
   // show a compound's photo even when that compound isn't for sale itself.
   const [found, fullCatalog] = await Promise.all([getProductBySlug(slug), listProducts({ includeInactive: true })]);

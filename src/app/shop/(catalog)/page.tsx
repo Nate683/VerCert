@@ -4,6 +4,7 @@ import { withStock } from "@/lib/inventory";
 import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { ShopClient } from "./ShopClient";
 import { buildMetadata } from "@/lib/seo";
+import { requireCustomerForPage } from "@/lib/users/current-user";
 
 export const metadata = buildMetadata({
   title: "Shop | VeriCert",
@@ -21,6 +22,8 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   // swapped the catalog in a moment later (the flash on load and refresh).
   const { q } = await searchParams;
   const urlQuery = typeof q === "string" ? q : "";
+  // Signed-in only; a session signed out by a password change goes to /register like a visitor with none.
+  await requireCustomerForPage(urlQuery ? `/shop?${new URLSearchParams({ q: urlQuery })}` : "/shop");
   const products = await listProducts().then(withStock).then(withCertifiedPurity);
 
   return (
