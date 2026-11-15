@@ -1,9 +1,9 @@
 # VeriCert Peptides — Stage 1 Completion Report
 ## Strength-Specific SKU & Product Functionality
 
-**Report status:** INITIAL (pre-deployment), 2026-11-14. Awaiting authorization to deploy.
+**Report status:** FINAL (post-deployment), 2026-11-14. Stopped for business-owner review.
 **Code checkpoint:** git tag `checkpoint/pre-stage1` (local) = commit `7161af7` = origin/master before any Stage 1 code.
-**Code status:** built and tested locally; **not committed, not pushed, not deployed.**
+**Code status:** committed as `0a0867a`, pushed to master, **deployed to production** (Vercel reported "Deployment has completed"). Verified live, signed out (section F2).
 **Database status:** one additive migration **applied to production** (owner-approved, 2026-11-14). See section C2.
 
 ---
@@ -198,7 +198,34 @@ All tests ran locally against the local copy of the database. None ran against p
 ---
 
 ## F. Deployment status
-**Local only.** Not committed, not pushed, not deployed. Production has the new table, which the live (pre-Stage-1) code ignores. Deployment awaits the owner's authorization.
+**Deployed.** The owner authorized "Commit and deploy". Committed as `0a0867a` (`VeriCert_Group_2_Audit_Report.txt` was left out), pushed to master, and deployed by Vercel's existing Git integration. Vercel reported success; no deployment errors.
+
+### F2. Live verification (signed out, no account, read-only)
+**Stage 1 checks: 11/11 passed.**
+- **Homepage featured cards:** all 4 vial images load at 390×844, 375×667 and 1280×900, and each card shows one price. This closes the item that couldn't be checked locally.
+- **Signed-out strength link:** `/shop/vc3r?strength=20mg` returns 307 to `/register?next=/shop/vc3r?strength=20mg`. Nothing about the product (price, SKU, strength) is served.
+- **Staff routes, signed out:** the new strength-image route (PUT and DELETE), `GET /api/executive/products` and `PATCH /api/executive/products/vc3r` all return **401**. `/api/catalog` still returns **401**.
+- **Certificate search "VC3R":** catalog rows for both strengths with their stored SKU codes (`VC3R-10MG`, `VC3R-20MG`), and no certificate groups.
+
+**Certificate checks** (the post-COA-deploy suite, re-run): **24/26 on the first pass.**
+- **The two failures came from comparing single page loads, and are not a leak.** They compared one load of the synthetic lot's `/lot/` page with one load of a made-up lot's page.
+- **Re-checked across 9 loads:**
+  - only two versions of the page exist;
+  - they differ only in whether the page-title text is placed in the page body, which varies between requests and also appeared between loads of the same made-up lot;
+  - every load of the synthetic lot's page is word-for-word identical to a made-up lot's page.
+- **All other certificate checks passed:**
+  - search for the synthetic lot and report number returns the same as for made-up ones;
+  - its PDF returns 404, like a random id;
+  - staff certificate routes return 401;
+  - the header search and How We Test return identical results;
+  - the no-match wording is correct.
+
+**Not verifiable without an account:**
+- the signed-in product page on production;
+- the Executive Office editor on production;
+- a real vial-image upload to Vercel Blob.
+
+These are business-owner checks G1–G8.
 
 Pre-deployment confirmations:
 - **Recoverable checkpoint:** yes (`checkpoint/pre-stage1` = `7161af7`). To roll back after deploying, revert the Stage 1 commit; the old code reads `products.sizes`, which is kept in sync.
@@ -229,5 +256,7 @@ Pre-deployment confirmations:
 1. **The certificate-to-strength association is missing** (C2). Record it for the later certificate integration phase. Do not show certificates per strength until then.
 2. **Renaming a strength detaches label-keyed certificates and subscriptions** (C2.3, C3). The editor warns about this.
 3. **Product-level status and date columns are kept but no longer edited.** Any external tool writing them directly has no effect on the storefront.
-4. **Blob upload is unverified locally.** Verify with step G3 after deploy.
-5. **Homepage featured-vial images on phones are unverified locally.** Check live after deploy.
+4. **The real vial-image upload to Vercel Blob is unverified** (it can't be tested locally or signed out). Verify with step G3.
+5. ~~Homepage featured-vial images on phones are unverified locally.~~ Verified live: all load (F2).
+
+Stage 2 and Stage 3 have not been started and await explicit business-owner approval.
