@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { getProductBySlug, updateProduct, deleteProduct, pricedSizes } from "@/lib/products";
+import { StrengthError } from "@/lib/products/strength-store";
 import { upsertInventory, deleteInventory, syncSizeInventory } from "@/lib/inventory";
 import { productUpdateSchema, parseBody } from "@/lib/validation";
 import { findBlockedTerm, blockedTermMessage, PRODUCT_NON_COPY_KEYS } from "@/lib/content-guard";
@@ -32,11 +33,13 @@ export const PATCH = withApiErrorHandling(async (
   if (blocked) return NextResponse.json({ error: blockedTermMessage(blocked) }, { status: 400 });
 
   if (sizePrice) {
+    // The strength by its permanent id when given, else by label.
     const sizes = patch.sizes ?? existing.sizes;
-    if (!sizes.some((s) => s.label === sizePrice.label)) {
+    const isTarget = (s: (typeof sizes)[number]) => (sizePrice.id ? s.id === sizePrice.id : s.label === sizePrice.label);
+    if (!sizes.some(isTarget)) {
       return NextResponse.json({ error: `No size "${sizePrice.label}" on this product.` }, { status: 400 });
     }
-    patch.sizes = sizes.map((s) => (s.label === sizePrice.label ? { ...s, priceUsd: sizePrice.priceUsd } : s));
+    patch.sizes = sizes.map((s) => (isTarget(s) ? { ...s, priceUsd: sizePrice.priceUsd } : s));
   }
 
   // Nothing goes on sale without a price: an active product needs at least
@@ -46,7 +49,15 @@ export const PATCH = withApiErrorHandling(async (
     return NextResponse.json({ error: "Set a price on at least one size before making this product active." }, { status: 400 });
   }
 
-  const product = await updateProduct(slug, patch);
+  let product;
+  try {
+    product = await updateProduct(slug, patch);
+  } catch (err) {
+    // A strength list that breaks a rule (duplicate, unknown id, a strength removed rather than deactivated): nothing
+    // was written, and the editor shows why.
+    if (err instanceof StrengthError) return NextResponse.json({ error: err.message }, { status: 400 });
+    throw err;
+  }
   if (initialStock !== undefined) await upsertInventory(slug, initialStock);
   // Renamed or removed sizes drop their separate counts even when this
   // request doesn't send any.

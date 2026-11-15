@@ -1,5 +1,5 @@
 import { listProducts } from "@/lib/products/store";
-import { availabilityStatus } from "@/lib/products/availability";
+import { availabilityStatus, strengthStatus } from "@/lib/products/availability";
 import { logActivity } from "@/lib/activity-log";
 import { parseResultNumber } from "./criteria";
 import { extractCertificate, inspectPdf } from "./extract";
@@ -70,6 +70,7 @@ async function context() {
     sizes: p.sizes.map((s) => s.label),
     batchNumbers: p.batchNumbers,
     availabilityStatus: availabilityStatus(p),
+    sizeStatuses: Object.fromEntries(p.sizes.map((s) => [s.label, strengthStatus(p, s)])),
     active: p.active !== false,
   }));
   return { products: productInfo, criteria, labs, records, lots };

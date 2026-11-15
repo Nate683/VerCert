@@ -1,5 +1,5 @@
-import type { Product } from "@/lib/types";
-import { availabilityStatus, type AvailabilityStatus } from "./availability";
+import type { Product, SizeOption } from "@/lib/types";
+import { availabilityStatus, strengthStatus, type AvailabilityStatus } from "./availability";
 
 // The optional estimated availability date (products.estimated_available_on,
 // a DATE: a calendar day with no time and no zone). Client-safe.
@@ -71,4 +71,18 @@ export function estimatedAvailabilityLabel(
   if (!date || !SHOWN_FOR.includes(availabilityStatus(product))) return null;
   if (date < businessToday(now)) return null;
   return formatDateOnly(date);
+}
+
+// Stage 1: the same rule for one strength — its own date and its own status
+// (the product's column is only the fallback for a status never set on the
+// strength). No date on the strength = nothing shown.
+export function strengthEstimatedLabel(
+  product: Pick<Product, "availabilityStatus">,
+  size: Pick<SizeOption, "availabilityStatus" | "estimatedAvailableOn">,
+  now: Date = new Date()
+): string | null {
+  return estimatedAvailabilityLabel(
+    { availabilityStatus: strengthStatus(product, size), estimatedAvailableOn: size.estimatedAvailableOn ?? null },
+    now
+  );
 }

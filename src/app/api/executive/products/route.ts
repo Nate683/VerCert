@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { listProducts, createProduct, getProductBySlug, pricedSizes } from "@/lib/products";
+import { StrengthError } from "@/lib/products/strength-store";
 import { upsertInventory, listInventory, syncSizeInventory } from "@/lib/inventory";
 import { productSchema, parseBody } from "@/lib/validation";
 import { findBlockedTerm, blockedTermMessage, PRODUCT_NON_COPY_KEYS } from "@/lib/content-guard";
@@ -55,7 +56,13 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     );
   }
 
-  const product = await createProduct(input);
+  let product;
+  try {
+    product = await createProduct(input);
+  } catch (err) {
+    if (err instanceof StrengthError) return NextResponse.json({ error: err.message }, { status: 400 });
+    throw err;
+  }
   await upsertInventory(product.slug, initialStock ?? 0);
   if (sizeStock) await syncSizeInventory(product.slug, product.sizes.map((s) => s.label), sizeStock);
 

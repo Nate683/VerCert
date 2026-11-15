@@ -1,6 +1,6 @@
 import { listProducts } from "@/lib/products/store";
 import { withStock } from "@/lib/inventory";
-import { availabilityStatus } from "@/lib/products/availability";
+import { availabilityStatus, strengthStatus } from "@/lib/products/availability";
 import type { Product } from "@/lib/types";
 import { getRecord, listLabs, listLots, listPublishedRecords, pendingRevision } from "./store";
 import { pricedSizes } from "@/lib/products/pricing";
@@ -32,7 +32,10 @@ export function lotAvailability(record: CoaRecord, product: Product | undefined)
   if (record.inventoryStatus === "unavailable") return lotListed ? "unavailable" : "historical";
   if (!product || !lotListed) return "historical";
   const remaining = record.sizeLabel ? product.sizeStock?.[record.sizeLabel]?.remaining ?? 0 : product.stock?.remaining ?? 0;
-  const sold = product.active !== false && availabilityStatus(product) === "in_stock" && remaining > 0;
+  // The record's own strength's status where it names one (Stage 1: status is per strength).
+  const strength = record.sizeLabel ? product.sizes.find((s) => s.label === record.sizeLabel) : undefined;
+  const status = strength ? strengthStatus(product, strength) : availabilityStatus(product);
+  const sold = product.active !== false && strength?.active !== false && status === "in_stock" && remaining > 0;
   return sold ? "available" : "unavailable";
 }
 
@@ -83,12 +86,14 @@ export async function searchPublic(q: string): Promise<SearchResult> {
   const [items, catalog, lots] = await Promise.all([publishedSearchables(), listProducts(), listLots()]);
   const candidates: CatalogCandidate[] = catalog.flatMap((p) => {
     const sizes = pricedSizes(p);
-    return (sizes.length ? sizes.map((s) => s.label) : [null]).map((sizeLabel) => ({
+    // Active strengths only (pricedSizes); the strength's stored SKU code (Stage 1), which equals the convention below
+    // unless the strength was renamed after it was created.
+    return (sizes.length ? sizes : [null]).map((s) => ({
       compoundName: p.name,
       aliases: p.alternateNames ?? [],
       productSlug: p.slug,
-      sizeLabel,
-      sku: sizeLabel ? `${p.slug}-${sizeLabel}`.toUpperCase().replace(/\s+/g, "") : null,
+      sizeLabel: s?.label ?? null,
+      sku: s ? s.sku ?? `${p.slug}-${s.label}`.toUpperCase().replace(/\s+/g, "") : null,
     }));
   });
   return searchCertificates(q, items, lots, candidates);

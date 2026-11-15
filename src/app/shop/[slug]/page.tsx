@@ -4,20 +4,21 @@ import Link from "next/link";
 import { getProductBySlug, isOnSale, listProducts, pricedSizes } from "@/lib/products";
 import { toStorefrontProduct } from "@/lib/products/storefront";
 import { lotKey, publishedLotKeys } from "@/lib/coa/public";
-import { ProductGallery } from "@/components/ProductGallery";
 import { ProductCard } from "@/components/ProductCard";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { RecordProductView } from "@/components/RecordProductView";
 import { AddToCartPanel } from "./AddToCartPanel";
+import { StrengthGallery, StrengthProvider } from "./StrengthSelection";
+import { resolveStrength, strengthKey } from "@/lib/products/strengths";
 import { buildMetadata } from "@/lib/seo";
-import { productImageAlt, productImageSources } from "@/lib/products/images";
+import { productImageSources } from "@/lib/products/images";
 import { formatPurity, specText } from "@/lib/products/specs";
 import { blendComponents } from "@/lib/products/blend-components";
 import { withStock } from "@/lib/inventory";
 import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { SCHEMA_AVAILABILITY } from "@/lib/products/stock";
-import { availabilityStatus } from "@/lib/products/availability";
-import { estimatedAvailabilityLabel } from "@/lib/products/estimated-availability";
+import { availabilityStatus, defaultStrength } from "@/lib/products/availability";
+import { strengthEstimatedLabel } from "@/lib/products/estimated-availability";
 import { getCurrentCustomer, requireCustomerForPage } from "@/lib/users/current-user";
 import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
 import { getContent } from "@/lib/site-content";
@@ -54,13 +55,20 @@ export async function generateMetadata({
 
 export default async function ProductDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<{ strength?: string | string[] }>;
 }) {
   const { slug } = await params;
+  const strengthQuery = (await searchParams).strength;
+  const strengthParamValue = Array.isArray(strengthQuery) ? strengthQuery[0] : strengthQuery;
   // Signed-in only, checked before anything is looked up (so a signed-out
   // session can't learn which products exist); goes to /register like the proxy.
-  await requireCustomerForPage(`/shop/${slug}`);
+  // The strength link is kept, so signing in returns to the same strength.
+  await requireCustomerForPage(
+    `/shop/${slug}${strengthParamValue ? `?strength=${encodeURIComponent(strengthParamValue)}` : ""}`
+  );
   // Inactive products are fetched too, only so a blend's component card can
   // show a compound's photo even when that compound isn't for sale itself.
   const [found, fullCatalog] = await Promise.all([getProductBySlug(slug), listProducts({ includeInactive: true })]);
@@ -97,6 +105,19 @@ export default async function ProductDetailPage({
 
   const primaryBatch = product.batchNumbers[0];
   const prices = pricedSizes(product).map((s) => s.priceUsd);
+
+  // Strengths (Stage 1). What the browser gets: active, priced strengths only, no cost, no raw dates.
+  const storefront = toStorefrontProduct(product);
+  const strengths = pricedSizes(storefront);
+  // ?strength= names one (label form, id or SKU); anything invalid, outdated or deactivated opens the default:
+  // the first In Stock strength, else the first strength.
+  const initialStrength = resolveStrength(storefront, strengths, strengthParamValue)!;
+  // Each strength's estimated-availability line, decided here per request against US Central's date.
+  const estimatedLabels = Object.fromEntries(
+    pricedSizes(product).map((s) => [strengthKey(s), strengthEstimatedLabel(product, s)])
+  );
+  const defaultSize = defaultStrength(product, pricedSizes(product));
+  const defaultStock = defaultSize ? product.sizeStock?.[defaultSize.label] ?? product.stock : undefined;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -117,10 +138,11 @@ export default async function ProductDetailPage({
       lowPrice: Math.min(...prices),
       highPrice: Math.max(...prices),
       offerCount: prices.length,
-      // Only In Stock can be ordered; every other status is reported as out of stock.
+      // Only In Stock can be ordered; every other status is reported as out of stock. Reported for the default
+      // strength (the first In Stock one, if any), with that strength's own stock.
       availability:
         availabilityStatus(product) === "in_stock"
-          ? SCHEMA_AVAILABILITY[product.stock?.status ?? "out"]
+          ? SCHEMA_AVAILABILITY[defaultStock?.status ?? "out"]
           : SCHEMA_AVAILABILITY.out,
     },
   };
@@ -162,12 +184,14 @@ export default async function ProductDetailPage({
 
       {/* The photo takes the wider column; the COA panel sits in the column
           beside it rather than further down the page. */}
+      {/* The selected strength is shared by the photo and the purchase panel (StrengthSelection.tsx). Keyed on
+          the initial strength, so following a link to another ?strength= starts from that one. */}
+      <StrengthProvider key={strengthKey(initialStrength)} sizes={strengths} initialKey={strengthKey(initialStrength)}>
       <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
         <div className="lg:sticky lg:top-28 lg:col-span-7 lg:self-start">
-          <ProductGallery
+          <StrengthGallery
             name={product.name}
-            alt={productImageAlt(product)}
-            mainSources={productImageSources(product)}
+            productSources={productImageSources(product)}
             galleryImageUrls={product.galleryImageUrls}
           />
         </div>
@@ -204,13 +228,13 @@ export default async function ProductDetailPage({
 
           <div className="mt-8">
             <AddToCartPanel
-              product={toStorefrontProduct(product)}
+              product={storefront}
               components={components}
               orderingEnabled={orderingEnabled}
               orderingUnavailableLabel={ORDERING_UNAVAILABLE.heading}
               // Decided here, per request (this page is force-dynamic), against
               // today's date in US Central, not the server clock's zone.
-              estimatedAvailability={estimatedAvailabilityLabel(product)}
+              estimatedLabels={estimatedLabels}
               subscription={
                 subscriptionsEnabled(subscriptionSettings) && isSubscribable(product)
                   ? { discountPercent: subscriptionSettings.discountPercent, intervalDays: subscriptionSettings.intervalDays }
@@ -278,6 +302,7 @@ export default async function ProductDetailPage({
           )}
         </div>
       </div>
+      </StrengthProvider>
 
       <div className="mt-16 border-t border-hairline pt-12">
         <div className="max-w-3xl">

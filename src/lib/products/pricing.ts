@@ -19,6 +19,10 @@ export function isPriced(size: SizeOption): size is PricedSize {
   return typeof size.priceUsd === "number";
 }
 
+// The sizes customers may see and buy: priced AND active. A deactivated
+// strength (Stage 1) is left out here, so it drops off the product page,
+// cards, search, cart re-pricing and checkout at once; product.sizes itself
+// keeps it, for the executive portal and the certificate system.
 export function pricedSizes(product: Pick<Product, "sizes">): PricedSize[] {
-  return product.sizes.filter(isPriced);
+  return product.sizes.filter((s): s is PricedSize => isPriced(s) && s.active !== false);
 }

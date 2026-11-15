@@ -159,6 +159,7 @@ export function CheckoutForm({
           items: items.map((item) => ({
             slug: item.slug,
             sizeLabel: item.sizeLabel,
+            ...(item.strengthId ? { strengthId: item.strengthId } : {}),
             quantity: item.quantity,
           })),
         }),
@@ -261,6 +262,7 @@ export function CheckoutForm({
           items: items.map((item) => ({
             slug: item.slug,
             sizeLabel: item.sizeLabel,
+            ...(item.strengthId ? { strengthId: item.strengthId } : {}),
             quantity: item.quantity,
             ...(item.subscription ? { subscriptionIntervalDays: item.subscription.intervalDays } : {}),
           })),

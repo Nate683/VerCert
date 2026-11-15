@@ -18,7 +18,8 @@ import { SubscriptionsSection } from "./SubscriptionsSection";
 import { listSubscriptionsForCustomer } from "@/lib/subscriptions/store";
 import { getContent } from "@/lib/site-content";
 import { isOrderingEnabled } from "@/lib/ordering";
-import { availabilityStatus } from "@/lib/products/availability";
+import { strengthStatus } from "@/lib/products/availability";
+import { findStrength } from "@/lib/products/strengths";
 import { DEFAULT_SUBSCRIPTION_SETTINGS } from "@/lib/subscriptions/rules";
 
 export const dynamic = "force-dynamic";
@@ -79,10 +80,11 @@ export default async function AccountPage() {
     const unavailable: string[] = [];
     for (const item of order.items) {
       const product = products.find((p) => p.slug === item.slug);
-      const size = product && pricedSizes(product).find((s) => s.label === item.sizeLabel);
-      // Only what can be ordered right now: visible, In Stock, and ordering on
+      // The same strength: by its permanent id on orders placed since Stage 1, else by label.
+      const size = product && findStrength(pricedSizes(product), item);
+      // Only what can be ordered right now: visible, the strength active and In Stock, and ordering on
       // (lib/ordering.ts). Units are checked at checkout, as before.
-      if (!product || !size || product.active === false || availabilityStatus(product) !== "in_stock" || !orderingEnabled) {
+      if (!product || !size || product.active === false || strengthStatus(product, size) !== "in_stock" || !orderingEnabled) {
         unavailable.push(item.name);
         continue;
       }
@@ -90,6 +92,8 @@ export default async function AccountPage() {
         slug: product.slug,
         name: product.name,
         sizeLabel: size.label,
+        ...(size.id ? { strengthId: size.id } : {}),
+        ...(size.sku ? { sku: size.sku } : {}),
         priceUsd: resolveUnitPrice(size, item.quantity),
         quantity: item.quantity,
       });

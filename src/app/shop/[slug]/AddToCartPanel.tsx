@@ -5,12 +5,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
-import { pricedSizes, resolveUnitPrice } from "@/lib/products";
+import { resolveUnitPrice } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import type { BlendComponentInfo } from "@/lib/products/blend-components";
 import { VialGlyph } from "@/components/VialGlyph";
 import { intervalLabel, subscriptionUnitPrice } from "@/lib/subscriptions/rules";
-import { AVAILABILITY_LABELS, availabilityStatus, isPurchasable, type AvailabilityStatus } from "@/lib/products/availability";
+import { AVAILABILITY_LABELS, isPurchasable, strengthStatus, type AvailabilityStatus } from "@/lib/products/availability";
+import { useStrength } from "./StrengthSelection";
+import { strengthKey } from "@/lib/products/strengths";
 
 // The purchase button's wording for a product that isn't In Stock (shown
 // disabled). Only the button's own words: the stored values and the status
@@ -27,38 +29,40 @@ export function AddToCartPanel({
   subscription = null,
   orderingEnabled,
   orderingUnavailableLabel,
-  estimatedAvailability = null,
+  estimatedLabels = {},
 }: {
   product: Product;
   // The ordering switch (lib/ordering.ts) and its heading, read on the server.
   orderingEnabled: boolean;
   orderingUnavailableLabel: string;
-  // "November 25, 2026", or null to show nothing. Decided on the server
-  // (estimatedAvailabilityLabel); informational only, never affects buying.
-  estimatedAvailability?: string | null;
+  // Per strength (keyed by strengthKey): "November 25, 2026", or absent/null
+  // to show nothing. Decided on the server (strengthEstimatedLabel) for the
+  // strength's own status and date; informational only, never affects buying.
+  estimatedLabels?: Record<string, string | null>;
   components?: Record<string, BlendComponentInfo>;
   // Set only when subscribe-and-save is on and this product qualifies.
   subscription?: { discountPercent: number; intervalDays: number[] } | null;
 }) {
   const router = useRouter();
-  const [sizeIndex, setSizeIndex] = useState(0);
+  // The selected strength, shared with the photo (StrengthSelection.tsx). Everything below is derived from it on
+  // every render, so the price, tiers, status, date, picker, total and button always belong to the same strength.
+  const { sizes, selected: size, select } = useStrength();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   // 0 = one-time purchase; otherwise the chosen subscription interval.
   const [intervalDays, setIntervalDays] = useState(0);
   const { addItem } = useCart();
 
-  const sizes = pricedSizes(product);
-  const size = sizes[Math.min(sizeIndex, sizes.length - 1)];
-
   // Stock from the inventory table, for the chosen size. Out of stock can't be
   // added (checkout would refuse it), and the quantity can't exceed what's left.
   const stock = product.sizeStock?.[size.label] ?? product.stock;
   const outOfStock = stock?.status === "out";
-  // Availability status first: anything but In Stock can't be bought, and
-  // In Stock only while ordering is on and this size has units.
-  const status = availabilityStatus(product);
-  const purchasable = isPurchasable(product, stock, orderingEnabled);
+  // The selected strength's own status first: anything but In Stock can't be
+  // bought, and In Stock only while ordering is on (sitewide) and this
+  // strength has units (isPurchasable).
+  const status = strengthStatus(product, size);
+  const purchasable = isPurchasable(product, size, stock, orderingEnabled);
+  const estimatedAvailability = estimatedLabels[strengthKey(size)] ?? null;
   const maxQuantity = stock ? Math.max(1, Math.min(999, stock.remaining)) : 999;
   const tierPrice = resolveUnitPrice(size, quantity);
   const subscribing = Boolean(subscription && intervalDays);
@@ -80,6 +84,9 @@ export function AddToCartPanel({
       slug: product.slug,
       name: product.name,
       sizeLabel: size.label,
+      // The selected strength's permanent id and SKU, so the cart line is this exact SKU.
+      ...(size.id ? { strengthId: size.id } : {}),
+      ...(size.sku ? { sku: size.sku } : {}),
       priceUsd: unitPrice,
       quantity,
       ...(subscribing ? { subscription: { intervalDays } } : {}),
@@ -89,7 +96,7 @@ export function AddToCartPanel({
   }
 
   return (
-    <div className="border border-hairline bg-surface p-6">
+    <div className="border border-hairline bg-surface p-6" data-selected-strength={strengthKey(size)} data-selected-sku={size.sku ?? ""}>
       {/* Size chips: each shows its size and price, and the chosen one is
           filled navy so it reads as selected at a glance. */}
       <div>
@@ -97,16 +104,17 @@ export function AddToCartPanel({
           Size
         </p>
         <div role="radiogroup" aria-labelledby="size-label" className="mt-3 flex flex-wrap gap-2">
-          {sizes.map((s, i) => {
-            const selected = i === sizeIndex;
+          {sizes.map((s) => {
+            const selected = strengthKey(s) === strengthKey(size);
             return (
               <button
-                key={s.label}
+                key={strengthKey(s)}
                 type="button"
                 role="radio"
                 aria-checked={selected}
+                data-strength={strengthKey(s)}
                 onClick={() => {
-                  setSizeIndex(i);
+                  select(strengthKey(s));
                   // Sizes can have separate stock: keep the quantity within the new size's.
                   const next = product.sizeStock?.[s.label] ?? product.stock;
                   if (next) setQuantity((q) => Math.min(q, Math.max(1, next.remaining)));

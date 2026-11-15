@@ -5,7 +5,7 @@ import { getUserById } from "@/lib/users/store";
 import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
 import { findInsufficientStock } from "@/lib/inventory";
 import { isOrderingEnabled } from "@/lib/ordering";
-import { availabilityStatus } from "@/lib/products/availability";
+import { strengthStatus } from "@/lib/products/availability";
 import { sendOrderConfirmationEmail, sendTransactionalEmail, sendAdminNotification } from "@/lib/email";
 import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getSiteUrl } from "@/lib/site-url";
@@ -72,7 +72,8 @@ async function runOne(sub: Subscription, now: Date, orderingEnabled: boolean): P
 
   if (!orderingEnabled) return { subscriptionId: sub.id, outcome: "ordering_unavailable" };
 
-  if (availabilityStatus(product) !== "in_stock") {
+  // The subscribed strength's own status (subscriptions record the strength by label).
+  if (strengthStatus(product, size) !== "in_stock") {
     const reason = "Waiting for availability — the order is placed as soon as it's available.";
     if (sub.statusReason !== reason) await updateSubscription(sub.id, { statusReason: reason });
     return { subscriptionId: sub.id, outcome: "waiting_for_stock" };
@@ -83,6 +84,8 @@ async function runOne(sub: Subscription, now: Date, orderingEnabled: boolean): P
     slug: product.slug,
     name: product.name,
     sizeLabel: size.label,
+    ...(size.id ? { strengthId: size.id } : {}),
+    ...(size.sku ? { sku: size.sku } : {}),
     priceUsd: subscriptionUnitPrice(listPrice, sub.discountPercent),
     quantity: sub.quantity,
     lotNumber: product.batchNumbers[0],

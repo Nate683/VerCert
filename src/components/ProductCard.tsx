@@ -65,7 +65,8 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
     const value = Number(priceDraft);
     const first = product.sizes[0];
     if (!first || !priceDraft.trim() || !Number.isFinite(value) || value < 0) return;
-    await patchProduct({ sizePrice: { label: first.label, priceUsd: value } });
+    // By the strength's permanent id (Stage 1), so it can't land on another strength.
+    await patchProduct({ sizePrice: { ...(first.id ? { id: first.id } : {}), label: first.label, priceUsd: value } });
   }
 
   async function handleStockBlur() {
@@ -105,6 +106,7 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
             {!active ? (
               <span className="min-h-[1lh] text-white/50">Unavailable</span>
             ) : availabilityStatus(product) !== "in_stock" ? (
+              // Product-wide: the status of the strength the product page opens on (the first In Stock one, if any).
               <span className="min-h-[1lh] text-white/55">{availabilityLabel(product, product.stock)}</span>
             ) : product.stock ? (
               <span

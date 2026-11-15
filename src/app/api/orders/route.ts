@@ -12,7 +12,8 @@ import { getCurrentCustomer } from "@/lib/users/current-user";
 import { updateUser } from "@/lib/users/store";
 import { findInsufficientStock } from "@/lib/inventory";
 import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
-import { availabilityStatus } from "@/lib/products/availability";
+import { strengthStatus } from "@/lib/products/availability";
+import { findStrength } from "@/lib/products/strengths";
 import type { CartItem } from "@/lib/types";
 import { createOrderSchema, parseBody } from "@/lib/validation";
 import { checkRateLimit, getClientIp, rateLimitResponse } from "@/lib/rate-limit";
@@ -85,14 +86,19 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const resolvedItems: CartItem[] = [];
   for (const item of items) {
     const product = products.find((p) => p.slug === item.slug);
-    const size = product && pricedSizes(product).find((s) => s.label === item.sizeLabel);
+    // The strength on sale (active and priced), by its permanent id, else by label (carts from before Stage 1).
+    const size = product && findStrength(pricedSizes(product), item);
     if (!product || !size) {
-      return NextResponse.json({ error: `Invalid cart item: ${item.slug}` }, { status: 400 });
-    }
-    // Only In Stock can be bought; units are checked below with the rest of the cart.
-    if (availabilityStatus(product) !== "in_stock") {
       return NextResponse.json(
-        { error: `${product.name} isn't available to order right now. Remove it from your cart to continue.` },
+        { error: `${product?.name ?? item.slug} ${item.sizeLabel} is no longer available. Remove it from your cart to continue.` },
+        { status: 400 }
+      );
+    }
+    // Only a strength marked In Stock can be bought (ordering is checked above for the whole request; units are
+    // checked below with the rest of the cart).
+    if (strengthStatus(product, size) !== "in_stock") {
+      return NextResponse.json(
+        { error: `${product.name} ${size.label} isn't available to order right now. Remove it from your cart to continue.` },
         { status: 409 }
       );
     }
@@ -123,6 +129,8 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       slug: product.slug,
       name: product.name,
       sizeLabel: size.label,
+      ...(size.id ? { strengthId: size.id } : {}),
+      ...(size.sku ? { sku: size.sku } : {}),
       priceUsd,
       quantity: item.quantity,
       // The batch currently on sale — the first listed, as on the product page.

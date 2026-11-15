@@ -579,6 +579,33 @@ async function main() {
   await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS estimated_available_on DATE`;
   await sql`COMMENT ON COLUMN products.estimated_available_on IS 'Optional estimated availability date, entered by an executive. Informational only: never changes status, visibility or purchasing.'`;
 
+  // Strength-specific SKUs (Stage 1): one row per product strength, with a
+  // permanent id. scripts/product-strengths.mjs created this in production
+  // (2026-11-14) and filled it from products.sizes; a product with no rows here
+  // falls back to products.sizes until it is next saved.
+  await sql`
+    CREATE TABLE IF NOT EXISTS product_strengths (
+      id TEXT PRIMARY KEY,
+      product_slug TEXT NOT NULL,
+      label TEXT NOT NULL,
+      sku TEXT NOT NULL,
+      position INTEGER NOT NULL,
+      active BOOLEAN NOT NULL,
+      availability_status TEXT NOT NULL CHECK (availability_status IN ('coming_soon', 'pending_testing', 'in_stock', 'out_of_stock')),
+      estimated_available_on DATE,
+      image_url TEXT,
+      price_usd DOUBLE PRECISION CHECK (price_usd IS NULL OR price_usd >= 0),
+      cost_usd DOUBLE PRECISION CHECK (cost_usd IS NULL OR cost_usd >= 0),
+      bulk_tiers JSONB,
+      composition JSONB,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS product_strengths_sku ON product_strengths (sku)`;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS product_strengths_product_label ON product_strengths (product_slug, label)`;
+  await sql`CREATE INDEX IF NOT EXISTS product_strengths_product ON product_strengths (product_slug, position)`;
+
   // The research-use attestation ticked at checkout, recorded per order: the
   // exact wording shown, when, and from which IP. Null on orders placed
   // before it was recorded.

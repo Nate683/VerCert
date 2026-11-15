@@ -6,26 +6,13 @@ import { CATEGORIES } from "@/lib/products";
 import { ProductCardImage } from "./ProductCardImage";
 import { ProductGalleryEditor } from "./ProductGalleryEditor";
 import { formatPurity } from "@/lib/products/specs";
-import {
-  AVAILABILITY_LABELS,
-  AVAILABILITY_STATUSES,
-  DEFAULT_AVAILABILITY_STATUS,
-  availabilityStatus,
-  type AvailabilityStatus,
-} from "@/lib/products/availability";
+import { AVAILABILITY_LABELS, DEFAULT_AVAILABILITY_STATUS, strengthStatus } from "@/lib/products/availability";
+import { StrengthPanel, type SizeForm } from "./StrengthPanel";
 
 type StockLevel = { quantity: number; threshold: number };
 // stock is the shared count; sizeLevels holds sizes counted separately.
 type ProductWithStock = Product & { stock: StockLevel | null; sizeLevels?: Record<string, StockLevel> };
 
-type SizeForm = {
-  label: string;
-  priceUsd: string; // blank = not yet priced
-  bulkTiers: string; // "minQty:price, minQty:price"
-  costUsd: string; // blank = use the product's cost
-  stock: string; // blank = draws on the product's shared stock
-  composition?: SizeOption["composition"]; // not edited here; carried through a save
-};
 
 type FormState = {
   slug: string;
@@ -43,12 +30,21 @@ type FormState = {
   sizes: SizeForm[];
   initialStock: string;
   active: boolean;
-  availabilityStatus: AvailabilityStatus;
-  estimatedAvailableOn: string; // "YYYY-MM-DD", or "" for none
   costUsd: string;
 };
 
-const EMPTY_SIZE: SizeForm = { label: "", priceUsd: "", bulkTiers: "", costUsd: "", stock: "" };
+// Availability status and the estimated date are per strength (Stage 1); the
+// product's own columns are kept as they are and not edited here.
+const EMPTY_SIZE: SizeForm = {
+  label: "",
+  priceUsd: "",
+  bulkTiers: "",
+  costUsd: "",
+  stock: "",
+  active: true,
+  availabilityStatus: DEFAULT_AVAILABILITY_STATUS,
+  estimatedAvailableOn: "",
+};
 
 function emptyForm(): FormState {
   return {
@@ -67,8 +63,6 @@ function emptyForm(): FormState {
     sizes: [{ ...EMPTY_SIZE }],
     initialStock: "0",
     active: true,
-    availabilityStatus: DEFAULT_AVAILABILITY_STATUS,
-    estimatedAvailableOn: "",
     costUsd: "",
   };
 }
@@ -87,18 +81,24 @@ function productToForm(p: ProductWithStock): FormState {
     summary: p.summary,
     description: p.description.join("\n"),
     batchNumbers: p.batchNumbers.join(", "),
+    // Every strength, deactivated ones included (they stay editable and can be reactivated).
     sizes: p.sizes.map((s) => ({
+      id: s.id,
+      sku: s.sku,
+      savedLabel: s.label,
       label: s.label,
       priceUsd: s.priceUsd !== null ? String(s.priceUsd) : "",
       bulkTiers: (s.bulkTiers ?? []).map((t) => `${t.minQuantity}:${t.priceUsd}`).join(", "),
       costUsd: s.costUsd !== undefined ? String(s.costUsd) : "",
       stock: p.sizeLevels?.[s.label] ? String(p.sizeLevels[s.label].quantity) : "",
+      active: s.active !== false,
+      availabilityStatus: strengthStatus(p, s),
+      estimatedAvailableOn: s.estimatedAvailableOn ?? "",
+      imageUrl: s.imageUrl ?? null,
       composition: s.composition,
     })),
     initialStock: String(p.stock?.quantity ?? 0),
     active: p.active ?? true,
-    availabilityStatus: availabilityStatus(p),
-    estimatedAvailableOn: p.estimatedAvailableOn ?? "",
     costUsd: p.costUsd !== undefined ? String(p.costUsd) : "",
   };
 }
@@ -121,11 +121,16 @@ function formToPayload(form: FormState) {
   const sizes: SizeOption[] = form.sizes
     .filter((s) => s.label.trim())
     .map((s) => ({
+      ...(s.id ? { id: s.id } : {}),
       label: s.label.trim(),
       priceUsd: s.priceUsd.trim() ? Number(s.priceUsd) : null,
       bulkTiers: parseBulkTiers(s.bulkTiers),
       ...(s.costUsd.trim() ? { costUsd: Number(s.costUsd) } : {}),
       ...(s.composition?.length ? { composition: s.composition } : {}),
+      active: s.active,
+      availabilityStatus: s.availabilityStatus,
+      // Sent every save: a date, or null to clear. Never changed by a status change.
+      estimatedAvailableOn: s.estimatedAvailableOn || null,
     }));
 
   return {
@@ -155,11 +160,25 @@ function formToPayload(form: FormState) {
         .map((s) => [s.label.trim(), s.stock.trim() ? Number(s.stock) || 0 : null])
     ),
     active: form.active,
-    availabilityStatus: form.availabilityStatus,
-    // Sent every save: a date, or null to clear. Never changed by a status change.
-    estimatedAvailableOn: form.estimatedAvailableOn || null,
     costUsd: form.costUsd.trim() ? Number(form.costUsd) : undefined,
   };
+}
+
+// Checked before a save is sent, so a mistake is shown at once (the server checks the same and more).
+function formProblem(form: FormState): string | null {
+  const labels = form.sizes.map((s) => s.label.trim());
+  if (labels.some((l) => !l)) return "Every strength needs a strength designation (e.g. 10mg), or remove the empty one.";
+  const seen = new Set<string>();
+  for (const l of labels) {
+    const key = l.toLowerCase().replace(/\s+/g, "");
+    if (seen.has(key)) return `Two strengths are both "${l}". Each strength must be different.`;
+    seen.add(key);
+  }
+  for (const s of form.sizes) {
+    if (s.priceUsd.trim() && !(Number(s.priceUsd) >= 0)) return `${s.label}: the retail price must be a number of 0 or more.`;
+    if (s.costUsd.trim() && !(Number(s.costUsd) >= 0)) return `${s.label}: the cost of goods must be a number of 0 or more.`;
+  }
+  return null;
 }
 
 export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
@@ -242,6 +261,12 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    const problem = formProblem(form);
+    if (problem) {
+      // Nothing is sent and nothing in the form is cleared.
+      setError(problem);
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -304,13 +329,22 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     await load();
   }
 
-  // A blank box means "still unpriced" — never $0.
+  // A blank box means "still unpriced" — never $0. The first ACTIVE strength, by its permanent id.
   async function handleInlinePriceChange(product: ProductWithStock, value: string) {
-    const first = product.sizes[0];
+    const first = product.sizes.find((s) => s.active !== false);
     const priceUsd = Number(value);
     if (!first || !value.trim() || !Number.isFinite(priceUsd) || priceUsd < 0) return;
     if (priceUsd === first.priceUsd) return;
-    await handleInlinePatch(product.slug, { sizePrice: { label: first.label, priceUsd } });
+    await handleInlinePatch(product.slug, { sizePrice: { ...(first.id ? { id: first.id } : {}), label: first.label, priceUsd } });
+  }
+
+  // A strength's vial image saves on its own (like the product photo); merge the result into the grid and the form.
+  function handleStrengthImageChange(updated: Product) {
+    setProducts((ps) => ps.map((p) => (p.slug === updated.slug ? { ...p, sizes: updated.sizes } : p)));
+    setForm((f) => ({
+      ...f,
+      sizes: f.sizes.map((s) => (s.id ? { ...s, imageUrl: updated.sizes.find((u) => u.id === s.id)?.imageUrl ?? null } : s)),
+    }));
   }
 
   async function handleInlineStockChange(product: ProductWithStock, value: string) {
@@ -372,8 +406,11 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                       </span>
                     </div>
                     <p className="mt-1 font-serif text-lg text-white">{p.name}</p>
-                    <p className="mt-1 text-[10px] uppercase tracking-[0.15em] text-white/50">
-                      {AVAILABILITY_LABELS[availabilityStatus(p)]}
+                    {/* Each strength's own status (Stage 1); deactivated strengths are marked. */}
+                    <p className="mt-1 text-[10px] uppercase tracking-[0.15em] text-white/50" data-strength-summary>
+                      {p.sizes
+                        .map((s) => `${s.label}: ${s.active === false ? "Deactivated" : AVAILABILITY_LABELS[strengthStatus(p, s)]}`)
+                        .join(" · ")}
                     </p>
                     {formatPurity(p.purityPercent) && (
                       <p className="mt-1 text-xs text-white/40">{formatPurity(p.purityPercent)} purity</p>
@@ -382,13 +419,13 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <label className="block">
                         <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">
-                          Price (1st size)
+                          Price ({p.sizes.find((s) => s.active !== false)?.label ?? "first strength"})
                         </span>
                         <input
                           type="number"
                           step="0.01"
                           min="0"
-                          defaultValue={p.sizes[0]?.priceUsd ?? ""}
+                          defaultValue={p.sizes.find((s) => s.active !== false)?.priceUsd ?? ""}
                           placeholder="Unpriced"
                           onBlur={(e) => handleInlinePriceChange(p, e.target.value)}
                           className="input-field mt-1 py-1.5 text-xs"
@@ -489,54 +526,12 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                 </option>
               ))}
             </select>
-            {/* Availability status: what customers are told and whether it can
-                be bought. Visibility is the separate checkbox below; neither
-                changes the other, or the stock counts. */}
-            <label className="block">
-              <span className="text-[10px] uppercase tracking-[0.1em] text-white/40">Product Availability Status</span>
-              <select
-                value={form.availabilityStatus}
-                onChange={(e) => setForm((f) => ({ ...f, availabilityStatus: e.target.value as AvailabilityStatus }))}
-                aria-label="Product Availability Status"
-                className="input-field mt-1"
-              >
-                {AVAILABILITY_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {AVAILABILITY_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {/* Optional, informational only: shown on the product page under
-                Coming Soon / In Independent Testing until the date passes
-                (US Central). Never changes the status or what can be bought,
-                and a status change leaves it as it is. */}
-            {/* Full width, so the fields after it keep their places in the two-column grid. */}
-            <div className="sm:col-span-2">
-              <label htmlFor="product-estimated-available-on" className="text-[10px] uppercase tracking-[0.1em] text-white/40">
-                Estimated Availability Date (optional)
-              </label>
-              <div className="mt-1 flex max-w-md gap-2">
-                <input
-                  id="product-estimated-available-on"
-                  type="date"
-                  value={form.estimatedAvailableOn}
-                  onChange={(e) => setForm((f) => ({ ...f, estimatedAvailableOn: e.target.value }))}
-                  className="input-field flex-1"
-                />
-                <button
-                  type="button"
-                  onClick={() => setForm((f) => ({ ...f, estimatedAvailableOn: "" }))}
-                  disabled={!form.estimatedAvailableOn}
-                  className="border border-white/20 px-3 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-gold hover:text-gold disabled:opacity-30"
-                >
-                  Clear
-                </button>
-              </div>
-              <p className="mt-1 text-[11px] text-white/40">
-                Shown for Coming Soon and Pending Independent Testing only, through the end of that day (US Central). Informational only.
-              </p>
-            </div>
+            {/* Availability status and the estimated availability date are set
+                per strength, under Sizes & Pricing below (Stage 1). Visibility
+                is the product-wide checkbox here; neither changes the other. */}
+            <p className="self-center text-[11px] text-white/40">
+              Availability status and estimated dates are set for each strength under Sizes &amp; Pricing.
+            </p>
             <label className="input-field flex items-center gap-3">
               <input
                 type="checkbox"
@@ -647,50 +642,20 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
 
           <div className="mt-6">
             <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Sizes & Pricing</p>
-            <div className="mt-3 space-y-3">
+            <p className="mt-1 text-[11px] text-white/40">
+              Each strength is its own SKU. Open one to edit it; every change is saved together by Save Product.
+            </p>
+            <div className="mt-3 space-y-2">
               {form.sizes.map((size, i) => (
-                <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-6">
-                  <input
-                    value={size.label}
-                    onChange={(e) => updateSize(i, { label: e.target.value })}
-                    placeholder="Size (e.g. 5 mg)"
-                    className="input-field"
-                  />
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={size.priceUsd}
-                    onChange={(e) => updateSize(i, { priceUsd: e.target.value })}
-                    placeholder="Price USD (blank = not for sale)"
-                    className="input-field"
-                  />
-                  <input
-                    value={size.bulkTiers}
-                    onChange={(e) => updateSize(i, { bulkTiers: e.target.value })}
-                    placeholder="Bulk tiers: minQty:price, e.g. 3:38, 5:32"
-                    className="input-field sm:col-span-2"
-                  />
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={size.costUsd}
-                    onChange={(e) => updateSize(i, { costUsd: e.target.value })}
-                    placeholder="Cost/unit (blank = product cost)"
-                    aria-label="Cost per unit for this size"
-                    className="input-field"
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    value={size.stock}
-                    onChange={(e) => updateSize(i, { stock: e.target.value })}
-                    placeholder="Stock (blank = shared)"
-                    aria-label="Stock for this size"
-                    className="input-field"
-                  />
-                </div>
+                <StrengthPanel
+                  key={size.id ?? `new-${i}`}
+                  index={i}
+                  size={size}
+                  product={editingProduct}
+                  onChange={(patch) => updateSize(i, patch)}
+                  onRemove={size.id ? undefined : () => setForm((f) => ({ ...f, sizes: f.sizes.filter((_, j) => j !== i) }))}
+                  onImageChange={handleStrengthImageChange}
+                />
               ))}
             </div>
             <div className="mt-3 flex gap-2">
@@ -699,19 +664,8 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                 onClick={() => setForm((f) => ({ ...f, sizes: [...f.sizes, { ...EMPTY_SIZE }] }))}
                 className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/70 hover:border-[var(--x-muted)] hover:text-[var(--x-text)]"
               >
-                + Add Size
+                + Add Strength
               </button>
-              {form.sizes.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setForm((f) => ({ ...f, sizes: f.sizes.slice(0, -1) }))
-                  }
-                  className="border border-white/20 px-3 py-1.5 text-[10px] uppercase tracking-[0.1em] text-white/50 hover:text-white"
-                >
-                  Remove Last
-                </button>
-              )}
             </div>
           </div>
 

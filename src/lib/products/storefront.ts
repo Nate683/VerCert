@@ -5,9 +5,12 @@ import { pricedSizes } from "./pricing";
 // each size) is our cost of goods — margin data that must never end up in a
 // page's serialized props. Sizes still awaiting a price are left off: they
 // aren't for sale.
+// Deactivated strengths are left off too (pricedSizes), and each strength's raw
+// estimated date: the product page sends its computed label instead
+// (strengthEstimatedLabel), so no date reaches the browser.
 export function toStorefrontProduct(product: Product): Product {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const sizes = pricedSizes(product).map(({ costUsd, ...size }) => size);
+  const sizes = pricedSizes(product).map(({ costUsd, estimatedAvailableOn, ...size }) => size);
   const storefront = { ...product, sizes };
   delete storefront.costUsd;
   // The product page sends the computed "Estimated availability" text

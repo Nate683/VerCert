@@ -111,6 +111,9 @@ const customerInfoSchema = z.object({
 const orderItemSchema = z.object({
   slug: z.string().min(1).max(100),
   sizeLabel: z.string().min(1).max(50),
+  // The strength's permanent id (Stage 1). Carts saved before it was added
+  // have none and are matched by label.
+  strengthId: z.string().min(1).max(64).optional(),
   quantity: z.number().int().min(1).max(999),
 });
 
@@ -151,13 +154,31 @@ const blendComponentSchema = z.object({
   amount: z.string().trim().min(1).max(50),
 });
 
-// priceUsd null = not yet priced; such a size is never sold.
+// "YYYY-MM-DD", a real calendar day.
+const dateOnlySchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date like 2026-11-25.")
+  .refine((d) => {
+    const [y, m, day] = d.split("-").map(Number);
+    const t = new Date(Date.UTC(y, m - 1, day));
+    return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === day;
+  }, "That date doesn't exist.");
+
+// One strength (SKU). priceUsd null = not yet priced; such a size is never sold.
+// id: the permanent identifier of an existing strength (absent = a new one).
+// sku and imageUrl are never taken from a request: the SKU is made once by the
+// server and the image is set through the strength image route. Fields left
+// out keep their stored values.
 const sizeOptionSchema = z.object({
+  id: z.string().trim().min(1).max(64).optional(),
   label: z.string().trim().min(1).max(50),
   priceUsd: z.number().min(0).max(1000000).nullable(),
   bulkTiers: z.array(bulkTierSchema).max(10).optional(),
   costUsd: z.number().min(0).max(1000000).optional(),
   composition: z.array(blendComponentSchema).max(20).optional(),
+  active: z.boolean().optional(),
+  availabilityStatus: z.enum(AVAILABILITY_STATUSES).optional(),
+  estimatedAvailableOn: dateOnlySchema.nullable().optional(),
 });
 
 // Blank means unknown: stored as null, never as a placeholder.
@@ -201,16 +222,7 @@ export const productSchema = z.object({
   active: z.boolean().optional(),
   availabilityStatus: z.enum(AVAILABILITY_STATUSES).optional(),
   // Optional estimated availability date, "YYYY-MM-DD"; null clears it.
-  estimatedAvailableOn: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date like 2026-11-25.")
-    .refine((d) => {
-      const [y, m, day] = d.split("-").map(Number);
-      const t = new Date(Date.UTC(y, m - 1, day));
-      return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === day;
-    }, "That date doesn't exist.")
-    .nullable()
-    .optional(),
+  estimatedAvailableOn: dateOnlySchema.nullable().optional(),
   costUsd: z.number().min(0).max(1000000).optional(),
 });
 
@@ -218,9 +230,10 @@ export const productUpdateSchema = productSchema
   .partial()
   .omit({ slug: true })
   .extend({
-    // Sets the price of one existing size, leaving the others untouched.
+    // Sets the price of one existing size, leaving the others untouched. By the
+    // strength's permanent id when given, else by label (older clients).
     sizePrice: z
-      .object({ label: z.string().trim().min(1).max(50), priceUsd: z.number().min(0).max(1000000) })
+      .object({ id: z.string().trim().min(1).max(64).optional(), label: z.string().trim().min(1).max(50), priceUsd: z.number().min(0).max(1000000) })
       .optional(),
   });
 

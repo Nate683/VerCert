@@ -24,6 +24,8 @@ export type ProductInfo = {
   batchNumbers: string[];
   // Read-only, for the informational availability warning. Never changed by the certificate system.
   availabilityStatus?: string;
+  // The same per strength label (Stage 1: status is per strength). The warning uses the record's own strength.
+  sizeStatuses?: Record<string, string>;
   active?: boolean;
 };
 
@@ -122,9 +124,11 @@ export function validateRecord(
       advise("strength_mismatch", `The certificate states strength "${printedStrength}", but the record is for ${record.sizeLabel}. Check the strength association.`);
     }
     // Informational: publishing never changes availability, and availability never blocks publishing.
-    if (p.availabilityStatus && p.availabilityStatus !== "in_stock") {
-      const label = { coming_soon: "Coming Soon", pending_testing: "In Independent Testing", out_of_stock: "Out of Stock" }[p.availabilityStatus] ?? p.availabilityStatus;
-      warn("availability_mismatch", `${p.name} is currently ${label}. Publishing this certificate won't change that, and won't make it purchasable.`);
+    const shownStatus = (record.sizeLabel && p.sizeStatuses?.[record.sizeLabel]) || p.availabilityStatus;
+    if (shownStatus && shownStatus !== "in_stock") {
+      const label = { coming_soon: "Coming Soon", pending_testing: "In Independent Testing", out_of_stock: "Out of Stock" }[shownStatus] ?? shownStatus;
+      const what = record.sizeLabel && p.sizeStatuses?.[record.sizeLabel] ? `${p.name} ${record.sizeLabel}` : p.name;
+      warn("availability_mismatch", `${what} is currently ${label}. Publishing this certificate won't change that, and won't make it purchasable.`);
     }
     if (p.active === false) warn("product_hidden", `${p.name} is hidden from the storefront. A published certificate stays searchable regardless.`);
   }

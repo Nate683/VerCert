@@ -1,8 +1,9 @@
-import { query } from "@/lib/db";
+import { query, transaction } from "@/lib/db";
 import type { Product } from "@/lib/types";
 import { DEFAULT_AVAILABILITY_STATUS, type AvailabilityStatus } from "./availability";
 import { pricedSizes } from "./pricing";
 import { toDateOnly } from "./estimated-availability";
+import { listStrengths, mirrorJson, planStrengthSave } from "./strength-store";
 
 // Server-only Postgres-backed product catalog store.
 
@@ -34,7 +35,10 @@ type ProductRow = {
   updated_at: string;
 };
 
-function rowToProduct(row: ProductRow): Product {
+// Strengths come from product_strengths (Stage 1, lib/products/strength-store.ts): every strength, active and
+// deactivated. The old products.sizes JSON is read only for a product with no strength rows at all (a database
+// the Stage 1 migration hasn't reached).
+function rowToProduct(row: ProductRow, strengths?: Map<string, Product["sizes"]>): Product {
   return {
     slug: row.slug,
     name: row.name,
@@ -46,7 +50,7 @@ function rowToProduct(row: ProductRow): Product {
     purityPercent: row.purity_percent,
     sequenceOrForm: row.sequence_or_form,
     storage: row.storage,
-    sizes: JSON.parse(row.sizes),
+    sizes: strengths?.get(row.slug) ?? JSON.parse(row.sizes),
     batchNumbers: JSON.parse(row.batch_numbers),
     summary: row.summary,
     description: JSON.parse(row.description),
@@ -68,10 +72,11 @@ const SELECT_ALL = "SELECT * FROM products";
 // By default only what the storefront may show: active products with at least
 // one priced size. Pass includeInactive for every product (executive panels).
 export async function listProducts(options?: { includeInactive?: boolean }): Promise<Product[]> {
-  const rows = await query<ProductRow>(
-    `${SELECT_ALL} ${options?.includeInactive ? "" : "WHERE active = TRUE"} ORDER BY sort_order ASC, name ASC`
-  );
-  const products = rows.map(rowToProduct);
+  const [rows, strengths] = await Promise.all([
+    query<ProductRow>(`${SELECT_ALL} ${options?.includeInactive ? "" : "WHERE active = TRUE"} ORDER BY sort_order ASC, name ASC`),
+    listStrengths(),
+  ]);
+  const products = rows.map((r) => rowToProduct(r, strengths));
   return options?.includeInactive ? products : products.filter(isOnSale);
 }
 
@@ -81,8 +86,8 @@ export function isOnSale(product: Product): boolean {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const rows = await query<ProductRow>(`${SELECT_ALL} WHERE slug = $1`, [slug]);
-  return rows[0] ? rowToProduct(rows[0]) : null;
+  const [rows, strengths] = await Promise.all([query<ProductRow>(`${SELECT_ALL} WHERE slug = $1`, [slug]), listStrengths(slug)]);
+  return rows[0] ? rowToProduct(rows[0], strengths) : null;
 }
 
 export async function getAllBatchNumbers(): Promise<{ batch: string; product: Product }[]> {
@@ -112,13 +117,19 @@ export type CreateProductInput = {
   costUsd?: number;
 };
 
+// The product row and its strengths in one transaction. Strengths kept from an earlier product with this slug (a
+// product delete never removes strengths) are matched by label and reused, or kept deactivated.
 export async function createProduct(input: CreateProductInput): Promise<Product> {
   const now = new Date().toISOString();
-  await query(
+  const plan = await planStrengthSave(input.slug, input.sizes, {
+    defaultStatus: input.availabilityStatus ?? DEFAULT_AVAILABILITY_STATUS,
+    deactivateMissing: true,
+  });
+  await transaction([{ text:
     `INSERT INTO products
       (slug, name, category, alternate_names, cas_number, molecular_formula, molecular_weight, purity_percent, sequence_or_form, storage, sizes, batch_numbers, summary, description, sort_order, active, availability_status, estimated_available_on, cost_usd, created_at, updated_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`,
-    [
+    params: [
       input.slug,
       input.name,
       input.category,
@@ -129,7 +140,7 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
       input.purityPercent,
       input.sequenceOrForm,
       input.storage,
-      JSON.stringify(input.sizes),
+      mirrorJson(plan.sizes),
       JSON.stringify(input.batchNumbers),
       input.summary,
       JSON.stringify(input.description),
@@ -140,8 +151,7 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
       input.costUsd ?? null,
       now,
       now,
-    ]
-  );
+    ] }, ...plan.statements]);
   const created = await getProductBySlug(input.slug);
   if (!created) throw new Error("Failed to create product.");
   return created;
@@ -177,21 +187,26 @@ export async function updateProduct(
   patch: Partial<Product>
 ): Promise<Product | null> {
   const fields = Object.keys(PATCHABLE_COLUMNS).filter((f) => f in patch);
+  // Sizes are strengths: planned (and validated) first, then written in the same transaction as the product row,
+  // whose sizes column becomes the mirror of the active strengths. Throws StrengthError on an invalid list.
+  const plan = patch.sizes ? await planStrengthSave(slug, patch.sizes) : null;
 
   if (fields.length > 0) {
     const values: unknown[] = [slug];
     const assignments = fields.map((field, i) => {
       const value = (patch as Record<string, unknown>)[field];
       values.push(
-        value === undefined ? null : JSON_FIELDS.has(field) ? JSON.stringify(value) : value
+        field === "sizes" && plan
+          ? mirrorJson(plan.sizes)
+          : value === undefined ? null : JSON_FIELDS.has(field) ? JSON.stringify(value) : value
       );
       return `${PATCHABLE_COLUMNS[field]} = $${i + 2}`;
     });
     values.push(new Date().toISOString());
-    await query(
-      `UPDATE products SET ${assignments.join(", ")}, updated_at = $${values.length} WHERE slug = $1`,
-      values
-    );
+    await transaction([
+      { text: `UPDATE products SET ${assignments.join(", ")}, updated_at = $${values.length} WHERE slug = $1`, params: values },
+      ...(plan?.statements ?? []),
+    ]);
   }
 
   return getProductBySlug(slug);

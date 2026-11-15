@@ -21,6 +21,24 @@ export type SizeOption = {
   // What's in the vial, for blends. Per size, since sizes of one blend can
   // split differently.
   composition?: BlendComponent[];
+  // Stage 1 (strength-specific SKUs), from the product_strengths table
+  // (lib/products/strength-store.ts). Absent only on a size not saved yet.
+  // id: the permanent identifier. Never regenerated or reused, kept through a
+  // rename, a price/image/status change and deactivation.
+  id?: string;
+  // e.g. "BPC-157-10MG": made once when the strength is created and kept after,
+  // so a rename doesn't change it. Same convention the certificate system uses.
+  sku?: string;
+  // false = deactivated: off every customer-facing list and refused at
+  // checkout, but kept with its id, history and certificates. Absent = active.
+  active?: boolean;
+  // This strength's own status; absent only on legacy data, which falls back
+  // to the product's (lib/products/strengths.ts).
+  availabilityStatus?: import("./products/availability").AvailabilityStatus;
+  // Optional, "YYYY-MM-DD". Informational only; never changes the status.
+  estimatedAvailableOn?: string | null;
+  // The strength's own vial image; the product photo is the fallback.
+  imageUrl?: string | null;
 };
 
 export type PricedSize = SizeOption & { priceUsd: number };
@@ -73,6 +91,10 @@ export type CartItem = {
   slug: string;
   name: string;
   sizeLabel: string;
+  // The strength's permanent id and SKU code (Stage 1). Set on cart items and
+  // order lines made from now on; absent on older ones, which match by label.
+  strengthId?: string;
+  sku?: string;
   priceUsd: number;
   quantity: number;
   // Set on order lines: the lot the item was sold from, so every vial on an

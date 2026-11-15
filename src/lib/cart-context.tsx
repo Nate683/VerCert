@@ -11,10 +11,11 @@ import {
 import type { CartItem } from "./types";
 import { track } from "./track-client";
 
-// One cart line per product, size and purchase type: the same size bought
-// once and on a subscription are separate lines.
-export function cartLineKey(item: Pick<CartItem, "slug" | "sizeLabel" | "subscription">): string {
-  return `${item.slug}|${item.sizeLabel}|${item.subscription?.intervalDays ?? 0}`;
+// One cart line per product, strength and purchase type: the same strength
+// bought once and on a subscription are separate lines. The strength is its
+// permanent id when the item carries one (Stage 1), else its label.
+export function cartLineKey(item: Pick<CartItem, "slug" | "sizeLabel" | "strengthId" | "subscription">): string {
+  return `${item.slug}|${item.strengthId ?? item.sizeLabel}|${item.subscription?.intervalDays ?? 0}`;
 }
 
 type CartContextValue = {

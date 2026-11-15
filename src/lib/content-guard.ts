@@ -40,7 +40,8 @@ const blockedPattern = new RegExp(`\\b(?:${BLOCKED_TERMS.map(escape).join("|")})
 const allowedPattern = new RegExp(ALLOWED_PHRASES.map(escape).join("|"), "gi");
 
 // Fields that hold links or identifiers rather than copy.
-export const PRODUCT_NON_COPY_KEYS = ["slug", "batchNumbers", "imageUrl", "imageUrls"];
+// "id" is a strength's permanent identifier (Stage 1), a random UUID, not copy.
+export const PRODUCT_NON_COPY_KEYS = ["slug", "batchNumbers", "imageUrl", "imageUrls", "id"];
 export const SITE_CONTENT_NON_COPY_KEYS = ["heroImageUrl", "certifiedImageUrl", "linkHref", "slugs"];
 
 // site_content keys the guard doesn't check. The legal pages have to name
