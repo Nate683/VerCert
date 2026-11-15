@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { listProducts, createProduct, getProductBySlug, pricedSizes } from "@/lib/products";
-import { StrengthError } from "@/lib/products/strength-store";
-import { upsertInventory, listInventory, syncSizeInventory } from "@/lib/inventory";
+import { StrengthError, strengthConflict } from "@/lib/products/strength-store";
+import { listStrengthStock } from "@/lib/inventory";
 import { productSchema, parseBody } from "@/lib/validation";
 import { findBlockedTerm, blockedTermMessage, PRODUCT_NON_COPY_KEYS } from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -16,20 +16,19 @@ export const GET = withApiErrorHandling(async () => {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const [products, inventory] = await Promise.all([
-    listProducts({ includeInactive: true }),
-    listInventory(),
-  ]);
-  // stock is the shared row; sizeLevels holds the sizes counted separately.
+  const [products, stock] = await Promise.all([listProducts({ includeInactive: true }), listStrengthStock()]);
+  // Stage 2: each strength's stock, by its permanent id (read-only here; changed in the Stock tab).
+  const byId = new Map(stock.map((r) => [r.strengthId, r]));
   return NextResponse.json({
-    products: products.map((p) => {
-      const rows = inventory.filter((i) => i.slug === p.slug);
-      const shared = rows.find((i) => i.size_label === "");
-      const sizeLevels = Object.fromEntries(
-        rows.filter((i) => i.size_label !== "").map((i) => [i.size_label, { quantity: i.quantity, threshold: i.threshold }])
-      );
-      return { ...p, stock: shared ? { quantity: shared.quantity, threshold: shared.threshold } : null, sizeLevels };
-    }),
+    products: products.map((p) => ({
+      ...p,
+      strengthStock: Object.fromEntries(
+        p.sizes.filter((s) => s.id && byId.has(s.id)).map((s) => {
+          const r = byId.get(s.id!)!;
+          return [s.id!, { physical: r.physical, reserved: r.reserved, available: r.available, threshold: r.threshold, level: r.level }];
+        })
+      ),
+    })),
   });
 });
 
@@ -41,6 +40,13 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const parsed = await parseBody(request, productSchema);
   if ("error" in parsed) return parsed.error;
   const { initialStock, sizeStock, ...input } = parsed.data;
+  // Stage 2: a new product's strengths open at 0; stock is then added through recorded adjustments (Stock tab).
+  if (initialStock !== undefined || sizeStock !== undefined) {
+    return NextResponse.json(
+      { error: "Stock is no longer set from the product editor. Save the product, then add stock in Executive Office → Stock." },
+      { status: 400 }
+    );
+  }
 
   const blocked = findBlockedTerm(input, PRODUCT_NON_COPY_KEYS);
   if (blocked) return NextResponse.json({ error: blockedTermMessage(blocked) }, { status: 400 });
@@ -61,10 +67,10 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     product = await createProduct(input);
   } catch (err) {
     if (err instanceof StrengthError) return NextResponse.json({ error: err.message }, { status: 400 });
+    const conflict = strengthConflict(err);
+    if (conflict) return NextResponse.json({ error: conflict.message }, { status: 409 });
     throw err;
   }
-  await upsertInventory(product.slug, initialStock ?? 0);
-  if (sizeStock) await syncSizeInventory(product.slug, product.sizes.map((s) => s.label), sizeStock);
 
   const actor = await getCurrentCustomer();
   if (actor) await logActivity(actor.email, "product.created", product.name);

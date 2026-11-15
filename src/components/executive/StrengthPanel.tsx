@@ -15,7 +15,8 @@ export type SizeForm = {
   priceUsd: string; // blank = not yet priced
   bulkTiers: string; // "minQty:price, minQty:price"
   costUsd: string; // blank = use the product's cost
-  stock: string; // blank = draws on the product's shared stock
+  // Stage 2: read-only stock (available/physical/reserved/threshold); changed only in the Stock tab.
+  stock?: { physical: number; reserved: number; available: number; threshold: number; level: "healthy" | "low" | "zero" } | null;
   active: boolean;
   availabilityStatus: AvailabilityStatus;
   estimatedAvailableOn: string; // "YYYY-MM-DD", or "" for none
@@ -35,9 +36,11 @@ export function StrengthPanel({
   onChange,
   onRemove,
   onImageChange,
+  duplicate = false,
 }: {
   index: number;
   size: SizeForm;
+  duplicate?: boolean;
   product: Product | null;
   onChange: (patch: Partial<SizeForm>) => void;
   onRemove?: () => void;
@@ -83,8 +86,15 @@ export function StrengthPanel({
                 onChange={(e) => onChange({ label: e.target.value })}
                 placeholder="e.g. 10mg"
                 aria-label="Strength designation"
-                className="input-field mt-1"
+                aria-invalid={duplicate || undefined}
+                aria-describedby={duplicate ? `${bodyId}-dup` : undefined}
+                className={`input-field mt-1 ${duplicate ? "border-red-400" : ""}`}
               />
+              {duplicate && (
+                <span id={`${bodyId}-dup`} role="alert" className="mt-1 block text-[11px] text-red-300" data-duplicate-warning>
+                  This product already has a {size.label.trim()} strength. Each strength must be different.
+                </span>
+              )}
             </label>
             <div className="block sm:col-span-2">
               {fieldLabel("SKU code")}
@@ -125,18 +135,16 @@ export function StrengthPanel({
                 className="input-field mt-1"
               />
             </label>
-            <label className="block sm:col-span-2">
-              {fieldLabel("Stock")}
-              <input
-                type="number"
-                min="0"
-                value={size.stock}
-                onChange={(e) => onChange({ stock: e.target.value })}
-                placeholder="Blank = shared stock"
-                aria-label="Stock for this strength"
-                className="input-field mt-1"
-              />
-            </label>
+            {/* Stage 2: read-only. Stock changes only through a recorded adjustment in Executive Office → Stock. */}
+            <div className="block sm:col-span-2">
+              {fieldLabel("Stock (available)")}
+              <p className="input-field mt-1 text-xs text-white/70" data-strength-stock>
+                {size.stock
+                  ? `${size.stock.available} available${size.stock.reserved ? ` (${size.stock.physical} physical, ${size.stock.reserved} reserved)` : ""} · low at ${size.stock.threshold}`
+                  : size.id ? "No stock record" : "Opens at 0 when saved"}
+              </p>
+              <p className="mt-1 text-[10px] text-white/35">Adjust in the Stock tab.</p>
+            </div>
             <label className="block sm:col-span-6">
               {fieldLabel("Bulk pricing (minQty:price, e.g. 3:38, 5:32)")}
               <input

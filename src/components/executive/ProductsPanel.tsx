@@ -8,10 +8,12 @@ import { ProductGalleryEditor } from "./ProductGalleryEditor";
 import { formatPurity } from "@/lib/products/specs";
 import { AVAILABILITY_LABELS, DEFAULT_AVAILABILITY_STATUS, strengthStatus } from "@/lib/products/availability";
 import { StrengthPanel, type SizeForm } from "./StrengthPanel";
+import { STOCK_LEVEL_LABELS, type StockLevel } from "@/lib/inventory-shared";
 
-type StockLevel = { quantity: number; threshold: number };
-// stock is the shared count; sizeLevels holds sizes counted separately.
-type ProductWithStock = Product & { stock: StockLevel | null; sizeLevels?: Record<string, StockLevel> };
+// Stage 2: each strength's stock, by permanent id — shown read-only here; changed only by a recorded adjustment
+// in the Stock tab.
+export type StrengthStockSummary = { physical: number; reserved: number; available: number; threshold: number; level: StockLevel };
+type ProductWithStock = Product & { strengthStock?: Record<string, StrengthStockSummary> };
 
 
 type FormState = {
@@ -28,7 +30,6 @@ type FormState = {
   description: string; // one paragraph per line
   batchNumbers: string; // comma separated
   sizes: SizeForm[];
-  initialStock: string;
   active: boolean;
   costUsd: string;
 };
@@ -40,7 +41,6 @@ const EMPTY_SIZE: SizeForm = {
   priceUsd: "",
   bulkTiers: "",
   costUsd: "",
-  stock: "",
   active: true,
   availabilityStatus: DEFAULT_AVAILABILITY_STATUS,
   estimatedAvailableOn: "",
@@ -61,7 +61,6 @@ function emptyForm(): FormState {
     description: "",
     batchNumbers: "",
     sizes: [{ ...EMPTY_SIZE }],
-    initialStock: "0",
     active: true,
     costUsd: "",
   };
@@ -90,14 +89,13 @@ function productToForm(p: ProductWithStock): FormState {
       priceUsd: s.priceUsd !== null ? String(s.priceUsd) : "",
       bulkTiers: (s.bulkTiers ?? []).map((t) => `${t.minQuantity}:${t.priceUsd}`).join(", "),
       costUsd: s.costUsd !== undefined ? String(s.costUsd) : "",
-      stock: p.sizeLevels?.[s.label] ? String(p.sizeLevels[s.label].quantity) : "",
+      stock: s.id ? p.strengthStock?.[s.id] ?? null : null,
       active: s.active !== false,
       availabilityStatus: strengthStatus(p, s),
       estimatedAvailableOn: s.estimatedAvailableOn ?? "",
       imageUrl: s.imageUrl ?? null,
       composition: s.composition,
     })),
-    initialStock: String(p.stock?.quantity ?? 0),
     active: p.active ?? true,
     costUsd: p.costUsd !== undefined ? String(p.costUsd) : "",
   };
@@ -153,12 +151,7 @@ function formToPayload(form: FormState) {
       .map((b) => b.trim())
       .filter(Boolean),
     sizes,
-    initialStock: Number(form.initialStock) || 0,
-    sizeStock: Object.fromEntries(
-      form.sizes
-        .filter((s) => s.label.trim())
-        .map((s) => [s.label.trim(), s.stock.trim() ? Number(s.stock) || 0 : null])
-    ),
+    // Stage 2: no stock here — it changes only through recorded adjustments in the Stock tab.
     active: form.active,
     costUsd: form.costUsd.trim() ? Number(form.costUsd) : undefined,
   };
@@ -213,24 +206,66 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     load();
   }, [load]);
 
+  // B3 (Stage 2): the product being edited is kept in ?edit=<slug> beside ?tab=products, so a browser refresh
+  // reopens its editor (from the saved data — nothing is saved automatically). The form as opened is remembered;
+  // while it differs, leaving or refreshing the page asks first (beforeunload), and Cancel / opening another product
+  // asks too.
+  const openedForm = useRef<string>("");
+  const restored = useRef(false);
+  const setEditParam = (slug: string | null) => {
+    const url = new URL(window.location.href);
+    if (slug) url.searchParams.set("edit", slug);
+    else url.searchParams.delete("edit");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+  // A vial image saves on its own (StrengthImageControl), so it never counts as an unsaved change.
+  const snap = (f: FormState) => JSON.stringify(f, (k, v) => (k === "imageUrl" ? undefined : v));
+  const dirty = editing !== null && snap(form) !== openedForm.current;
+  const confirmDiscard = () => !dirty || window.confirm("Discard your unsaved changes to this product?");
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+  // After the first load, reopen the editor named in ?edit= (if that product still exists).
+  useEffect(() => {
+    if (loading || restored.current) return;
+    restored.current = true;
+    const slug = new URLSearchParams(window.location.search).get("edit");
+    const product = slug ? products.find((p) => p.slug === slug) : undefined;
+    if (product) startEdit(product);
+    else if (slug) setEditParam(null);
+  }, [loading, products]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function startNew() {
-    setForm(emptyForm());
+    if (!confirmDiscard()) return;
+    const fresh = emptyForm();
+    setForm(fresh);
+    openedForm.current = snap(fresh);
     setEditing("new");
+    setEditParam(null); // a product not saved yet has nothing to restore
     setError(null);
     openedFrom.current = null;
     setScrollTarget({ to: "form", at: Date.now() });
   }
 
   function startEdit(product: ProductWithStock) {
-    setForm(productToForm(product));
+    if (editing !== product.slug && !confirmDiscard()) return;
+    const opened = productToForm(product);
+    setForm(opened);
+    openedForm.current = snap(opened);
     setEditing(product.slug);
+    setEditParam(product.slug);
     setError(null);
     openedFrom.current = product.slug;
     setScrollTarget({ to: "form", at: Date.now() });
   }
 
   function closeEditor(returnTo: string | null = openedFrom.current) {
+    openedForm.current = "";
     setEditing(null);
+    setEditParam(null);
     setScrollTarget(returnTo ? { to: "card", slug: returnTo, at: Date.now() } : null);
   }
 
@@ -347,12 +382,6 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
     }));
   }
 
-  async function handleInlineStockChange(product: ProductWithStock, value: string) {
-    const initialStock = Number(value);
-    if (!Number.isFinite(initialStock) || initialStock < 0) return;
-    await handleInlinePatch(product.slug, { initialStock });
-  }
-
   async function handleToggleActive(product: ProductWithStock) {
     await handleInlinePatch(product.slug, { active: !(product.active ?? true) });
   }
@@ -431,28 +460,18 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                           className="input-field mt-1 py-1.5 text-xs"
                         />
                       </label>
-                      {Object.keys(p.sizeLevels ?? {}).length > 0 ? (
-                        // Sizes counted separately are edited in the full form.
-                        <div className="block">
-                          <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">Stock (per size)</span>
-                          <p className="mt-1 py-1.5 text-xs text-white/70">
-                            {Object.entries(p.sizeLevels ?? {})
-                              .map(([label, level]) => `${label}: ${level.quantity}`)
-                              .join(" · ")}
-                          </p>
-                        </div>
-                      ) : (
-                        <label className="block">
-                          <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">Stock</span>
-                          <input
-                            type="number"
-                            min="0"
-                            defaultValue={p.stock?.quantity ?? 0}
-                            onBlur={(e) => handleInlineStockChange(p, e.target.value)}
-                            className="input-field mt-1 py-1.5 text-xs"
-                          />
-                        </label>
-                      )}
+                      {/* Stage 2: read-only available stock per strength; changed in the Stock tab. */}
+                      <div className="block" data-card-stock>
+                        <span className="text-[9px] uppercase tracking-[0.1em] text-white/30">Available stock</span>
+                        <p className="mt-1 py-1.5 text-xs text-white/70">
+                          {p.sizes
+                            .map((s) => {
+                              const st = s.id ? p.strengthStock?.[s.id] : undefined;
+                              return `${s.label}: ${st ? `${st.available}${st.level === "healthy" ? "" : ` (${STOCK_LEVEL_LABELS[st.level].toLowerCase()})`}` : "—"}`;
+                            })
+                            .join(" · ")}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -576,17 +595,8 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
               aria-label="Purity %"
               className="input-field"
             />
-            <input
-              required
-              type="number"
-              min="0"
-              value={form.initialStock}
-              onChange={(e) => setForm((f) => ({ ...f, initialStock: e.target.value }))}
-              placeholder="Stock quantity"
-              aria-label="Shared stock (sizes without their own count)"
-              title="Shared stock: used by every size without its own count below"
-              className="input-field"
-            />
+            {/* Stage 2: the shared stock box is gone — stock is per strength and changes only through recorded
+                adjustments in Executive Office → Stock. */}
             <input
               type="number"
               step="0.01"
@@ -652,6 +662,9 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
                   index={i}
                   size={size}
                   product={editingProduct}
+                  // Immediate warning (B1): another strength of this product has the same designation, ignoring
+                  // case and spaces — the same comparison the server and the database index make.
+                  duplicate={Boolean(size.label.trim()) && form.sizes.some((o, j) => j !== i && o.label.toLowerCase().replace(/\s+/g, "") === size.label.toLowerCase().replace(/\s+/g, ""))}
                   onChange={(patch) => updateSize(i, patch)}
                   onRemove={size.id ? undefined : () => setForm((f) => ({ ...f, sizes: f.sizes.filter((_, j) => j !== i) }))}
                   onImageChange={handleStrengthImageChange}
@@ -692,7 +705,7 @@ export function ProductsPanel({ variant }: { variant: "command" | "office" }) {
             </button>
             <button
               type="button"
-              onClick={() => closeEditor()}
+              onClick={() => confirmDiscard() && closeEditor()}
               className="border border-white/15 px-6 py-2.5 text-xs uppercase tracking-[0.15em] text-white/50 hover:text-white"
             >
               Cancel

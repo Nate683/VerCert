@@ -18,7 +18,7 @@ export async function markOrderPaid(order: Order): Promise<Order | null> {
   if (order.status !== "awaiting_payment") return order;
 
   if (!order.stockDecremented) {
-    await decrementStock(order.items);
+    await decrementStock(order.items, order.reference);
   }
 
   const updated = await updateOrder(order.id, {
@@ -111,7 +111,7 @@ export async function cancelOrder(order: Order, reason?: string): Promise<Order 
   }
 
   if (order.stockDecremented) {
-    await restoreStock(order.items);
+    await restoreStock(order.items, order.reference);
   }
   if (order.promoCodeId) {
     await removeRedemptionForOrder(order.id);
@@ -142,7 +142,7 @@ export async function refundOrder(
   }
 
   if (order.stockDecremented) {
-    await restoreStock(order.items);
+    await restoreStock(order.items, order.reference);
   }
   if (order.promoCodeId) {
     await removeRedemptionForOrder(order.id);

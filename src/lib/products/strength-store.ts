@@ -4,6 +4,7 @@ import type { SizeOption } from "@/lib/types";
 import { AVAILABILITY_STATUSES, DEFAULT_AVAILABILITY_STATUS, type AvailabilityStatus } from "./availability";
 import { toDateOnly } from "./estimated-availability";
 import { skuOf } from "./strengths";
+import { openingStockStatements } from "@/lib/inventory";
 
 // Server-only. Strength-specific SKUs (Stage 1): one product_strengths row per strength of a product
 // (scripts/product-strengths.mjs created the table and one row per existing size).
@@ -66,7 +67,26 @@ export async function listStrengths(slug?: string): Promise<Map<string, SizeOpti
 
 export class StrengthError extends Error {}
 
+// A save that lost a race: another request created the same strength (or SKU code) between this request's checks
+// and its write. The database's unique indexes refused it, the whole transaction rolled back (nothing written), and
+// the editor is told plainly. Returns null for any other error.
+export function strengthConflict(err: unknown): StrengthError | null {
+  const e = err as { code?: string; constraint?: string; message?: string };
+  if (e?.code !== "23505") return null;
+  const which = `${e.constraint ?? ""} ${e.message ?? ""}`;
+  if (/product_strengths_product_label/.test(which)) {
+    return new StrengthError("Another change saved the same strength for this product at the same moment. Nothing was saved — reload and try again.");
+  }
+  if (/product_strengths_sku/.test(which)) {
+    return new StrengthError("That SKU code was just taken by another change. Nothing was saved — reload and try again.");
+  }
+  return new StrengthError("Another change was saved at the same moment. Nothing was saved — reload and try again.");
+}
+
+// Strength names are compared ignoring case and all whitespace ("10mg" = "10 MG" = " 10mg "), exactly as the
+// database index product_strengths_product_label_norm does; they are stored trimmed, inner spaces collapsed.
 const compact = (s: string) => s.toLowerCase().replace(/\s+/g, "");
+export const normalizeLabel = (s: string) => s.trim().replace(/\s+/g, " ");
 
 export type StrengthPlan = {
   statements: { text: string; params: unknown[] }[];
@@ -92,7 +112,7 @@ export async function planStrengthSave(
   const existing = (await listStrengths(slug)).get(slug) ?? [];
   const seen = new Map<string, string>();
   for (const s of submitted) {
-    const label = s.label.trim();
+    const label = normalizeLabel(s.label);
     if (!label) throw new StrengthError("Every strength needs a strength designation (e.g. 10mg).");
     const key = compact(label);
     if (seen.has(key)) throw new StrengthError(`Two strengths are both "${label}". Each strength must be different.`);
@@ -104,12 +124,13 @@ export async function planStrengthSave(
   const statements: StrengthPlan["statements"] = [];
   const sizes: SizeOption[] = [];
   const renames: StrengthPlan["renames"] = [];
+  const newStrengths: { id: string; sku: string; label: string }[] = [];
   const takenSkus = new Set(
     (await query<{ sku: string }>("SELECT sku FROM product_strengths")).map((r) => r.sku)
   );
 
   submitted.forEach((s, position) => {
-    const label = s.label.trim();
+    const label = normalizeLabel(s.label);
     let current: SizeOption | undefined;
     if (s.id) {
       current = existing.find((e) => e.id === s.id);
@@ -155,6 +176,7 @@ export async function planStrengthSave(
       for (let n = 2; takenSkus.has(sku); n++) sku = `${base}-${n}`;
       takenSkus.add(sku);
       next.sku = sku;
+      newStrengths.push({ id: next.id!, sku, label });
       statements.push({
         text: `INSERT INTO product_strengths (id, product_slug, sku, label, position, active, availability_status,
                  estimated_available_on, price_usd, cost_usd, bulk_tiers, composition, created_at, updated_at, image_url)
@@ -164,6 +186,10 @@ export async function planStrengthSave(
     }
     sizes.push(next);
   });
+
+  // Every new strength opens with its own stock record (0 units) and an opening-balance movement, in the same
+  // transaction as the strength itself (after its INSERT, which the foreign keys need).
+  for (const n of newStrengths) statements.push(...openingStockStatements(n.id, n.sku, slug, n.label, now));
 
   const missing = existing.filter((e) => !matched.has(e.id!));
   if (missing.length && !deactivateMissing) {
@@ -179,16 +205,9 @@ export async function planStrengthSave(
     sizes.push({ ...m, active: false });
   });
 
-  // A rename keeps the strength's own stock count: move its inventory row to the new label (before this, a rename
-  // dropped the count). Orders, subscriptions and certificate records are not rewritten — they keep the label they
+  // Stage 2: stock is keyed by the strength's permanent id (strength_inventory), so a rename keeps it with no
+  // statement at all. Orders, subscriptions and certificate records are not rewritten — they keep the label they
   // were made with.
-  for (const r of renames) {
-    statements.push({
-      text: `UPDATE inventory SET size_label = $3 WHERE slug = $1 AND size_label = $2
-               AND NOT EXISTS (SELECT 1 FROM inventory WHERE slug = $1 AND size_label = $3)`,
-      params: [slug, r.from, r.to],
-    });
-  }
   return { statements, sizes, renames };
 }
 

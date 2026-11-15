@@ -5,6 +5,32 @@ import { CONTACT_SUBJECTS } from "@/lib/contact-subjects";
 import { PASSWORD_MAX_LENGTH } from "@/lib/users/password-policy";
 import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
 import { AVAILABILITY_STATUSES } from "@/lib/products/availability";
+import { ADJUSTMENT_REASONS, ADJUSTMENT_TYPES } from "@/lib/inventory-shared";
+
+// Stage 2 inventory. A stock adjustment: whole units; a reason from the type's list; a note required for "Other";
+// an idempotency key per submission (a double click records once). expectedVersion guards a count correction
+// against a change made since the administrator read the count.
+export const inventoryAdjustmentSchema = z
+  .object({
+    type: z.enum(ADJUSTMENT_TYPES),
+    quantity: z.number().int("Use a whole number of units.").min(0).max(1_000_000),
+    reason: z.string().trim().min(1, "Choose a reason.").max(80),
+    note: z.string().trim().max(500).optional(),
+    idempotencyKey: z.string().trim().min(8).max(100),
+    expectedVersion: z.number().int().min(0).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.type !== "count_correction" && v.quantity < 1) ctx.addIssue({ code: "custom", path: ["quantity"], message: "Enter at least 1 unit." });
+    if (!ADJUSTMENT_REASONS[v.type].includes(v.reason)) ctx.addIssue({ code: "custom", path: ["reason"], message: "Choose one of the listed reasons." });
+    if (v.reason === "Other" && !v.note) ctx.addIssue({ code: "custom", path: ["note"], message: "Add a note explaining the adjustment." });
+    if (v.type === "count_correction" && v.expectedVersion === undefined) ctx.addIssue({ code: "custom", path: ["expectedVersion"], message: "Reload the count before correcting it." });
+  });
+
+export const lowStockThresholdSchema = z.object({
+  threshold: z.number().int("Use a whole number.").min(0).max(100_000),
+  note: z.string().trim().max(500).optional(),
+  idempotencyKey: z.string().trim().min(8).max(100),
+});
 
 // Shared zod schemas for the highest-risk request bodies (auth + money
 // paths). Parse with `parseBody` to get a consistent 400 response shape.

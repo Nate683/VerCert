@@ -33,7 +33,6 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
   const { execMode, beginSave, endSave } = useExecMode();
   const [active, setActive] = useState(product.active ?? true);
   const [priceDraft, setPriceDraft] = useState(String(product.sizes[0]?.priceUsd ?? ""));
-  const [stockDraft, setStockDraft] = useState("");
 
   async function patchProduct(patch: Record<string, unknown>): Promise<boolean> {
     beginSave();
@@ -69,13 +68,6 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
     await patchProduct({ sizePrice: { ...(first.id ? { id: first.id } : {}), label: first.label, priceUsd: value } });
   }
 
-  async function handleStockBlur() {
-    if (!stockDraft.trim()) return;
-    const value = Number(stockDraft);
-    if (!Number.isFinite(value) || value < 0) return;
-    await patchProduct({ initialStock: value });
-  }
-
   // The tile carries image, category, name, stock, unit price and one action;
   // CAS and purity are on the product page (and CAS is still searchable).
   const price = unitPrice(product);
@@ -107,7 +99,13 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
               <span className="min-h-[1lh] text-white/50">Unavailable</span>
             ) : availabilityStatus(product) !== "in_stock" ? (
               // Product-wide: the status of the strength the product page opens on (the first In Stock one, if any).
-              <span className="min-h-[1lh] text-white/55">{availabilityLabel(product, product.stock)}</span>
+              // Coming Soon in brand gold (B4, Stage 2): #c9a227 on this navy is 6.31:1.
+              <span
+                className={`min-h-[1lh] ${availabilityStatus(product) === "coming_soon" ? "text-gold" : "text-white/55"}`}
+                data-card-status={availabilityStatus(product)}
+              >
+                {availabilityLabel(product, product.stock)}
+              </span>
             ) : product.stock ? (
               <span
                 className={`min-h-[1lh] ${
@@ -154,15 +152,8 @@ export function ProductCard({ product, pricingLocked = false }: { product: Produ
               placeholder="Price"
               className="border border-white/20 bg-black px-2 py-1 text-xs text-white focus:border-gold focus:outline-none"
             />
-            <input
-              type="number"
-              min="0"
-              value={stockDraft}
-              onChange={(e) => setStockDraft(e.target.value)}
-              onBlur={handleStockBlur}
-              placeholder="Set stock"
-              className="border border-white/20 bg-black px-2 py-1 text-xs text-white focus:border-gold focus:outline-none"
-            />
+            {/* Stage 2: stock is set only by a recorded adjustment (Executive Office → Stock), not here. */}
+            <p className="self-center text-[10px] leading-tight text-white/50">Stock: adjust in Executive Office → Stock</p>
           </div>
           <button
             type="button"

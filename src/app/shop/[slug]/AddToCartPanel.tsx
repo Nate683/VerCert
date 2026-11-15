@@ -186,7 +186,22 @@ export function AddToCartPanel({
         </div>
       )}
 
-      {status !== "in_stock" ? (
+      {status === "coming_soon" ? (
+        // B4 (Stage 2): Coming Soon as a badge in the brand colours — gold dot, gold border, a light gold tint, and
+        // the label in gold-ink (#82673B, the site's gold for text on light grounds): 4.62:1 on the tint over this
+        // panel. Brand gold #c9a227 as text would be 2.11:1 there, so it carries the border and dot, not the words.
+        // The date below is gold-ink on the panel, 5.01:1. Styling only: the status and what can be bought are as
+        // before.
+        <div className="mt-6" data-coming-soon>
+          <p className="inline-flex items-center gap-2 border border-gold bg-gold/10 px-3 py-1.5 text-sm font-medium text-gold-ink" data-status-badge>
+            <span aria-hidden="true" className="h-2 w-2 rounded-full bg-gold" />
+            {AVAILABILITY_LABELS[status]}
+          </p>
+          {estimatedAvailability && (
+            <p className="mt-2 text-sm text-gold-ink">Estimated availability: {estimatedAvailability}</p>
+          )}
+        </div>
+      ) : status !== "in_stock" ? (
         <>
           <p className="mt-6 flex items-center gap-2 text-sm text-muted">
             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-muted" />

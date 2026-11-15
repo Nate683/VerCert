@@ -14,6 +14,7 @@ import { OrderTable } from "./OrderTable";
 import { CustomersPanel } from "./CustomersPanel";
 import { AssistantChat } from "./AssistantChat";
 import { ProductsPanel } from "./ProductsPanel";
+import { StockPanel } from "./StockPanel";
 import { SubscriptionsPanel } from "./SubscriptionsPanel";
 import { PromotionsPanel } from "./PromotionsPanel";
 import { SiteContentPanel } from "./SiteContentPanel";
@@ -43,6 +44,7 @@ type Tab =
   | "briefing"
   | "orders"
   | "products"
+  | "stock"
   | "financials"
   | "ledger"
   | "goals"
@@ -73,6 +75,8 @@ const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "financials", label: "Revenue" },
   { id: "orders", label: "Orders" },
   { id: "products", label: "Inventory" },
+  // Stage 2: stock per strength — quantities, adjustments, low-stock thresholds and movement history.
+  { id: "stock", label: "Stock" },
   { id: "certificates", label: "Certificates" },
   { id: "ledger", label: "Ledger" },
   { id: "goals", label: "Goals" },
@@ -114,7 +118,23 @@ export function ExecutiveTerminal({
   const router = useRouter();
   // Both realms get every tab (owner gave /office full parity, 2026-11-08).
   const TABS = [...BASE_TABS, ...COMMAND_ONLY_TABS];
-  const [tab, setTab] = useState<Tab>("overview");
+  const [tab, setTabState] = useState<Tab>("overview");
+  // B3 (Stage 2): the open tab lives in ?tab=, so a browser refresh comes back to it instead of Overview. Read once
+  // after mount (the server render can't know it); changed in place with replaceState (no navigation). Panels may
+  // keep their own state beside it (e.g. ?edit= for the product editor) — leaving a tab clears those.
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from the URL on mount
+    if (requested && TABS.some((t) => t.id === requested)) setTabState(requested as Tab);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const setTab = (next: Tab) => {
+    setTabState(next);
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("tab") !== next) {
+      url.search = next === "overview" ? "" : `?tab=${next}`;
+      window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+  };
   const [overview, setOverview] = useState<ExecutiveOverview | null>(null);
   const [lowInventory, setLowInventory] = useState<LowInventoryAlert[]>([]);
   const [hqMember, setHqMember] = useState<HqMember | null>(null);
@@ -209,6 +229,7 @@ export function ExecutiveTerminal({
           {tab === "briefing" && <BriefingPanel variant={variant} />}
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}
+          {tab === "stock" && <StockPanel variant={variant} />}
           {tab === "certificates" && <CertificatesPanel />}
           {tab === "financials" && <FinancialsPanel variant={variant} />}
           {tab === "ledger" && <LedgerPanel variant={variant} />}

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { PricedSize } from "@/lib/types";
 import { ProductGallery } from "@/components/ProductGallery";
 import { strengthImageSources, strengthKey, strengthUrlValue } from "@/lib/products/strengths";
@@ -39,6 +39,22 @@ export function StrengthProvider({
     },
     [sizes]
   );
+  // B2 (Stage 2): if the link named a strength that isn't shown — deactivated, unknown, misspelt — or named the
+  // shown one in another form (id, SKU, "10 MG"), rewrite ?strength= to the strength actually selected, once, in
+  // place (replaceState: no navigation, no reload, no history entry, so it can't loop). Other parameters and the
+  // hash are kept. A link without ?strength= is left as it is.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const requested = url.searchParams.get("strength");
+    const initial = sizes.find((s) => strengthKey(s) === initialKey);
+    if (requested === null || !initial) return;
+    const canonical = strengthUrlValue(initial, sizes);
+    if (requested === canonical) return;
+    url.searchParams.set("strength", canonical);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    // Once per page: the server decided initialKey from this same URL.
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const value = useMemo(() => ({ sizes, selected, select }), [sizes, selected, select]);
   return <StrengthContext.Provider value={value}>{children}</StrengthContext.Provider>;
 }

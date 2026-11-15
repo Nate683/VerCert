@@ -606,6 +606,57 @@ async function main() {
   await sql`CREATE UNIQUE INDEX IF NOT EXISTS product_strengths_product_label ON product_strengths (product_slug, label)`;
   await sql`CREATE INDEX IF NOT EXISTS product_strengths_product ON product_strengths (product_slug, position)`;
 
+  // Inventory per strength (Stage 2). scripts/strength-inventory.mjs created these in production (2026-11-15) with
+  // opening balances from the legacy inventory table, which the application no longer reads or writes. Here (a fresh
+  // database) the tables start empty; a strength saved in the product editor opens its own stock row at 0.
+  // available = physical - reserved; reserved is never incremented in Stage 2.
+  await sql`
+    CREATE TABLE IF NOT EXISTS strength_inventory (
+      strength_id TEXT PRIMARY KEY REFERENCES product_strengths(id) ON DELETE RESTRICT,
+      physical_quantity INTEGER NOT NULL CHECK (physical_quantity >= 0),
+      reserved_quantity INTEGER NOT NULL DEFAULT 0 CHECK (reserved_quantity >= 0),
+      low_stock_threshold INTEGER NOT NULL CHECK (low_stock_threshold >= 0),
+      version INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      CONSTRAINT strength_inventory_reserved_within_physical CHECK (reserved_quantity <= physical_quantity)
+    )
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS inventory_movements (
+      id TEXT PRIMARY KEY,
+      strength_id TEXT NOT NULL REFERENCES product_strengths(id) ON DELETE RESTRICT,
+      sku TEXT NOT NULL,
+      product_slug TEXT NOT NULL,
+      strength_label TEXT NOT NULL,
+      movement_type TEXT NOT NULL CHECK (movement_type IN
+        ('opening_balance', 'stock_received', 'stock_removed', 'count_correction', 'threshold_changed', 'order_deducted', 'order_restored')),
+      quantity_change INTEGER NOT NULL,
+      previous_quantity INTEGER NOT NULL CHECK (previous_quantity >= 0),
+      resulting_quantity INTEGER NOT NULL CHECK (resulting_quantity >= 0),
+      reason TEXT NOT NULL CHECK (length(trim(reason)) > 0),
+      note TEXT,
+      actor TEXT NOT NULL,
+      reference TEXT,
+      idempotency_key TEXT UNIQUE,
+      created_at TEXT NOT NULL,
+      CONSTRAINT inventory_movements_arithmetic CHECK (resulting_quantity = previous_quantity + quantity_change)
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS inventory_movements_strength ON inventory_movements (strength_id, created_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS inventory_movements_created ON inventory_movements (created_at DESC)`;
+  await sql`
+    CREATE OR REPLACE FUNCTION inventory_movements_append_only() RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN RAISE EXCEPTION 'inventory_movements is append-only: % is not allowed', TG_OP; END $$
+  `;
+  await sql`DROP TRIGGER IF EXISTS inventory_movements_no_update_delete ON inventory_movements`;
+  await sql`
+    CREATE TRIGGER inventory_movements_no_update_delete BEFORE UPDATE OR DELETE ON inventory_movements
+      FOR EACH ROW EXECUTE FUNCTION inventory_movements_append_only()
+  `;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS product_strengths_product_label_norm ON product_strengths (product_slug, lower(regexp_replace(label, '\s', '', 'g')))`;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS product_strengths_sku_ci ON product_strengths (upper(sku))`;
+
   // The research-use attestation ticked at checkout, recorded per order: the
   // exact wording shown, when, and from which IP. Null on orders placed
   // before it was recorded.

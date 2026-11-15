@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireExecutiveSession } from "@/lib/executive/require-auth";
 import { getProductBySlug, updateProduct, deleteProduct, pricedSizes } from "@/lib/products";
-import { StrengthError } from "@/lib/products/strength-store";
-import { upsertInventory, deleteInventory, syncSizeInventory } from "@/lib/inventory";
+import { StrengthError, strengthConflict } from "@/lib/products/strength-store";
+
+const stockMoved = () =>
+  NextResponse.json(
+    { error: "Stock is no longer set from the product editor. Use Executive Office → Stock to record an adjustment." },
+    { status: 400 }
+  );
 import { productUpdateSchema, parseBody } from "@/lib/validation";
 import { findBlockedTerm, blockedTermMessage, PRODUCT_NON_COPY_KEYS } from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
@@ -28,6 +33,8 @@ export const PATCH = withApiErrorHandling(async (
   const parsed = await parseBody(request, productUpdateSchema);
   if ("error" in parsed) return parsed.error;
   const { initialStock, sizeStock, sizePrice, ...patch } = parsed.data;
+  // Stage 2: stock changes only through recorded adjustments (/api/executive/inventory), never by a product save.
+  if (initialStock !== undefined || sizeStock !== undefined) return stockMoved();
 
   const blocked = findBlockedTerm(patch, PRODUCT_NON_COPY_KEYS);
   if (blocked) return NextResponse.json({ error: blockedTermMessage(blocked) }, { status: 400 });
@@ -56,12 +63,11 @@ export const PATCH = withApiErrorHandling(async (
     // A strength list that breaks a rule (duplicate, unknown id, a strength removed rather than deactivated): nothing
     // was written, and the editor shows why.
     if (err instanceof StrengthError) return NextResponse.json({ error: err.message }, { status: 400 });
+    // Lost a race with a concurrent save of the same strength or SKU: the unique indexes refused it, nothing written.
+    const conflict = strengthConflict(err);
+    if (conflict) return NextResponse.json({ error: conflict.message }, { status: 409 });
     throw err;
   }
-  if (initialStock !== undefined) await upsertInventory(slug, initialStock);
-  // Renamed or removed sizes drop their separate counts even when this
-  // request doesn't send any.
-  if (product && (sizeStock || patch.sizes)) await syncSizeInventory(slug, product.sizes.map((s) => s.label), sizeStock ?? {});
 
   const actor = await getCurrentCustomer();
   if (actor) await logActivity(actor.email, "product.updated", slug);
@@ -78,8 +84,8 @@ export const DELETE = withApiErrorHandling(async (
   }
 
   const { slug } = await params;
+  // Stock records and their history stay (they belong to the strengths, which are never deleted).
   await deleteProduct(slug);
-  await deleteInventory(slug);
 
   const actor = await getCurrentCustomer();
   if (actor) await logActivity(actor.email, "product.deleted", slug);
