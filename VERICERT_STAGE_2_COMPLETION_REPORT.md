@@ -5,7 +5,7 @@
 |---|---|
 | Date | 2026-11-15 |
 | Code checkpoint | git tag `checkpoint/pre-stage2` (local) = `85db8ab` = origin/master before any Stage 2 code |
-| Code status | **Development, local only.** Not committed, not pushed, not deployed |
+| Code status | **Deployed.** Committed as `f7ee6fc` (the audit .txt left out), pushed to master, deployed by Vercel ("Deployment has completed"), and checked live signed out (§13) |
 | Database status | One additive migration, `scripts/strength-inventory.mjs`, **applied to production** with the owner's approval on 2026-11-15. The live site runs pre-Stage-2 code and ignores the new tables |
 | Stage 3 | Not started. No order management, checkout or reservation was implemented |
 
@@ -298,8 +298,8 @@ SELECT slug, size_label, quantity, threshold FROM inventory WHERE size_label = '
 ---
 
 ## 12. Known issues
-1. **Not deployed.** Deployment requires your authorization.
-2. **Homepage featured-vial photos can't be checked locally** (3 UI checks). Check them live after deployment.
+1. ~~Not deployed.~~ Deployed as `f7ee6fc` (§13).
+2. ~~Homepage featured-vial photos can't be checked locally.~~ Verified live: all load (§13).
 3. **Real Blob upload of a strength vial image is unverified.** Owner check after deploy.
 4. **Legacy stock deliberately left behind (owner decision, 2026-11-15).** These counts were not carried into the new system and were not recorded as adjustments: nobody has physically verified them, and the shop already ignored them. See §11a for the full list and where they live.
 5. **Test fixtures write stock directly.** The ported catalog suite empties a strength by writing `strength_inventory` directly (local only, restored after), which bypasses the history on purpose. The application itself has no such path.
@@ -310,7 +310,33 @@ SELECT slug, size_label, quantity, threshold FROM inventory WHERE size_label = '
 ---
 
 ## 13. Deployment status
-**Development, local only.** Production has the Stage 2 tables, which the live pre-Stage-2 code ignores (it still reads the legacy table).
+**Deployed 2026-11-15** on the owner's instruction "Ready to deploy". Commit `f7ee6fc`, pushed to master, deployed through the existing Vercel Git integration. Vercel reported success; no deployment errors.
+
+### Live verification (signed out, no account, read-only, no writes)
+**Stage 2 checks: 12/12 passed.**
+- **New inventory routes:** list, SKU detail, adjustment POST and threshold PUT all return **401**.
+- **Product routes:** `GET` and `PATCH /api/executive/products` (with a stock field) return **401**. `/api/catalog` still returns **401**.
+- **Signed-out product link:** `/shop/vc3r?strength=20mg&utm_source=x` returns 307 to `/register?next=…strength%3D20mg%26utm_source%3Dx`. The strength link is kept, and no product data is served.
+- **Homepage, at 390×844 and 1280×900:**
+  - all 4 featured vial photos load, and each card shows its price;
+  - the Coming Soon labels render in brand gold, computed `rgb(201, 162, 39)` = `#c9a227`;
+  - no internal stock data (thresholds, reserved or physical counts, history) is in the page.
+
+  This closes the homepage-photo item that couldn't be checked locally.
+
+**Certificate checks** (post-COA suite, re-run): 24/26 on the first pass.
+- The two differences were the single-load lot-page variation already documented after Stage 1.
+- Re-checked across 9 loads: every load of the synthetic lot's page is word-for-word identical to the made-up lots' pages, so **no leak**.
+- All other certificate checks passed: search, PDF 404, staff routes 401, header and How We Test identical, no-match wording.
+
+**Not verifiable without an account:**
+- the Stock tab and Edit Product on production;
+- the signed-in product page (Coming Soon badge, URL cleanup);
+- a real vial-image upload.
+
+These are the manual audit in §15.
+
+**Before deployment** (kept for the record): production had the Stage 2 tables, which the pre-Stage-2 code ignored (it still read the legacy table).
 
 - **Rollback (code):** revert the Stage 2 commit, or redeploy `85db8ab` (`checkpoint/pre-stage2`).
 - **Rollback (database):** drop the two new tables and two indexes. Nothing needs restoring.
