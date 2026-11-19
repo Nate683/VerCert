@@ -1,9 +1,10 @@
 import type { Affiliate, AffiliatePayout, AffiliateSummary, Order, PromoCode } from "@/lib/types";
+import { qualifiesForCommission } from "@/lib/orders/revenue";
 
 // Orders qualify for commission once paid and never refunded/cancelled —
 // mirrors the revenue-recognition rule used everywhere else in the app.
 function isQualifying(order: Order): boolean {
-  return Boolean(order.paidAt) && order.status !== "cancelled" && !order.refundedAt;
+  return qualifiesForCommission(order);
 }
 
 // Whether an order counts toward this affiliate. Orders record who they're

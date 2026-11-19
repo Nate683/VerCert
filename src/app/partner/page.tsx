@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { qualifiesForCommission } from "@/lib/orders/revenue";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import {
   getAffiliateByEmail,
@@ -57,7 +58,7 @@ function StatusScreen({
 // Same qualifying-order rule used by computeAffiliateSummaries — kept local
 // since this page needs the underlying order-level detail, not just totals.
 function isQualifying(order: Order): boolean {
-  return Boolean(order.paidAt) && order.status !== "cancelled" && !order.refundedAt;
+  return qualifiesForCommission(order);
 }
 
 function liveResetToken(customer: Customer): string | null {

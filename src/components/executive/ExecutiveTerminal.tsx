@@ -15,6 +15,8 @@ import { CustomersPanel } from "./CustomersPanel";
 import { AssistantChat } from "./AssistantChat";
 import { ProductsPanel } from "./ProductsPanel";
 import { StockPanel } from "./StockPanel";
+import { ReservationsPanel } from "./ReservationsPanel";
+import { PaymentsPanel } from "./PaymentsPanel";
 import { SubscriptionsPanel } from "./SubscriptionsPanel";
 import { PromotionsPanel } from "./PromotionsPanel";
 import { SiteContentPanel } from "./SiteContentPanel";
@@ -45,6 +47,8 @@ type Tab =
   | "orders"
   | "products"
   | "stock"
+  | "reservations"
+  | "payments"
   | "financials"
   | "ledger"
   | "goals"
@@ -77,6 +81,9 @@ const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "products", label: "Inventory" },
   // Stage 2: stock per strength — quantities, adjustments, low-stock thresholds and movement history.
   { id: "stock", label: "Stock" },
+  // Stage 3: every live stock reservation (with stuck ones flagged and releasable) and the payment-method switches.
+  { id: "reservations", label: "Reservations" },
+  { id: "payments", label: "Payments" },
   { id: "certificates", label: "Certificates" },
   { id: "ledger", label: "Ledger" },
   { id: "goals", label: "Goals" },
@@ -230,6 +237,8 @@ export function ExecutiveTerminal({
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}
           {tab === "stock" && <StockPanel variant={variant} />}
+          {tab === "reservations" && <ReservationsPanel variant={variant} />}
+          {tab === "payments" && <PaymentsPanel variant={variant} />}
           {tab === "certificates" && <CertificatesPanel />}
           {tab === "financials" && <FinancialsPanel variant={variant} />}
           {tab === "ledger" && <LedgerPanel variant={variant} />}

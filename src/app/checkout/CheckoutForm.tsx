@@ -6,24 +6,32 @@ import Link from "next/link";
 import { useCart, cartLineKey } from "@/lib/cart-context";
 import { track } from "@/lib/track-client";
 import type { PaymentMethod, SavedAddress } from "@/lib/types";
+import type { OfferedMethod } from "@/lib/payments/methods";
 import { RESEARCH_ATTESTATION } from "@/lib/orders/attestation";
-import { isPaymentMethodAvailable } from "@/lib/payments/availability";
 import { RESEARCH_CATEGORIES } from "@/lib/users/registration";
 
-// The only two ways to pay. No card, Apple Pay or Google Pay inputs, not even
-// as placeholders.
-const PAYMENT_OPTIONS: { value: PaymentMethod; title: string; detail: string }[] = [
-  {
-    value: "bank_transfer",
+// What each method says at checkout. Only the methods the server offers (lib/payments/config.ts: switched on AND
+// integration ready) are shown. No card, bank-account or wallet fields are ever collected here: a provider method,
+// once one exists, collects them on the provider's hosted page.
+const PAYMENT_DETAIL: Partial<Record<PaymentMethod, { title: string; detail: string }>> = {
+  bank_transfer: {
     title: "Direct Bank Transfer (ACH / Wire)",
     detail: "Bank-to-bank electronic transfer. Instructions and reference code are shown after you place your order.",
   },
-  {
-    value: "crypto",
-    title: "Cryptocurrency",
-    detail: "BTC, ETH, or USDC. A payment address and amount are issued after you place your order.",
+  crypto: { title: "Cryptocurrency", detail: "BTC, ETH, or USDC. A payment address and amount are issued after you place your order." },
+  zelle: {
+    title: "Zelle",
+    detail: "Pay with Zelle using your order reference. Your order is confirmed once we've verified the payment; stock isn't held until then.",
   },
-];
+  bitcoin: { title: "Bitcoin", detail: "Payment details are issued after you place your order." },
+  ethereum: { title: "Ethereum", detail: "Payment details are issued after you place your order." },
+  usdc: { title: "USDC", detail: "Payment details are issued after you place your order." },
+  ach: { title: "ACH Bank Transfer", detail: "Authorize the transfer with our payment provider after you place your order." },
+  card: { title: "Credit / Debit Card", detail: "Pay on our payment provider's secure page." },
+  apple_pay: { title: "Apple Pay", detail: "Pay with Apple Pay through our payment provider." },
+  google_pay: { title: "Google Pay", detail: "Pay with Google Pay through our payment provider." },
+};
+const newAttemptKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
 
 type Field = {
   name: keyof FormValues;
@@ -62,7 +70,7 @@ const ADDRESS_FIELDS: Field[] = [
 export function CheckoutForm({
   initialEmail,
   initialAddress,
-  bankTransferAvailable,
+  offeredMethods,
   referralPromoCode,
   askResearchCategory = false,
   orderingEnabled,
@@ -70,7 +78,8 @@ export function CheckoutForm({
 }: {
   initialEmail: string;
   initialAddress?: SavedAddress;
-  bankTransferAvailable: boolean;
+  /** From the server (lib/payments/config.ts getOfferedMethods): the methods that can take payment now. */
+  offeredMethods: OfferedMethod[];
   /** The referring affiliate's code, applied for the customer once the cart has loaded. */
   referralPromoCode?: string;
   /** An affiliate with no research category on file: required with this order. */
@@ -81,12 +90,15 @@ export function CheckoutForm({
 }) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
-  // Only methods that can actually take payment: bank transfer once its
-  // details are configured, crypto only while a working provider is enabled
-  // (it isn't — see lib/payments/availability.ts).
-  const paymentOptions = PAYMENT_OPTIONS.filter(
-    (o) => isPaymentMethodAvailable(o.value) && (o.value !== "bank_transfer" || bankTransferAvailable)
-  );
+  // Only methods the server says can take payment now (the server refuses any other method anyway).
+  const paymentOptions = offeredMethods.map((m) => {
+    const copy = PAYMENT_DETAIL[m.id] ?? { title: m.label, detail: "" };
+    const hold = m.reservationMinutes ? ` Your items are held for ${m.reservationMinutes} minutes while you pay.` : "";
+    return { value: m.id, title: copy.title, detail: `${copy.detail}${hold}${m.simulated ? " [LOCAL SIMULATION — not a real payment]" : ""}` };
+  });
+  // One key per checkout attempt: a double click or a retry after a dropped connection returns the same order
+  // instead of creating a second one. A new key is taken only after an order was placed.
+  const [attemptKey] = useState(newAttemptKey);
   const noPaymentMethod = paymentOptions.length === 0;
   // Ordering switched off, or no way to pay: the payment section shows the
   // ordering-unavailable message and the order can't be placed.
@@ -256,6 +268,7 @@ export function CheckoutForm({
             country: values.country.trim(),
           },
           paymentMethod: method,
+          idempotencyKey: attemptKey,
           promoCode: appliedPromo?.code,
           researchAttestation: agreed,
           ...(askResearchCategory ? { researchCategory } : {}),

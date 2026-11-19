@@ -106,8 +106,22 @@ export type CartItem = {
   subscription?: { intervalDays: number; discountPercent?: number; listPriceUsd?: number };
 };
 
-export type PaymentMethod = "crypto" | "bank_transfer";
+// "crypto" (Coinbase Commerce, shut down) and "bank_transfer" (manual, staff-verified) existed before Stage 3 and
+// remain for existing orders. The eight Stage 3 methods are listed in lib/payments/methods.ts.
+export type PaymentMethod =
+  | "crypto"
+  | "bank_transfer"
+  | "bitcoin"
+  | "ethereum"
+  | "usdc"
+  | "zelle"
+  | "ach"
+  | "card"
+  | "apple_pay"
+  | "google_pay";
 
+// The single legacy status, derived in the database from paymentStatus + fulfillmentStatus (Stage 3) so every page
+// and email that reads it keeps working.
 export type OrderStatus =
   | "awaiting_payment"
   | "paid"
@@ -115,7 +129,12 @@ export type OrderStatus =
   | "shipped"
   | "delivered"
   | "expired"
-  | "cancelled";
+  | "cancelled"
+  | "payment_failed"
+  | "returned";
+
+export type PaymentStatus = "pending" | "processing" | "confirmed" | "failed" | "expired" | "partially_refunded" | "refunded" | "reversed" | "cancelled";
+export type FulfillmentStatus = "unfulfilled" | "reserved" | "allocated" | "processing" | "shipped" | "delivered" | "returned" | "cancelled";
 
 // Statuses that can be manually advanced to from the executive terminals,
 // in pipeline order (awaiting_payment is entered automatically, not chosen).
@@ -190,6 +209,23 @@ export type Order = {
   // The credited affiliate is the buyer: the discount applies, but the order
   // earns no commission and isn't counted as driven by them.
   selfPurchase?: boolean;
+  // Stage 3: payment and fulfillment tracked separately (status above is derived from them).
+  paymentStatus?: PaymentStatus;
+  fulfillmentStatus?: FulfillmentStatus;
+  reservationExpiresAt?: string;
+  // What the confirming administrator (or provider) recorded: the confirmation reference, amount and date
+  // received, who confirmed and when, and whether it came from an administrator, a provider, a simulation, or
+  // the pre-Stage-3 record.
+  paymentReference?: string;
+  paymentAmountReceived?: number;
+  paymentReceivedOn?: string;
+  paymentConfirmedBy?: string;
+  paymentConfirmedAt?: string;
+  paymentSource?: "admin" | "provider" | "simulated" | "legacy";
+  needsReview?: boolean;
+  reviewReason?: string;
+  reviewOpenedAt?: string;
+  returnedAt?: string;
 };
 
 export type RefundReasonCode =

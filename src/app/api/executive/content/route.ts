@@ -20,6 +20,7 @@ import {
 } from "@/lib/content-guard";
 import { withApiErrorHandling } from "@/lib/api-error";
 import { getOrderingSettings, ORDERING_CONTENT_KEY } from "@/lib/ordering";
+import { PAYMENT_CONFIG_KEY } from "@/lib/payments/config";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,11 @@ export const PATCH = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, siteContentUpdateSchema);
   if ("error" in parsed) return parsed.error;
+
+  // Payment configuration lives in site_content but is written only by its own validated, audited endpoint.
+  if (parsed.data.key === PAYMENT_CONFIG_KEY) {
+    return NextResponse.json({ error: "Payment methods are changed under Executive Office → Payments." }, { status: 403 });
+  }
 
   const blocked = GUARD_EXEMPT_CONTENT_KEYS.includes(parsed.data.key)
     ? null

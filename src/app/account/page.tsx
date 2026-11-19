@@ -33,6 +33,8 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   delivered: "Delivered",
   expired: "Payment Expired",
   cancelled: "Cancelled",
+  payment_failed: "Payment Failed",
+  returned: "Returned",
 };
 
 // Status colour carries meaning at a glance: gold = we're waiting on the
@@ -45,6 +47,8 @@ const STATUS_TONE: Record<OrderStatus, string> = {
   processing: "border-emerald-400/30 bg-emerald-400/5 text-emerald-200",
   shipped: "border-emerald-400/30 bg-emerald-400/5 text-emerald-200",
   delivered: "border-hairline bg-surface text-muted",
+  payment_failed: "border-red-400/40 bg-red-500/10 text-red-200",
+  returned: "border-hairline bg-surface text-muted",
 };
 
 export default async function AccountPage() {

@@ -36,7 +36,11 @@ export function OrderStatusTimeline({ order }: { order: Order }) {
     );
   }
 
-  const currentIndex = STEPS.findIndex((s) => s.status === order.status);
+  // Stage 3: a returned order went through shipping (and possibly delivery) first; show those steps, then the return.
+  const returned = order.status === "returned";
+  const currentIndex = returned
+    ? STEPS.findIndex((s) => s.status === (order.deliveredAt ? "delivered" : "shipped"))
+    : STEPS.findIndex((s) => s.status === order.status);
 
   return (
     <div className="border border-hairline p-6 sm:p-8">
@@ -71,6 +75,11 @@ export function OrderStatusTimeline({ order }: { order: Order }) {
           );
         })}
       </ol>
+      {returned && (
+        <p className="mt-6 border-t border-hairline pt-4 text-sm text-muted">
+          This order was returned{order.returnedAt ? ` (${formatDate(order.returnedAt)})` : ""}.
+        </p>
+      )}
     </div>
   );
 }

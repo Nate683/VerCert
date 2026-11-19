@@ -5,13 +5,17 @@ import { CONTACT_SUBJECTS } from "@/lib/contact-subjects";
 import { PASSWORD_MAX_LENGTH } from "@/lib/users/password-policy";
 import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
 import { AVAILABILITY_STATUSES } from "@/lib/products/availability";
-import { ADJUSTMENT_REASONS, ADJUSTMENT_TYPES } from "@/lib/inventory-shared";
+import { ADJUSTMENT_REASONS, ADJUSTMENT_TYPES, LOT_RELEASE_STATUSES, LOT_TESTING_STATUSES } from "@/lib/inventory-shared";
+
+const PAYMENT_METHOD_IDS = ["crypto", "bank_transfer", "bitcoin", "ethereum", "usdc", "zelle", "ach", "card", "apple_pay", "google_pay"] as const;
 
 // Stage 2 inventory. A stock adjustment: whole units; a reason from the type's list; a note required for "Other";
 // an idempotency key per submission (a double click records once). expectedVersion guards a count correction
 // against a change made since the administrator read the count.
 export const inventoryAdjustmentSchema = z
   .object({
+    // Stage 3: every adjustment names the lot it applies to (the SKU total moves with it).
+    lotId: z.string().trim().min(1, "Choose the lot.").max(64),
     type: z.enum(ADJUSTMENT_TYPES),
     quantity: z.number().int("Use a whole number of units.").min(0).max(1_000_000),
     reason: z.string().trim().min(1, "Choose a reason.").max(80),
@@ -149,7 +153,11 @@ export const createOrderSchema = z.object({
     .array(orderItemSchema.extend({ subscriptionIntervalDays: z.number().int().min(1).max(365).optional() }))
     .min(1)
     .max(50),
-  paymentMethod: z.enum(["crypto", "bank_transfer"]),
+  // Every method the system knows; whether it is offered right now is decided by the server
+  // (lib/payments/config.ts), so a direct request for a switched-off method is refused there.
+  paymentMethod: z.enum(PAYMENT_METHOD_IDS),
+  // One per checkout attempt (Stage 3): a repeat with the same key returns the order already created.
+  idempotencyKey: z.string().trim().min(8).max(100).optional(),
   promoCode: z.string().trim().max(40).optional(),
   // Asked at checkout only of an affiliate with none on file; the route
   // decides when it's required.
@@ -160,10 +168,90 @@ export const createOrderSchema = z.object({
   }),
 });
 
-export const orderStatusUpdateSchema = z.object({
-  status: z.enum(["processing", "shipped", "delivered"]),
-  carrier: z.string().trim().max(100).optional(),
-  trackingNumber: z.string().trim().max(100).optional(),
+export const orderStatusUpdateSchema = z
+  .object({
+    status: z.enum(["processing", "shipped", "delivered"]),
+    carrier: z.string().trim().max(100).optional(),
+    trackingNumber: z.string().trim().max(100).optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.status === "shipped" && !v.trackingNumber) ctx.addIssue({ code: "custom", path: ["trackingNumber"], message: "Enter the tracking number." });
+  });
+
+// --- Stage 3: payment confirmation and order actions -----------------------------------------------------------
+
+// Governance C: a person confirming a payment must record what they are looking at — the confirmation reference or
+// transaction id from the Zelle / bank notification, the amount and date received — and attest they saw it.
+export const confirmPaymentSchema = z.object({
+  reference: z
+    .string()
+    .trim()
+    .min(4, "Enter the confirmation reference or transaction ID from the payment notification.")
+    .max(80)
+    .regex(/^[A-Za-z0-9][A-Za-z0-9 ._\-/#:]*$/, "Use the reference exactly as it appears (letters, numbers, - _ . / # :)."),
+  amountReceived: z.number({ error: "Enter the amount received." }).positive("Enter the amount received.").max(1_000_000),
+  receivedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Enter the date the payment was received."),
+  note: z.string().trim().max(500).optional(),
+  attested: z.literal(true, { error: "Confirm that you have seen this payment in the receiving account." }),
+});
+
+export const voidPaymentSchema = z.object({
+  reason: z.string().trim().min(10, "Explain why the confirmation is being voided (at least 10 characters).").max(500),
+});
+
+export const orderReturnSchema = z.object({
+  lineIndex: z.number().int().min(0).max(49),
+  allocationId: z.string().min(1).max(64).optional(),
+  quantity: z.number().int().min(1).max(999),
+  condition: z.string().trim().min(3, "Describe the condition of the returned units.").max(300),
+  decision: z.enum(["restock", "quarantine", "discard"]),
+  reason: z.string().trim().min(3, "Give the reason for the return.").max(300),
+  idempotencyKey: z.string().trim().min(8).max(100),
+});
+
+export const resolveReviewSchema = z.object({
+  action: z.enum(["allocate", "close"]),
+  note: z.string().trim().max(500).optional(),
+}).superRefine((v, ctx) => {
+  if (v.action === "close" && (!v.note || v.note.length < 10)) ctx.addIssue({ code: "custom", path: ["note"], message: "Explain how the review was resolved (at least 10 characters)." });
+});
+
+export const releaseReservationSchema = z.object({
+  reason: z.string().trim().min(3, "A reason is required.").max(300),
+});
+
+export const paymentConfigSchema = z.object({
+  // partialRecord: a request names only the methods it sets (z.record with enum keys is exhaustive in zod 4).
+  enabled: z.partialRecord(z.enum(PAYMENT_METHOD_IDS), z.boolean()),
+  reservationMinutes: z.partialRecord(z.enum(PAYMENT_METHOD_IDS), z.number().int().min(5).max(7 * 24 * 60).nullable()),
+  achFulfillment: z.enum(["after_settlement", "after_initiation"]),
+});
+
+const lotDetailFields = {
+  manufacturerLot: z.string().trim().max(80).optional(),
+  vericertLotNumber: z.string().trim().max(80).optional(),
+  receivedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}/).optional(),
+  manufacturedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  expiresOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  notes: z.string().trim().max(500).optional(),
+};
+export const lotReceiveSchema = z.object({
+  quantity: z.number().int("Use a whole number of units.").min(1, "Enter at least 1 unit.").max(1_000_000),
+  ...lotDetailFields,
+  idempotencyKey: z.string().trim().min(8).max(100),
+});
+export const lotSplitSchema = z.object({
+  quantity: z.number().int().min(1).max(1_000_000),
+  reason: z.string().trim().min(3, "Give a reason.").max(300),
+  ...lotDetailFields,
+  idempotencyKey: z.string().trim().min(8).max(100),
+});
+export const lotUpdateSchema = z.object({
+  releaseStatus: z.enum(LOT_RELEASE_STATUSES).optional(),
+  testingStatus: z.enum(LOT_TESTING_STATUSES).optional(),
+  reason: z.string().trim().max(500).optional(),
+  ...lotDetailFields,
+  idempotencyKey: z.string().trim().min(8).max(100),
 });
 
 export const orderCancelSchema = z.object({
@@ -359,8 +447,15 @@ export const hqSettingsSchema = z.object({
 
 export const refundOrderSchema = z.object({
   reason: z.enum(["customer_request", "quality_issue", "duplicate_order", "shipping_issue", "other"]),
-  amount: z.number().min(0).max(1000000).optional(),
+  // Blank = the remaining balance. The database refuses any amount that would take refunds past what was paid.
+  amount: z.number().positive("Enter an amount above 0.").max(1000000).optional(),
   note: z.string().trim().max(500).optional(),
+  // One per refund submission (Stage 3): a double click records one refund.
+  idempotencyKey: z.string().trim().min(8).max(100).optional(),
+});
+
+export const reallocateSchema = z.object({
+  reason: z.string().trim().min(10, "Give the reason for the reallocation (at least 10 characters).").max(500),
 });
 
 export const customerNotesSchema = z.object({

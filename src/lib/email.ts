@@ -2,6 +2,7 @@ import type { Affiliate, Order } from "@/lib/types";
 import { getBankTransferDetails } from "@/lib/bank-details";
 import { getSiteUrl } from "@/lib/site-url";
 import { renderEmailHtml, renderEmailShell, renderCalloutBox, renderButton } from "@/lib/email-template";
+import { describeLots, type FulfilledLot } from "@/lib/orders/lots";
 
 // TRANSACTIONAL email: order confirmations, payment and shipping notices,
 // email verification, password resets, 2FA and account-security alerts,
@@ -60,7 +61,9 @@ export async function sendOrderConfirmationEmail(order: Order): Promise<void> {
   await sendTransactionalEmail(order.customer.email, subject, buildConfirmationBody(order));
 }
 
-export async function sendPaymentConfirmedEmail(order: Order): Promise<void> {
+// Sent once stock is allocated (lib/orders/notifications.ts makes it once-only). `lots`: the lots the order was
+// actually filled from (lib/orders/lots.ts) — the only lot numbers a customer is ever told.
+export async function sendPaymentConfirmedEmail(order: Order, lots?: Map<number, FulfilledLot[]>): Promise<void> {
   const subject = `Payment Received — VeriCert Order ${order.reference}`;
   await sendTransactionalEmail(
     order.customer.email,
@@ -69,6 +72,9 @@ export async function sendPaymentConfirmedEmail(order: Order): Promise<void> {
       `Hi ${order.customer.firstName},`,
       "",
       `We've confirmed payment for order ${order.reference} ($${order.total.toFixed(2)} USD). Your order is now processing.`,
+      "",
+      `Items:`,
+      buildItemLines(order, lots),
       "",
       `Track your order any time at:`,
       `${siteUrl()}/order/${order.reference}`,
@@ -79,9 +85,42 @@ export async function sendPaymentConfirmedEmail(order: Order): Promise<void> {
   );
 }
 
-export async function sendShippingNotificationEmail(order: Order): Promise<void> {
+// DRAFT COPY — PENDING OWNER APPROVAL (Stage 3 final corrections, item 2). Sent once, instead of the "payment
+// confirmed / processing" email, when a payment has been verified but the order can't go to fulfillment yet
+// (Administrative Review). It says plainly that payment was received and that a check is being completed before
+// shipping; it never suggests the order is ready to ship, never gives the internal reason, and never implies the
+// customer did anything wrong.
+export const PAYMENT_HOLD_EMAIL = {
+  subject: (reference: string) => `Payment received — VeriCert order ${reference}`,
+  body: (order: Order) => [
+    `Hi ${order.customer.firstName},`,
+    "",
+    `Thank you — we've received your payment of $${(order.paymentAmountReceived ?? order.total).toFixed(2)} USD for order ${order.reference}.`,
+    "",
+    "Before your order ships, we're completing a final check on it. There's nothing you need to do. We'll email you as soon as it's on its way, or contact you directly if anything about your order needs to change.",
+    "",
+    `If you have a question in the meantime, contact us at ${siteUrl()}/contact.`,
+    "",
+    `Order number: ${order.reference}`,
+    `Items:`,
+    buildItemLines(order),
+    `Total paid: $${(order.paymentAmountReceived ?? order.total).toFixed(2)} USD`,
+    "",
+    `You can check your order any time at:`,
+    `${siteUrl()}/order/${order.reference}`,
+    "",
+    "For research use only. Not for human or veterinary use.",
+    "— VeriCert Peptides",
+  ].join("\n"),
+};
+
+export async function sendPaymentHoldEmail(order: Order): Promise<void> {
+  await sendTransactionalEmail(order.customer.email, PAYMENT_HOLD_EMAIL.subject(order.reference), PAYMENT_HOLD_EMAIL.body(order));
+}
+
+export async function sendShippingNotificationEmail(order: Order, lots?: Map<number, FulfilledLot[]>): Promise<void> {
   const subject = `Your VeriCert Order ${order.reference} Has Shipped`;
-  await sendTransactionalEmail(order.customer.email, subject, buildShippingBody(order));
+  await sendTransactionalEmail(order.customer.email, subject, buildShippingBody(order, lots));
 }
 
 // Internal admin alerts (new order / low stock) — sent to whatever address
@@ -336,10 +375,13 @@ async function sendMailWithHtml(to: string, subject: string, text: string, bodyH
   }
 }
 
-function buildItemLines(order: Order): string {
+// Stage 3: a line names a lot ONLY when `lots` (the allocated, fulfilled lots) are given — never the line's stored
+// lotNumber, which was an assumption made at checkout.
+function buildItemLines(order: Order, lots?: Map<number, FulfilledLot[]>): string {
   return order.items
-    .map((item) => {
-      const lot = item.lotNumber ? `, lot ${item.lotNumber}` : "";
+    .map((item, index) => {
+      const described = describeLots(lots?.get(index));
+      const lot = described ? `, ${described}` : "";
       const sub = item.subscription
         ? ` [subscription, every ${item.subscription.intervalDays} days, ${item.subscription.discountPercent}% off]`
         : "";
@@ -379,10 +421,19 @@ function buildConfirmationBody(order: Order): string {
       `Account Type: ${d.accountType}`,
       ""
     );
-  } else {
+  } else if (order.paymentMethod === "crypto") {
     lines.push(
       `Complete your crypto payment from your order page — the payment window is time-limited:`,
       `${siteUrl()}/order/${order.reference}`,
+      ""
+    );
+  } else {
+    // Stage 3 methods: the order page carries the method's instructions (Zelle recipient only if configured; no
+    // payment details are ever invented). Stock is held only for methods with a reservation window.
+    lines.push(
+      `See how to complete payment on your order page:`,
+      `${siteUrl()}/order/${order.reference}`,
+      order.reservationExpiresAt ? `Your items are held until ${new Date(order.reservationExpiresAt).toUTCString()}.` : `Your items are not held until payment is confirmed.`,
       ""
     );
   }
@@ -391,7 +442,7 @@ function buildConfirmationBody(order: Order): string {
   return lines.join("\n");
 }
 
-function buildShippingBody(order: Order): string {
+function buildShippingBody(order: Order, lots?: Map<number, FulfilledLot[]>): string {
   return [
     `Hi ${order.customer.firstName},`,
     "",
@@ -399,6 +450,9 @@ function buildShippingBody(order: Order): string {
     "",
     order.carrier ? `Carrier: ${order.carrier}` : undefined,
     order.trackingNumber ? `Tracking number: ${order.trackingNumber}` : undefined,
+    "",
+    `Items:`,
+    buildItemLines(order, lots),
     "",
     `Track your order any time at:`,
     `${siteUrl()}/order/${order.reference}`,

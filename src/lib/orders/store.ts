@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
-import { query } from "@/lib/db";
-import type { CartItem, CustomerInfo, Order, OrderStatus, PaymentMethod } from "@/lib/types";
+import { query, transaction } from "@/lib/db";
+import type { CartItem, CustomerInfo, FulfillmentStatus, Order, OrderStatus, PaymentMethod, PaymentStatus } from "@/lib/types";
 import { generateOrderReference } from "./reference";
 
 // Server-only Postgres-backed order store. Exported function signatures are
@@ -40,8 +40,23 @@ type OrderRow = {
   research_attested_ip: string | null;
   subscription_id: string | null;
   affiliate_id: string | null;
-  self_purchase: boolean | null;
+  self_purchase: boolean | null | string;
+  payment_status?: PaymentStatus | null;
+  fulfillment_status?: FulfillmentStatus | null;
+  reservation_expires_at?: string | null;
+  payment_reference?: string | null;
+  payment_amount_received?: number | string | null;
+  payment_received_on?: string | null;
+  payment_confirmed_by?: string | null;
+  payment_confirmed_at?: string | null;
+  payment_source?: Order["paymentSource"] | null;
+  needs_review?: boolean | string | null;
+  review_reason?: string | null;
+  review_opened_at?: string | null;
+  returned_at?: string | null;
 };
+
+const truthy = (v: unknown) => v === true || v === "t" || v === "true";
 
 function rowToOrder(row: OrderRow): Order {
   return {
@@ -78,7 +93,20 @@ function rowToOrder(row: OrderRow): Order {
         : undefined,
     subscriptionId: row.subscription_id ?? undefined,
     affiliateId: row.affiliate_id ?? undefined,
-    selfPurchase: row.self_purchase === true ? true : undefined,
+    selfPurchase: truthy(row.self_purchase) ? true : undefined,
+    paymentStatus: row.payment_status ?? undefined,
+    fulfillmentStatus: row.fulfillment_status ?? undefined,
+    reservationExpiresAt: row.reservation_expires_at ?? undefined,
+    paymentReference: row.payment_reference ?? undefined,
+    paymentAmountReceived: row.payment_amount_received === null || row.payment_amount_received === undefined ? undefined : Number(row.payment_amount_received),
+    paymentReceivedOn: row.payment_received_on ?? undefined,
+    paymentConfirmedBy: row.payment_confirmed_by ?? undefined,
+    paymentConfirmedAt: row.payment_confirmed_at ?? undefined,
+    paymentSource: row.payment_source ?? undefined,
+    needsReview: truthy(row.needs_review),
+    reviewReason: row.review_reason ?? undefined,
+    reviewOpenedAt: row.review_opened_at ?? undefined,
+    returnedAt: row.returned_at ?? undefined,
   };
 }
 
@@ -103,19 +131,61 @@ export type CreateOrderInput = {
 };
 
 export async function createOrder(input: CreateOrderInput): Promise<Order> {
+  return (await createOrderAtomic(input)).order;
+}
+
+export class DuplicateOrderAttempt extends Error {
+  constructor(readonly existing: Order) {
+    super("This checkout was already submitted.");
+  }
+}
+
+// Stage 3. Inserts the order and — for a reserving payment method — reserves its stock, in ONE transaction: if the
+// reservation is refused (not enough sellable stock) the order is not created either. A repeated checkout attempt
+// (same idempotency key) creates nothing and returns the order the first attempt created.
+export async function createOrderAtomic(
+  input: CreateOrderInput,
+  opts: { idempotencyKey?: string; reserve?: { expiresAt: string; actor: string } } = {}
+): Promise<{ order: Order; duplicate: boolean }> {
+  if (opts.idempotencyKey) {
+    const existing = await getOrderByIdempotencyKey(opts.idempotencyKey);
+    if (existing) return { order: existing, duplicate: true };
+  }
   const order: Order = {
     id: randomUUID(),
     reference: generateOrderReference(),
     createdAt: new Date().toISOString(),
     ...input,
   };
+  const insert = buildInsert(order, opts.idempotencyKey);
+  try {
+    await transaction([
+      insert,
+      ...(opts.reserve ? [{ text: "SELECT vc_order_reserve($1, $2, $3)", params: [order.id, opts.reserve.expiresAt, opts.reserve.actor] }] : []),
+    ]);
+  } catch (err) {
+    const e = err as { code?: string; message?: string; constraint?: string };
+    if (opts.idempotencyKey && e.code === "23505" && /idempotency/.test(`${e.constraint ?? ""} ${e.message ?? ""}`)) {
+      const existing = await getOrderByIdempotencyKey(opts.idempotencyKey);
+      if (existing) return { order: existing, duplicate: true };
+    }
+    throw err;
+  }
+  return { order: (await getOrderById(order.id)) ?? order, duplicate: false };
+}
 
-  await query(
-    `INSERT INTO orders
+export async function getOrderByIdempotencyKey(key: string): Promise<Order | null> {
+  const rows = await query<OrderRow>(`${SELECT_ALL} WHERE idempotency_key = $1`, [key]);
+  return rows[0] ? rowToOrder(rows[0]) : null;
+}
+
+function buildInsert(order: Order, idempotencyKey?: string): { text: string; params: unknown[] } {
+  return {
+    text: `INSERT INTO orders
       (id, reference, created_at, status, payment_method, customer_id, customer, items, subtotal, total, promo_code, promo_code_id, discount_amount, free_shipping,
-       research_attestation, research_attested_at, research_attested_ip, subscription_id, affiliate_id, self_purchase)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
-    [
+       research_attestation, research_attested_at, research_attested_ip, subscription_id, affiliate_id, self_purchase, idempotency_key)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`,
+    params: [
       order.id,
       order.reference,
       order.createdAt,
@@ -136,10 +206,52 @@ export async function createOrder(input: CreateOrderInput): Promise<Order> {
       order.subscriptionId ?? null,
       order.affiliateId ?? null,
       order.selfPurchase ?? false,
-    ]
-  );
+      idempotencyKey ?? null,
+    ],
+  };
+}
 
-  return order;
+export type OrderSearch = {
+  search?: string;
+  paymentStatus?: string;
+  fulfillmentStatus?: string;
+  paymentMethod?: string;
+  status?: string;
+  needsReview?: boolean;
+  from?: string; // YYYY-MM-DD, inclusive
+  to?: string; // YYYY-MM-DD, inclusive
+  limit?: number;
+};
+
+// Executive Office search: order number, customer name, email or SKU (a line's SKU, or the SKU of the strength a
+// pre-Stage-1 line names), plus payment / fulfillment / method / review / date filters. Newest first.
+export async function searchOrders(f: OrderSearch): Promise<Order[]> {
+  const where: string[] = [];
+  const params: unknown[] = [];
+  const p = (v: unknown) => { params.push(v); return `$${params.length}`; };
+  if (f.search) {
+    const s = p(`%${f.search.toLowerCase()}%`);
+    where.push(`(lower(o.reference) LIKE ${s}
+      OR lower(o.customer::jsonb->>'email') LIKE ${s}
+      OR lower((o.customer::jsonb->>'firstName') || ' ' || (o.customer::jsonb->>'lastName')) LIKE ${s}
+      OR EXISTS (SELECT 1 FROM jsonb_array_elements(o.items::jsonb) e
+                  LEFT JOIN product_strengths ps ON ps.id = e->>'strengthId'
+                  LEFT JOIN product_strengths pl ON e->>'strengthId' IS NULL AND pl.product_slug = e->>'slug' AND pl.label = e->>'sizeLabel'
+                 WHERE lower(COALESCE(e->>'sku', ps.sku, pl.sku, '')) LIKE ${s}))`);
+  }
+  if (f.paymentStatus) where.push(`o.payment_status = ${p(f.paymentStatus)}`);
+  if (f.fulfillmentStatus) where.push(`o.fulfillment_status = ${p(f.fulfillmentStatus)}`);
+  if (f.paymentMethod) where.push(`o.payment_method = ${p(f.paymentMethod)}`);
+  if (f.status) where.push(`o.status = ${p(f.status)}`);
+  if (f.needsReview) where.push("o.needs_review");
+  if (f.from) where.push(`o.created_at >= ${p(`${f.from}T00:00:00.000Z`)}`);
+  if (f.to) where.push(`o.created_at <= ${p(`${f.to}T23:59:59.999Z`)}`);
+  const limit = Math.min(Math.max(f.limit ?? 500, 1), 2000);
+  const rows = await query<OrderRow>(
+    `SELECT o.* FROM orders o ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY o.created_at DESC LIMIT ${limit}`,
+    params
+  );
+  return rows.map(rowToOrder);
 }
 
 export async function listOrders(): Promise<Order[]> {

@@ -1,9 +1,10 @@
 import type { AffiliateSummary, Order, Product, PromoCode } from "@/lib/types";
+import { countsAsRevenue, netRevenue as orderNetRevenue, refundedTotal } from "@/lib/orders/revenue";
 
 // Orders qualify for revenue recognition once paid and never
 // cancelled/refunded — the same rule used by stats.ts and affiliates/stats.ts.
 function isQualifying(order: Order): boolean {
-  return Boolean(order.paidAt) && order.status !== "cancelled" && !order.refundedAt;
+  return countsAsRevenue(order);
 }
 
 export type PeriodRevenue = {
@@ -51,7 +52,7 @@ function sumInRange(orders: Order[], start: Date, end: Date): number {
       const paidAt = new Date(o.paidAt!);
       return paidAt >= start && paidAt < end;
     })
-    .reduce((sum, o) => sum + o.total, 0);
+    .reduce((sum, o) => sum + orderNetRevenue(o), 0);
 }
 
 function startOfDay(d: Date) {
@@ -122,7 +123,7 @@ export function computeFinancials(
     mtd: periodRevenue(paid, monthStart, nextMonthStart, priorMonthStart, monthStart),
     qtd: periodRevenue(paid, quarterStart, nextQuarterStart, priorQuarterStart, quarterStart),
     ytd: periodRevenue(paid, yearStart, nextYearStart, priorYearStart, yearStart),
-    allTime: paid.reduce((sum, o) => sum + o.total, 0),
+    allTime: paid.reduce((sum, o) => sum + orderNetRevenue(o), 0),
   };
 
   const grossRevenue = paid.reduce((sum, o) => sum + o.subtotal, 0);
@@ -146,7 +147,7 @@ export function computeFinancials(
     awaitingPayment: orders
       .filter((o) => o.status === "awaiting_payment")
       .reduce((sum, o) => sum + o.total, 0),
-    refunded: orders.filter((o) => o.refundedAt).reduce((sum, o) => sum + (o.refundAmount ?? o.total), 0),
+    refunded: orders.reduce((sum, o) => sum + refundedTotal(o), 0),
   };
 
   // Each unit is costed at its size's cost, else the product's. Margin % is
@@ -199,7 +200,7 @@ export function computeFinancials(
   for (const o of paid) {
     if (!o.promoCodeId) continue;
     const entry = promoAgg.get(o.promoCodeId) ?? { revenue: 0, discount: 0 };
-    entry.revenue += o.total;
+    entry.revenue += orderNetRevenue(o);
     entry.discount += o.discountAmount ?? 0;
     promoAgg.set(o.promoCodeId, entry);
   }

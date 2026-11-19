@@ -1,3 +1,4 @@
+import { countsAsRevenue, netRevenue } from "@/lib/orders/revenue";
 import type {
   CogsEntry,
   Expense,
@@ -45,7 +46,7 @@ function inRange(dateStr: string, range: DateRange): boolean {
 }
 
 function isQualifyingOrder(order: Order): boolean {
-  return Boolean(order.paidAt) && order.status !== "cancelled" && !order.refundedAt;
+  return countsAsRevenue(order);
 }
 
 export function computeLedgerReports(
@@ -63,7 +64,7 @@ export function computeLedgerReports(
   const financials = computeFinancials(orders, products, promoCodes, affiliateSummaries);
 
   const ordersInRange = orders.filter((o) => isQualifyingOrder(o) && inRange(o.paidAt!, range));
-  const revenue = ordersInRange.reduce((sum, o) => sum + o.total, 0);
+  const revenue = ordersInRange.reduce((sum, o) => sum + netRevenue(o), 0);
   const discountsGiven = ordersInRange.reduce((sum, o) => sum + (o.discountAmount ?? 0), 0);
   // Commissions owed is a point-in-time balance (not period-scoped) — always
   // the current total across all affiliates, same figure shown in Financials.
@@ -97,7 +98,7 @@ export function computeLedgerReports(
     const inflow =
       orders
         .filter((o) => isQualifyingOrder(o) && new Date(o.paidAt!) >= monthDate && new Date(o.paidAt!) < monthEnd)
-        .reduce((sum, o) => sum + o.total, 0) +
+        .reduce((sum, o) => sum + netRevenue(o), 0) +
       ownerTransactions
         .filter((t) => t.type === "contribution" && new Date(t.date) >= monthDate && new Date(t.date) < monthEnd)
         .reduce((sum, t) => sum + t.amountUsd, 0);

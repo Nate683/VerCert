@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { listProducts, pricedSizes, resolveUnitPrice } from "@/lib/products";
-import { createOrder, updateOrder } from "@/lib/orders/store";
+import { createOrderAtomic, updateOrder } from "@/lib/orders/store";
 import { validatePromoCode } from "@/lib/promotions";
 import { creditedAffiliateId, getAffiliateByEmail, isSelfPurchase } from "@/lib/affiliates";
 import { getPaymentProvider, PaymentProviderError } from "@/lib/payments";
-import { isPaymentMethodAvailable } from "@/lib/payments/availability";
-import { getBankTransferDetails } from "@/lib/bank-details";
+import { getMethodState } from "@/lib/payments/config";
 import { sendOrderConfirmationEmail, sendAdminNotification } from "@/lib/email";
 import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getCurrentCustomer } from "@/lib/users/current-user";
 import { updateUser } from "@/lib/users/store";
-import { findInsufficientStock } from "@/lib/inventory";
+import { findInsufficientStock, InventoryError } from "@/lib/inventory";
 import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
 import { strengthStatus } from "@/lib/products/availability";
 import { findStrength } from "@/lib/products/strengths";
@@ -53,7 +52,9 @@ export const POST = withApiErrorHandling(async (request: Request) => {
 
   const parsed = await parseBody(request, createOrderSchema);
   if ("error" in parsed) return parsed.error;
-  const { customer, items, paymentMethod, promoCode, researchCategory } = parsed.data;
+  const { customer, items, paymentMethod, promoCode, researchCategory, idempotencyKey } = parsed.data;
+  // Scoped to the customer, so one account's key can never collide with (or reveal) another's order.
+  const attemptKey = idempotencyKey ? `${currentCustomer.id}:${idempotencyKey}` : undefined;
 
   // Affiliates never see the customer prompt for a research category, so one
   // with none on file gives it here. It's saved to the account with the order.
@@ -66,12 +67,11 @@ export const POST = withApiErrorHandling(async (request: Request) => {
     );
   }
 
-  // Refused before anything is saved, so a hidden method — or bank transfer
-  // without its account details set — can't leave an order behind that has no
-  // way to be paid (checkout hides both; this covers a direct API call).
-  const bankTransferUnconfigured =
-    paymentMethod === "bank_transfer" && !getBankTransferDetails().isConfigured;
-  if (!isPaymentMethodAvailable(paymentMethod) || bankTransferUnconfigured) {
+  // Refused before anything is saved: a method that is switched off, or whose integration isn't ready (no provider,
+  // Zelle/bank details not set), can't leave an order behind that has no way to be paid. Checkout shows only the
+  // offered methods; this covers a direct API call. (lib/payments/config.ts)
+  const methodState = await getMethodState(paymentMethod);
+  if (!methodState?.offered) {
     return NextResponse.json(
       { error: "That payment method isn't available right now. Please choose another." },
       { status: 400 }
@@ -133,8 +133,8 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       ...(size.sku ? { sku: size.sku } : {}),
       priceUsd,
       quantity: item.quantity,
-      // The batch currently on sale — the first listed, as on the product page.
-      lotNumber: product.batchNumbers[0],
+      // Stage 3: no lot is stamped at checkout. The lot an order is filled from is decided when stock is allocated
+      // (inventory_allocations) and only that is ever shown to the customer (lib/orders/lots.ts).
       ...(subscription ? { subscription } : {}),
     });
   }
@@ -179,22 +179,43 @@ export const POST = withApiErrorHandling(async (request: Request) => {
   const affiliateId = await creditedAffiliateId({ promoAffiliateId, customer: currentCustomer });
   const selfPurchase = await isSelfPurchase(affiliateId, currentCustomer.email);
 
-  const order = await createOrder({
-    paymentMethod,
-    customerId: currentCustomer.id,
-    customer,
-    items: resolvedItems,
-    subtotal,
-    total,
-    status: "awaiting_payment",
-    promoCode: appliedPromoCode,
-    promoCodeId: appliedPromoCodeId,
-    discountAmount,
-    freeShipping,
-    researchAttestation: { text: RESEARCH_ATTESTATION, at: new Date().toISOString(), ip },
-    affiliateId,
-    selfPurchase,
-  });
+  // Stage 3: the order row and (for a reserving method, e.g. crypto: 30 minutes by default) its stock reservation are
+  // created in one transaction — if the reservation is refused there is no order. Methods that don't reserve
+  // (Zelle, bank transfer) hold nothing until payment is confirmed. A repeated attempt returns the first order.
+  const reserveMinutes = methodState.reservationMinutes;
+  let created;
+  try {
+    created = await createOrderAtomic(
+      {
+        paymentMethod,
+        customerId: currentCustomer.id,
+        customer,
+        items: resolvedItems,
+        subtotal,
+        total,
+        status: "awaiting_payment",
+        promoCode: appliedPromoCode,
+        promoCodeId: appliedPromoCodeId,
+        discountAmount,
+        freeShipping,
+        researchAttestation: { text: RESEARCH_ATTESTATION, at: new Date().toISOString(), ip },
+        affiliateId,
+        selfPurchase,
+      },
+      {
+        idempotencyKey: attemptKey,
+        reserve: reserveMinutes ? { expiresAt: new Date(Date.now() + reserveMinutes * 60_000).toISOString(), actor: `customer:${currentCustomer.id}` } : undefined,
+      }
+    );
+  } catch (err) {
+    if (err instanceof InventoryError || (err as { code?: string }).code === "P0003") {
+      return NextResponse.json({ error: "Some items in your cart just sold out. Please adjust your cart." }, { status: 409 });
+    }
+    throw err;
+  }
+  const order = created.order;
+  // The same checkout submitted again: nothing new was created, so nothing is re-sent.
+  if (created.duplicate) return NextResponse.json({ reference: order.reference, duplicate: true });
 
   // Each subscribed line becomes a subscription; this order is its first
   // delivery, so the next one is due one interval from now.

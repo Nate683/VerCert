@@ -8,11 +8,14 @@ import {
   MOVEMENT_LABELS,
   STOCK_LEVEL_LABELS,
   type AdjustmentType,
+  type InventoryLot,
   type InventoryMovement,
   type StockLevel,
   type StrengthStockRow,
 } from "@/lib/inventory-shared";
 import { AVAILABILITY_LABELS, type AvailabilityStatus } from "@/lib/products/availability";
+import { scrollElementIntoView } from "@/lib/scroll-into-view";
+import { LotsSection } from "./LotsSection";
 
 // Executive Office → Stock (Stage 2): stock per strength (SKU). View by product and strength, search by name or
 // SKU, filter by level, open one SKU for its details, adjustments, low-stock threshold and full movement history.
@@ -52,6 +55,10 @@ export function StockPanel({ variant }: { variant: "command" | "office" }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [openId, setOpenId] = useState<string | null>(null);
+  // Stage 3 correction: opening a SKU (the Open button, or ?strength= on a refresh) brings its detail panel into
+  // view, once. Only these two set a request, so adjustments, searches, filters and the background reload never
+  // scroll the page.
+  const [scrollRequest, setScrollRequest] = useState<{ id: string; at: number } | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/executive/inventory", { cache: "no-store" });
@@ -71,13 +78,30 @@ export function StockPanel({ variant }: { variant: "command" | "office" }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time mount-time fetch
     load();
     const id = new URLSearchParams(window.location.search).get("strength");
-    if (id) setOpenId(id);
+    if (id) {
+      setOpenId(id);
+      setScrollRequest({ id, at: 1 });
+    }
   }, [load]);
 
   const open = (id: string | null) => {
     setOpenId(id);
     setStrengthParam(id);
+    // `at` only has to differ between requests (re-opening the same SKU scrolls again).
+    setScrollRequest((prev) => (id ? { id, at: (prev?.at ?? 0) + 1 } : null));
   };
+
+  // Runs after the table has loaded (so the panel's position is final) and the panel for the requested SKU exists.
+  useEffect(() => {
+    if (!scrollRequest || loading || scrollRequest.id !== openId) return;
+    const panel = document.querySelector<HTMLElement>(`[data-sku-panel="${CSS.escape(scrollRequest.id)}"]`);
+    if (!panel) return;
+    scrollElementIntoView(panel);
+    // Keyboard and screen-reader users land on the panel too, without a second scroll.
+    panel.focus({ preventScroll: true });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot request, cleared once handled
+    setScrollRequest(null);
+  }, [scrollRequest, loading, openId]);
 
   const q = search.trim().toLowerCase();
   const shown = useMemo(
@@ -106,11 +130,12 @@ export function StockPanel({ variant }: { variant: "command" | "office" }) {
           <p className="text-xs uppercase tracking-[0.2em] text-white/40">Stock by strength</p>
           <p className="text-[11px] text-white/40" data-stock-summary>
             {activeRows.length} active SKUs · {count("healthy")} healthy · {count("low")} low · {count("zero")} zero ·{" "}
-            {activeRows.reduce((a, r) => a + r.available, 0)} units available
+            {activeRows.reduce((a, r) => a + r.sellable, 0)} units sellable ({activeRows.reduce((a, r) => a + r.available, 0)} available incl. unapproved lots)
           </p>
         </div>
         <p className="mt-1 text-[11px] text-white/35">
           Stock never changes what the shop says about a strength: availability is set per strength in Inventory → Edit Product.
+          Sellable = units in approved lots not held by a reservation; only sellable units can be ordered. Levels use sellable units.
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -147,6 +172,7 @@ export function StockPanel({ variant }: { variant: "command" | "office" }) {
                   <th className="py-2 pr-3 text-right font-normal">Physical</th>
                   <th className="py-2 pr-3 text-right font-normal">Reserved</th>
                   <th className="py-2 pr-3 text-right font-normal">Available</th>
+                  <th className="py-2 pr-3 text-right font-normal">Sellable</th>
                   <th className="py-2 pr-3 text-right font-normal">Low at</th>
                   <th className="py-2 pr-3 font-normal">Level</th>
                   <th className="py-2 font-normal" />
@@ -165,6 +191,7 @@ export function StockPanel({ variant }: { variant: "command" | "office" }) {
                       <td className="py-2 pr-3 text-right text-white/60" data-total="physical">{live.reduce((a, r) => a + r.physical, 0)}</td>
                       <td className="py-2 pr-3 text-right text-white/60" data-total="reserved">{live.reduce((a, r) => a + r.reserved, 0)}</td>
                       <td className="py-2 pr-3 text-right text-white/60" data-total="available">{live.reduce((a, r) => a + r.available, 0)}</td>
+                      <td className="py-2 pr-3 text-right text-white/60" data-total="sellable">{live.reduce((a, r) => a + r.sellable, 0)}</td>
                       <td colSpan={3} className="py-2 text-[9px] uppercase tracking-[0.12em] text-white/30">product total</td>
                     </tr>
                     {g.map((r) => (
@@ -177,7 +204,8 @@ export function StockPanel({ variant }: { variant: "command" | "office" }) {
                         <td className="py-2 pr-3 text-white/60">{AVAILABILITY_LABELS[r.availabilityStatus as AvailabilityStatus] ?? r.availabilityStatus}</td>
                         <td className="py-2 pr-3 text-right text-white/80">{r.physical}</td>
                         <td className="py-2 pr-3 text-right text-white/50">{r.reserved}</td>
-                        <td className="py-2 pr-3 text-right text-white" data-available>{r.available}</td>
+                        <td className="py-2 pr-3 text-right text-white/70" data-available>{r.available}</td>
+                        <td className="py-2 pr-3 text-right text-white" data-sellable>{r.sellable}</td>
                         <td className="py-2 pr-3 text-right text-white/50">{r.threshold}</td>
                         <td className="py-2 pr-3"><LevelBadge level={r.level} /></td>
                         <td className="py-2 text-right">
@@ -201,14 +229,18 @@ export function StockPanel({ variant }: { variant: "command" | "office" }) {
       </div>
 
       {openId && (
-        <SkuDetail
-          key={openId}
-          strengthId={openId}
-          fallback={openRow}
-          cardClass={cardClass}
-          onClose={() => open(null)}
-          onChanged={load}
-        />
+        // The scroll target: a stable wrapper that exists from the first render, whatever SkuDetail is showing
+        // (loading, not found, or the detail). tabIndex -1 lets it take focus without joining the tab order.
+        <div data-sku-panel={openId} tabIndex={-1} className="focus:outline-none">
+          <SkuDetail
+            key={openId}
+            strengthId={openId}
+            fallback={openRow}
+            cardClass={cardClass}
+            onClose={() => open(null)}
+            onChanged={load}
+          />
+        </div>
       )}
 
       <div className={cardClass}>
@@ -228,6 +260,7 @@ function MovementList({ movements, showSku = false }: { movements: InventoryMove
           <tr>
             <th className="py-1.5 pr-3 font-normal">When</th>
             {showSku && <th className="py-1.5 pr-3 font-normal">SKU</th>}
+            <th className="py-1.5 pr-3 font-normal">Lot</th>
             <th className="py-1.5 pr-3 font-normal">Movement</th>
             <th className="py-1.5 pr-3 text-right font-normal">Change</th>
             <th className="py-1.5 pr-3 text-right font-normal">Before → after</th>
@@ -240,11 +273,18 @@ function MovementList({ movements, showSku = false }: { movements: InventoryMove
             <tr key={m.id} className="border-t border-white/5 align-top" data-movement={m.type}>
               <td className="py-1.5 pr-3 whitespace-nowrap text-white/50">{when(m.createdAt)}</td>
               {showSku && <td className="py-1.5 pr-3 font-mono text-[10px] text-white/60">{m.sku}</td>}
-              <td className="py-1.5 pr-3 text-white/80">{MOVEMENT_LABELS[m.type] ?? m.type}</td>
+              <td className="py-1.5 pr-3 font-mono text-[10px] text-white/50">{m.lotCode ?? "—"}</td>
+              <td className="py-1.5 pr-3 text-white/80">
+                {MOVEMENT_LABELS[m.type] ?? m.type}
+                {m.reservedChange !== 0 && <span className="block text-[10px] text-white/45">reserved {m.reservedChange > 0 ? "+" : ""}{m.reservedChange}</span>}
+              </td>
               <td className={`py-1.5 pr-3 text-right ${m.change > 0 ? "text-white" : m.change < 0 ? "text-[var(--x-negative,#e0675f)]" : "text-white/40"}`}>
                 {m.change > 0 ? `+${m.change}` : m.change}
               </td>
-              <td className="py-1.5 pr-3 whitespace-nowrap text-right text-white/60">{m.previous} → {m.resulting}</td>
+              <td className="py-1.5 pr-3 whitespace-nowrap text-right text-white/60">
+                {m.previous} → {m.resulting}
+                {m.lotId && m.lotPrevious !== null && <span className="block text-[10px] text-white/40">lot {m.lotPrevious} → {m.lotResulting}</span>}
+              </td>
               <td className="py-1.5 pr-3 text-white/70">
                 {m.reason}
                 {m.note && <span className="block text-white/45">{m.note}</span>}
@@ -275,6 +315,8 @@ function SkuDetail({
 }) {
   const [row, setRow] = useState<StrengthStockRow | null>(fallback);
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
+  const [lots, setLots] = useState<InventoryLot[]>([]);
+  const [lotId, setLotId] = useState<string>("");
   const [missing, setMissing] = useState(false);
   const [type, setType] = useState<AdjustmentType>("stock_received");
   const [quantity, setQuantity] = useState("");
@@ -294,6 +336,8 @@ function SkuDetail({
     const data = await res.json();
     setRow(data.row);
     setMovements(data.movements ?? []);
+    setLots(data.lots ?? []);
+    setLotId((cur) => (cur && (data.lots ?? []).some((l: InventoryLot) => l.id === cur) ? cur : data.lots?.[0]?.id ?? ""));
     setThreshold(String(data.row.threshold));
   }, [strengthId]);
   useEffect(() => {
@@ -312,10 +356,12 @@ function SkuDetail({
   if (!row) return <div className={cardClass}><p className="text-sm text-white/30">Loading…</p></div>;
 
   const qty = Number(quantity);
+  // Stage 3: adjustments apply to one lot; the SKU total moves by the same amount.
+  const lot = lots.find((l) => l.id === lotId) ?? null;
   const preview =
-    quantity.trim() === "" || !Number.isInteger(qty) || qty < 0
+    !lot || quantity.trim() === "" || !Number.isInteger(qty) || qty < 0
       ? null
-      : type === "stock_received" ? row.physical + qty : type === "stock_removed" ? row.physical - qty : qty;
+      : type === "stock_received" ? lot.physical + qty : type === "stock_removed" ? lot.physical - qty : qty;
 
   async function submitAdjustment(e: React.FormEvent) {
     e.preventDefault();
@@ -327,12 +373,13 @@ function SkuDetail({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          lotId,
           type,
           quantity: quantity.trim() === "" ? NaN : Number(quantity),
           reason,
           ...(note.trim() ? { note: note.trim() } : {}),
           idempotencyKey: adjustKey,
-          ...(type === "count_correction" ? { expectedVersion: row!.version } : {}),
+          ...(type === "count_correction" ? { expectedVersion: lot?.version } : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -388,11 +435,12 @@ function SkuDetail({
         </button>
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-5" data-sku-numbers>
+      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-6" data-sku-numbers>
         {[
           ["Physical", row.physical],
           ["Reserved", row.reserved],
           ["Available", row.available],
+          ["Sellable", row.sellable],
           ["Low at", row.threshold],
         ].map(([k, v]) => (
           <div key={k as string} className="border border-white/10 p-3">
@@ -406,14 +454,24 @@ function SkuDetail({
         </div>
       </dl>
       <p className="mt-2 text-[11px] text-white/35">
-        Available = physical − reserved. Reserved stays 0 until order management (Stage 3). Shop status:{" "}
+        Available = physical − reserved, over every lot. Sellable = approved lots only (what can be ordered)
+        {row.expiredHolds > 0 ? `; ${row.expiredHolds} unit(s) are held by expired reservations awaiting the sweep (counted as sellable)` : ""}. Shop status:{" "}
         {AVAILABILITY_LABELS[row.availabilityStatus as AvailabilityStatus] ?? row.availabilityStatus} — not changed by stock.
       </p>
 
       <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-3">
         <form onSubmit={submitAdjustment} className="space-y-3 lg:col-span-2" data-adjust-form>
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Adjust stock</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Adjust stock in a lot</p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <label className="block sm:col-span-3">
+              {field("Lot")}
+              <select value={lotId} onChange={(e) => setLotId(e.target.value)} aria-label="Lot" className="input-field mt-1" data-adjust-lot>
+                {lots.length === 0 && <option value="">No lots — receive a new lot below first</option>}
+                {lots.map((l) => (
+                  <option key={l.id} value={l.id}>{l.lotCode} · {l.releaseStatus} · physical {l.physical}, reserved {l.reserved}</option>
+                ))}
+              </select>
+            </label>
             <label className="block">
               {field("Adjustment")}
               <select
@@ -456,15 +514,15 @@ function SkuDetail({
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
-              disabled={busy !== null}
+              disabled={busy !== null || !lot}
               className="border border-[var(--x-muted)] bg-[var(--x-raised)] px-5 py-2 text-xs uppercase tracking-[0.15em] text-[var(--x-text)] hover:border-[var(--x-text)] disabled:opacity-40"
             >
               {busy === "adjust" ? "Recording…" : "Record adjustment"}
             </button>
             {preview !== null && (
-              <span className={`text-[11px] ${preview < row.reserved ? "text-red-300" : "text-white/50"}`} data-adjust-preview>
-                Physical {row.physical} → {preview}
-                {preview < row.reserved ? " — not allowed (below reserved or zero)" : ""}
+              <span className={`text-[11px] ${lot && preview < lot.reserved ? "text-red-300" : "text-white/50"}`} data-adjust-preview>
+                Lot {lot?.lotCode} physical {lot?.physical} → {preview} (SKU {row.physical} → {row.physical + preview - (lot?.physical ?? 0)})
+                {lot && preview < lot.reserved ? " — not allowed (below reserved or zero)" : ""}
               </span>
             )}
           </div>
@@ -491,6 +549,8 @@ function SkuDetail({
           {message.text}
         </p>
       )}
+
+      <LotsSection strengthId={strengthId} lots={lots} onChanged={async () => { await Promise.all([refresh(), onChanged()]); }} />
 
       <div className="mt-6">
         <p className="text-xs uppercase tracking-[0.2em] text-[var(--x-muted)]">Movement history</p>

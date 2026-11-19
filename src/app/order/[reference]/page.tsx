@@ -10,6 +10,10 @@ import { CryptoPaymentPanel } from "./CryptoPaymentPanel";
 import { BankTransferPanel } from "./BankTransferPanel";
 import { OrderStatusTimeline } from "./OrderStatusTimeline";
 import { CopyReference } from "./CopyReference";
+import { PendingPaymentPanel } from "./PendingPaymentPanel";
+import { isPaymentSimulation, zelleDetails } from "@/lib/payments/config";
+import { getFulfilledLots } from "@/lib/orders/lots";
+import { isFullyRefunded } from "@/lib/orders/revenue";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Your Order | VeriCert", robots: { index: false, follow: false } };
@@ -49,15 +53,32 @@ export default async function OrderPage({
   // panels — everything past that point (paid through delivered, or
   // cancelled) gets the status timeline instead. This is a fresh server
   // read every time, so it survives a refresh or a closed browser.
-  const isPending = order.status === "awaiting_payment" || order.status === "expired";
+  const isPending = order.status === "awaiting_payment" || order.status === "expired" || order.status === "payment_failed";
+  // Stage 3 methods get their own panel; bank transfer and the retired Coinbase crypto keep theirs.
+  const stage3Panel = isPending && order.paymentMethod !== "bank_transfer" && order.paymentMethod !== "crypto";
   const supportEmail = !isUnset(contact.email) ? contact.email : null;
   // A crypto order whose charge was never created (the provider failed at
   // checkout): no address or payment window exists, so it must not be shown
   // the bank-transfer instructions it used to fall through to.
   const cryptoNotSetUp = isPending && order.paymentMethod === "crypto" && !order.crypto;
 
+  // Stage 3 final corrections: payment is recorded but the order is held in Administrative Review before fulfillment.
+  // DRAFT COPY — PENDING OWNER APPROVAL. Never shows the internal review reason.
+  const onHold =
+    Boolean(order.needsReview) && (order.paymentStatus === "confirmed" || order.paymentStatus === "partially_refunded") &&
+    !["shipped", "delivered", "returned", "cancelled"].includes(order.fulfillmentStatus ?? "");
+  // The lots each line was ACTUALLY filled from (allocated stock) — never the line's stored lotNumber, which was an
+  // assumption made at checkout before Stage 3. Nothing is shown until stock is allocated.
+  const fulfilledLots = await getFulfilledLots(order.id);
+
   // Status only: no payment is arranged outside checkout.
-  const nextSteps = cryptoNotSetUp
+  const nextSteps = onHold
+    ? [
+        "We've received your payment for this order.",
+        "Before it ships, we're completing a final check. There's nothing you need to do.",
+        "We'll email you as soon as it's on its way, or contact you directly if anything about your order needs to change.",
+      ]
+    : cryptoNotSetUp
     ? ["No crypto payment address was issued, so please don't send cryptocurrency for this order."]
     : isPending
     ? [
@@ -77,11 +98,13 @@ export default async function OrderPage({
     ? { eyebrow: "Payment Not Set Up", title: "We couldn't set up crypto payment" }
     : isPending
     ? {
-        eyebrow: order.paymentMethod === "crypto" ? "Payment Required" : "Bank Transfer — Awaiting Settlement",
+        eyebrow: order.paymentMethod === "bank_transfer" ? "Bank Transfer — Awaiting Settlement" : "Payment Required",
         title: "Complete Your Payment",
       }
-    : order.refundedAt
+    : isFullyRefunded(order)
       ? { eyebrow: "Order Refunded", title: "This order was refunded." }
+      : onHold
+      ? { eyebrow: "Payment Received", title: "We're completing a final check before shipping." }
       : order.status === "cancelled"
         ? { eyebrow: "Order Cancelled", title: "This order was cancelled." }
         : order.status === "delivered"
@@ -118,6 +141,8 @@ export default async function OrderPage({
                 issued. Please don&apos;t send cryptocurrency for it.
               </p>
             </section>
+          ) : stage3Panel ? (
+            <PendingPaymentPanel order={order} zelle={zelleDetails()} simulated={isPaymentSimulation()} />
           ) : isPending ? (
             order.paymentMethod === "crypto" && order.crypto ? (
               <CryptoPaymentPanel
@@ -178,7 +203,7 @@ export default async function OrderPage({
           <div className="border border-hairline p-6">
             <h2 className="text-xs uppercase tracking-[0.25em] text-gold-ink">Order Summary</h2>
             <ul className="mt-4 space-y-4">
-              {order.items.map((item) => (
+              {order.items.map((item, index) => (
                 <li key={`${item.slug}-${item.sizeLabel}-${item.subscription?.intervalDays ?? 0}`} className="flex justify-between gap-3 text-sm">
                   <div className="min-w-0">
                     <Link
@@ -190,16 +215,27 @@ export default async function OrderPage({
                     <p className="text-xs text-muted">
                       {item.sizeLabel} × {item.quantity}
                     </p>
-                    {item.lotNumber && (
-                      <p className="font-mono text-xs text-navy">
-                        Lot{" "}
-                        {/* The lot recorded on this order line, linked to its permanent lot page (its published
-                            certificate, or a plain statement that none is published yet). */}
-                        <Link href={`/lot/${encodeURIComponent(item.lotNumber)}`} className="inline-block py-1 underline-offset-4 hover:underline">
-                          {item.lotNumber}
-                        </Link>
-                      </p>
-                    )}
+                    {(() => {
+                      // The VeriCert lot(s) this line was filled from, each linked to its permanent lot page (its
+                      // published certificate, or a plain statement that none is published yet). Several lots: each
+                      // with its quantity.
+                      const lots = (fulfilledLots.get(index) ?? []).filter((l) => l.vericertLot);
+                      if (lots.length === 0) return null;
+                      return (
+                        <p className="font-mono text-xs text-navy" data-fulfilled-lots>
+                          {lots.length === 1 ? "Lot " : "Lots "}
+                          {lots.map((l, i) => (
+                            <span key={l.vericertLot}>
+                              {i > 0 && ", "}
+                              <Link href={`/lot/${encodeURIComponent(l.vericertLot!)}`} className="inline-block py-1 underline-offset-4 hover:underline">
+                                {l.vericertLot}
+                              </Link>
+                              {lots.length > 1 && ` (${l.quantity})`}
+                            </span>
+                          ))}
+                        </p>
+                      );
+                    })()}
                     {item.subscription && (
                       <p className="text-xs text-muted">
                         Subscription · every {item.subscription.intervalDays} days

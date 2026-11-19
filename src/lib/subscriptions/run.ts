@@ -9,7 +9,7 @@ import { strengthStatus } from "@/lib/products/availability";
 import { sendOrderConfirmationEmail, sendTransactionalEmail, sendAdminNotification } from "@/lib/email";
 import { getContent, DEFAULT_NOTIFICATION_SETTINGS } from "@/lib/site-content";
 import { getSiteUrl } from "@/lib/site-url";
-import { getBankTransferDetails } from "@/lib/bank-details";
+import { getMethodState } from "@/lib/payments/config";
 import { logActivity } from "@/lib/activity-log";
 import type { CartItem } from "@/lib/types";
 import { isSubscribable, subscriptionUnitPrice, intervalLabel } from "./rules";
@@ -88,7 +88,6 @@ async function runOne(sub: Subscription, now: Date, orderingEnabled: boolean): P
     ...(size.sku ? { sku: size.sku } : {}),
     priceUsd: subscriptionUnitPrice(listPrice, sub.discountPercent),
     quantity: sub.quantity,
-    lotNumber: product.batchNumbers[0],
     subscription: { intervalDays: sub.intervalDays, discountPercent: sub.discountPercent, listPriceUsd: listPrice },
   };
 
@@ -101,7 +100,8 @@ async function runOne(sub: Subscription, now: Date, orderingEnabled: boolean): P
   // Checked before anything is saved, as in /api/orders: without the bank
   // details there is no way to pay, so no order is left behind. The due date
   // isn't moved, so the next daily run places it once they're set.
-  if (!getBankTransferDetails().isConfigured) {
+  // Stage 3: also respects the Executive Office → Payments switch for bank transfer (same rule as checkout).
+  if (!(await getMethodState("bank_transfer"))?.offered) {
     console.warn(`[subscriptions] ${sub.id} not ordered: bank transfer isn't configured.`);
     return { subscriptionId: sub.id, outcome: "payment_unavailable" };
   }

@@ -85,6 +85,7 @@ const METRICS_SQL = `
      WHERE customer_id IS NOT NULL
        AND paid_at IS NOT NULL
        AND status <> 'cancelled'
+       AND payment_status NOT IN ('cancelled', 'failed', 'expired', 'reversed')
        AND (refund_amount IS NULL OR refund_amount < total)
   ),
   order_stats AS (

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentCustomer } from "@/lib/users/current-user";
-import { getBankTransferDetails } from "@/lib/bank-details";
+import { getOfferedMethods } from "@/lib/payments/config";
 import { getAffiliateByEmail, getReferringAffiliate } from "@/lib/affiliates";
 import { CheckoutForm } from "./CheckoutForm";
 import { isOrderingEnabled, ORDERING_UNAVAILABLE } from "@/lib/ordering";
@@ -23,7 +23,7 @@ export default async function CheckoutPage() {
     <CheckoutForm
       initialEmail={customer.email}
       initialAddress={customer.savedAddress}
-      bankTransferAvailable={getBankTransferDetails().isConfigured}
+      offeredMethods={await getOfferedMethods()}
       referralPromoCode={referrer ? customer.attribution?.ref?.toUpperCase() : undefined}
       askResearchCategory={askResearchCategory}
       orderingEnabled={orderingEnabled}

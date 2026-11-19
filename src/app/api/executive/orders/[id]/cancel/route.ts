@@ -1,39 +1,29 @@
 import { NextResponse } from "next/server";
-import { requireExecutiveSession } from "@/lib/executive/require-auth";
+import { requireExecutiveActor } from "@/lib/executive/require-auth";
 import { getOrderById } from "@/lib/orders/store";
 import { cancelOrder } from "@/lib/orders/lifecycle";
 import { orderCancelSchema, parseBody } from "@/lib/validation";
 import { logActivity } from "@/lib/activity-log";
-import { getCurrentCustomer } from "@/lib/users/current-user";
+import { withApiErrorHandling } from "@/lib/api-error";
+import { inventoryErrorResponse, notFound, unauthorized } from "@/lib/executive/route-helpers";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  if (!(await requireExecutiveSession())) {
-    return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  }
-
+// Cancels an order before shipment: releases any reservation and puts deducted units back into the lots they came
+// from (one database call; a repeat is a no-op). A paid order cancelled here is flagged to have its refund recorded.
+export const POST = withApiErrorHandling(async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
+  const actor = await requireExecutiveActor();
+  if (!actor) return unauthorized();
   const { id } = await params;
   const order = await getOrderById(id);
-  if (!order) {
-    return NextResponse.json({ error: "Order not found." }, { status: 404 });
-  }
-
+  if (!order) return notFound();
   const parsed = await parseBody(request, orderCancelSchema);
   if ("error" in parsed) return parsed.error;
-
   try {
-    const updated = await cancelOrder(order, parsed.data.reason);
-    const actor = await getCurrentCustomer();
-    if (actor) await logActivity(actor.email, "order.cancelled", order.reference);
+    const updated = await cancelOrder(order, parsed.data.reason, actor, "admin");
+    await logActivity(actor.email, "order.cancelled", `${order.reference}${parsed.data.reason ? ` — ${parsed.data.reason}` : ""}`);
     return NextResponse.json({ order: updated });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Could not cancel order." },
-      { status: 400 }
-    );
+    return inventoryErrorResponse(err);
   }
-}
+});

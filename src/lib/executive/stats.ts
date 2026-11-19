@@ -1,4 +1,5 @@
 import type { Order, Product } from "@/lib/types";
+import { countsAsRevenue, netRevenue, paymentNotReceived } from "@/lib/orders/revenue";
 
 export type RevenuePoint = { date: string; revenue: number };
 
@@ -55,7 +56,7 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
   // "Paid" for revenue purposes means the order has ever been paid and
   // wasn't subsequently cancelled or refunded — not just currently sitting in
   // the "paid" status, since paid orders move on to processing/shipped/delivered.
-  const paidOrders = orders.filter((o) => o.paidAt && o.status !== "cancelled" && !o.refundedAt);
+  const paidOrders = orders.filter(countsAsRevenue);
 
   let revenueToday = 0;
   let revenueYesterday = 0;
@@ -69,12 +70,13 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
 
   for (const order of paidOrders) {
     const paidAt = new Date(order.paidAt!);
-    revenueAllTime += order.total;
-    if (isSameMonth(paidAt, now)) revenueMtd += order.total;
-    if (isSameDay(paidAt, now)) revenueToday += order.total;
-    if (isSameDay(paidAt, yesterday)) revenueYesterday += order.total;
+    const net = netRevenue(order);
+    revenueAllTime += net;
+    if (isSameMonth(paidAt, now)) revenueMtd += net;
+    if (isSameDay(paidAt, now)) revenueToday += net;
+    if (isSameDay(paidAt, yesterday)) revenueYesterday += net;
     if (isSameMonth(paidAt, priorMonthSameDay) && paidAt.getDate() <= priorMonthSameDay.getDate()) {
-      revenueMtdPriorPeriod += order.total;
+      revenueMtdPriorPeriod += net;
     }
   }
 
@@ -90,7 +92,7 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
     day.setDate(day.getDate() - i);
     const dayRevenue = paidOrders
       .filter((o) => isSameDay(new Date(o.paidAt!), day))
-      .reduce((sum, o) => sum + o.total, 0);
+      .reduce((sum, o) => sum + netRevenue(o), 0);
     chartSeries.push({
       date: day.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
       revenue: dayRevenue,
@@ -126,7 +128,7 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
           message: `New ${order.paymentMethod === "crypto" ? "crypto" : "bank transfer"} order ${order.reference} — $${order.total.toFixed(2)}`,
         },
       ];
-      if (order.paidAt) {
+      if (order.paidAt && !paymentNotReceived(order)) {
         events.push({
           id: `${order.id}-paid`,
           timestamp: order.paidAt,
@@ -161,14 +163,14 @@ export function computeOverview(orders: Order[], products: Product[]): Executive
 // tab's trend chart (separate from the fixed 14-day chart on the Overview tab).
 export function computeRevenueSeries(orders: Order[], days: number): RevenuePoint[] {
   const now = new Date();
-  const paidOrders = orders.filter((o) => o.paidAt && o.status !== "cancelled" && !o.refundedAt);
+  const paidOrders = orders.filter(countsAsRevenue);
   const series: RevenuePoint[] = [];
   for (let i = days - 1; i >= 0; i--) {
     const day = new Date(now);
     day.setDate(day.getDate() - i);
     const dayRevenue = paidOrders
       .filter((o) => isSameDay(new Date(o.paidAt!), day))
-      .reduce((sum, o) => sum + o.total, 0);
+      .reduce((sum, o) => sum + netRevenue(o), 0);
     series.push({
       date: day.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
       revenue: dayRevenue,

@@ -8,6 +8,14 @@ export async function requireExecutiveSession(): Promise<boolean> {
   return customer?.role === "command" || customer?.role === "office";
 }
 
+// The same check, returning WHO the staff member is (Stage 3: every order, payment and inventory action records
+// its actor). Same session rules as above — two-factor and session revocation are enforced in getCurrentCustomer.
+export async function requireExecutiveActor(): Promise<{ email: string; role: "command" | "office" } | null> {
+  const customer = await getCurrentCustomer();
+  if (customer?.role !== "command" && customer?.role !== "office") return null;
+  return { email: customer.email, role: customer.role };
+}
+
 // Guard for the features that were once /command-only (promotions, site
 // content, announcements, affiliates management, invite codes, goals,
 // subscribers, subscriptions, the activity log). Since 2026-11-08 the owner

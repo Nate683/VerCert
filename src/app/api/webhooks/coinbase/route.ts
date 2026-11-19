@@ -37,7 +37,8 @@ export const POST = withApiErrorHandling(async (request: Request) => {
       // keeps the store's public API small; order volume is low enough that
       // this isn't a bottleneck.
       const order = (await listOrders()).find((o) => o.crypto?.chargeId === data.id);
-      if (order) await markOrderPaid(order);
+      // Keyed by charge + event type: a repeated delivery of the same notification is recorded once.
+      if (order) await markOrderPaid(order, `${data.id}:${type}`);
     }
   } catch (err) {
     console.error("Failed to process Coinbase webhook:", err);

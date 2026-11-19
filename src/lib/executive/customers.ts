@@ -1,4 +1,5 @@
 import type { Customer, Order } from "@/lib/types";
+import { countsAsRevenue, netRevenue } from "@/lib/orders/revenue";
 
 export type CustomerSummary = {
   id: string;
@@ -16,7 +17,7 @@ export function computeCustomerSummaries(users: Customer[], orders: Order[]): Cu
   return users
     .map((user) => {
       const customerOrders = orders.filter((o) => o.customerId === user.id);
-      const paidOrders = customerOrders.filter((o) => o.paidAt && o.status !== "cancelled" && !o.refundedAt);
+      const paidOrders = customerOrders.filter(countsAsRevenue);
       return {
         id: user.id,
         email: user.email,
@@ -24,7 +25,7 @@ export function computeCustomerSummaries(users: Customer[], orders: Order[]): Cu
         marketingConsent: user.marketingConsent,
         emailVerified: user.emailVerified,
         orderCount: customerOrders.length,
-        lifetimeValue: paidOrders.reduce((sum, o) => sum + o.total, 0),
+        lifetimeValue: paidOrders.reduce((sum, o) => sum + netRevenue(o), 0),
         notes: user.notes,
         recentOrders: customerOrders
           .slice()
