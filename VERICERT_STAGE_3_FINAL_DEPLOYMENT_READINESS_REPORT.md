@@ -254,3 +254,26 @@ was saved locally (`prod-apply.txt`, scratchpad).
 - A Stage 2 "mark paid" would leave the order inconsistent.
 
 Not yet done: commit, push, deploy.
+
+## 9. Committed, pushed and deployed (2026-11-19, owner-authorized)
+
+- **Commit and push:** `f721b2e` (Stage 3, 89 files), pushed `023cdf6..f721b2e` to `master`. Vercel deployed it
+  automatically; the new routes answered on vericertpeptides.com about 40 seconds after the push.
+  `VeriCert_Group_2_Audit_Report.txt` was not part of Stage 3 and was left uncommitted.
+- **Live signed-out checks:** `scripts/stage3-tests/t-live-signed-out.mjs`, 15/15. It only makes GET requests and
+  requests the server refuses.
+  - Homepage and shop load.
+  - Both cron routes refuse a missing or wrong secret (401).
+  - Eight Stage 3 executive routes exist and refuse a signed-out request (401).
+  - The old mark-paid route is gone.
+  - A signed-out checkout is refused.
+  - The public order-status endpoint reads a migrated order: VC-E3SQJ9 shows cancelled.
+  - One failed check during the first live run was a test fault, now fixed: Next answers a POST to a missing route
+    with its not-found page and status 200, so the test now checks the matched path.
+- **The pre-deploy caution in §8 no longer applies:** the Executive Office now runs Stage 3 code.
+
+**Still to verify, which needs you or time:**
+1. Within about a day: the Reservations tab shows a scheduled cron run (daily at 14:30 UTC).
+2. The signed-in live audit in the completion report §16: Stock tab, scrolling, Payments tab, Orders tab, and the
+   Reservations tab.
+3. Still holding: D6–D8, the "hold lifted" email copy, and zeroing the reconciliation quantities before launch.
