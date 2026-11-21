@@ -7,7 +7,7 @@ set -euo pipefail
 E="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 pid=$(netstat -ano | grep ":3300 .*LISTENING" | awk '{print $5}' | head -1 || true)
 [ -n "${pid:-}" ] && taskkill //F //T //PID "$pid" >/dev/null 2>&1 || true
-node "$E/db-snapshot.mjs" restore post3
+node "$E/db-snapshot.mjs" restore "${SNAP:-post3}"   # SNAP=ref1 for the Refinements Package 1 suites
 if [[ " $* " == *" --build "* ]]; then bash "$E/local.sh" npx next build > "$E/build.log" 2>&1 || { tail -30 "$E/build.log"; exit 1; }; echo "build ok"; fi
 export ZELLE_RECIPIENT_NAME="LOCAL TEST RECIPIENT" ZELLE_RECIPIENT_HANDLE="zelle-test@example.invalid"
 if [[ " $* " == *" --sim "* ]]; then export PAYMENT_SIMULATION=local-test-only; echo "simulation ON"; fi

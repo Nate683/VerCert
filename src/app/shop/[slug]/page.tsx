@@ -13,7 +13,7 @@ import { resolveStrength, strengthKey } from "@/lib/products/strengths";
 import { buildMetadata } from "@/lib/seo";
 import { productImageSources } from "@/lib/products/images";
 import { formatPurity, specText } from "@/lib/products/specs";
-import { blendComponents } from "@/lib/products/blend-components";
+import { getPublicCompositions } from "@/lib/products/blend-composition";
 import { withStock } from "@/lib/inventory";
 import { withCertifiedPurity } from "@/lib/products/certified-purity";
 import { SCHEMA_AVAILABILITY } from "@/lib/products/stock";
@@ -69,14 +69,15 @@ export default async function ProductDetailPage({
   await requireCustomerForPage(
     `/shop/${slug}${strengthParamValue ? `?strength=${encodeURIComponent(strengthParamValue)}` : ""}`
   );
-  // Inactive products are fetched too, only so a blend's component card can
-  // show a compound's photo even when that compound isn't for sale itself.
+  // The full catalog (inactive included) feeds certified purity; the related rail below uses only on-sale products.
   const [found, fullCatalog] = await Promise.all([getProductBySlug(slug), listProducts({ includeInactive: true })]);
   if (!found || !isOnSale(found)) notFound();
   // Purity is kept only where an uploaded certificate backs it (certified-purity.ts).
   const [certifiedFound, ...catalog] = await withCertifiedPurity([found, ...fullCatalog]);
   const [product, ...allProducts] = await withStock([certifiedFound, ...catalog.filter(isOnSale)]);
-  const components = blendComponents(product, catalog);
+  // A blend's composition, per strength, from its structured records (blend_compositions / blend_components). A
+  // strength without one gets no composition section at all.
+  const blendCompositions = await getPublicCompositions(product.sizes.map((s) => s.id).filter((id): id is string => Boolean(id)));
   const [subscriptionSettings, orderingEnabled, publishedLots] = await Promise.all([
     getContent("subscriptions", DEFAULT_SUBSCRIPTION_SETTINGS),
     isOrderingEnabled(),
@@ -229,7 +230,7 @@ export default async function ProductDetailPage({
           <div className="mt-8">
             <AddToCartPanel
               product={storefront}
-              components={components}
+              blendCompositions={blendCompositions}
               orderingEnabled={orderingEnabled}
               orderingUnavailableLabel={ORDERING_UNAVAILABLE.heading}
               // Decided here, per request (this page is force-dynamic), against

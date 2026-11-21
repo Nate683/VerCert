@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import Image from "next/image";
 import { SearchBox } from "./SearchBox";
+import { PublicSearchBox } from "./PublicSearchBox";
 import { VerifyButton, VerifyPanel } from "./verify/VerifyHeader";
 import { LinkPending } from "./LinkPending";
 
@@ -20,7 +21,10 @@ const NAV_LINKS = [
 export function Header() {
   const pathname = usePathname();
   const { itemCount } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  // Website Refinements Package 1: signed-out visitors get the public compound search in the same slot, shown only
+  // once the session check has finished (so a signed-in visitor never sees it flash before their own search).
+  const signedOut = !user && !authLoading;
   // The drawer is only open for the route it was opened on, so any navigation
   // — including a back/forward move — closes it without an effect.
   const [openedAt, setOpenedAt] = useState<string | null>(null);
@@ -100,8 +104,11 @@ export function Header() {
         {/* PRODUCT search (catalog only — a separate component and data source from the certificate search above).
             The catalog is for signed-in customers, so it only appears once someone is signed in; the wrapper stays
             either way to hold the layout. On desktop it is sized to its content: the icon, the whole placeholder
-            ("Search name or CAS #") and a little padding — no wider. */}
-        <div className="ml-auto hidden w-full max-w-xs md:block xl:ml-2 xl:w-[12.25rem] xl:max-w-none xl:shrink-0">{user && <SearchBox />}</div>
+            ("Search name or CAS #") and a little padding — no wider. Signed out, the same slot holds the public compound
+            search (Website Refinements Package 1). At full desktop width (xl) it is 12.75rem, 8px wider than the
+            original 12.25rem (owner, 2026-11-21): "Explore 30 Compounds" had only 2px to spare, too little for a
+            three-digit count or Safari's slightly wider text. Below xl nothing changed. */}
+        <div className="ml-auto hidden w-full max-w-xs md:block xl:ml-2 xl:w-[12.75rem] xl:max-w-none xl:shrink-0">{user ? <SearchBox /> : signedOut ? <PublicSearchBox /> : null}</div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
           {user?.role && (
@@ -167,11 +174,15 @@ export function Header() {
           appearing. A tap on the page you are already on changes no pathname, so that one still closes it. */}
       {menuOpen && (
         <div className="pop-in border-t border-white/10 px-6 py-4 xl:hidden">
-          {user && (
+          {user ? (
             <div className="md:hidden">
               <SearchBox onNavigate={() => setMenuOpen(false)} />
             </div>
-          )}
+          ) : signedOut ? (
+            <div className="md:hidden">
+              <PublicSearchBox onNavigate={() => setMenuOpen(false)} idSuffix="-menu" />
+            </div>
+          ) : null}
           <nav className="mt-2 flex flex-col">
             {NAV_LINKS.map((link) => (
               <Link

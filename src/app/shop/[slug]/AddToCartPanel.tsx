@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart-context";
 import { resolveUnitPrice } from "@/lib/products";
 import type { Product } from "@/lib/types";
-import type { BlendComponentInfo } from "@/lib/products/blend-components";
-import { VialGlyph } from "@/components/VialGlyph";
+import { formatMg, type PublicBlendComposition } from "@/lib/products/blend-composition-shared";
 import { intervalLabel, subscriptionUnitPrice } from "@/lib/subscriptions/rules";
 import { AVAILABILITY_LABELS, isPurchasable, strengthStatus, type AvailabilityStatus } from "@/lib/products/availability";
 import { useStrength } from "./StrengthSelection";
@@ -25,7 +23,7 @@ const UNAVAILABLE_BUTTON_LABELS: Record<Exclude<AvailabilityStatus, "in_stock">,
 
 export function AddToCartPanel({
   product,
-  components = {},
+  blendCompositions = {},
   subscription = null,
   orderingEnabled,
   orderingUnavailableLabel,
@@ -39,7 +37,8 @@ export function AddToCartPanel({
   // to show nothing. Decided on the server (strengthEstimatedLabel) for the
   // strength's own status and date; informational only, never affects buying.
   estimatedLabels?: Record<string, string | null>;
-  components?: Record<string, BlendComponentInfo>;
+  // A blend's structured composition per strength id (server-read). A strength absent here shows no section.
+  blendCompositions?: Record<string, PublicBlendComposition>;
   // Set only when subscribe-and-save is on and this product qualifies.
   subscription?: { discountPercent: number; intervalDays: number[] } | null;
 }) {
@@ -142,48 +141,25 @@ export function AddToCartPanel({
         </div>
       </div>
 
-      {/* A blend's vial holds several compounds: one card per compound, with
-          its own photo and page where the catalog has them. */}
-      {size.composition && size.composition.length > 0 && (
-        <div className="mt-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-gold-ink">In each {size.label} vial</p>
-          <ul className={`mt-3 grid gap-3 ${size.composition.length > 2 ? "grid-cols-3" : "grid-cols-2"}`}>
-            {size.composition.map((c) => {
-              const info = components[c.name] ?? {};
-              const body = (
-                <>
-                  <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-navy">
-                    {info.imageUrl ? (
-                      <Image src={info.imageUrl} alt={c.name} fill sizes="160px" className="object-cover" />
-                    ) : (
-                      <VialGlyph className="h-1/2 w-1/2 text-gold/30" />
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-sm text-navy">{c.name}</p>
-                    <p className="text-xs text-muted">{c.amount}</p>
-                    {info.href && (
-                      <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-navy underline-offset-4 group-hover:underline">
-                        View compound →
-                      </p>
-                    )}
-                  </div>
-                </>
-              );
-              return (
-                <li key={c.name} className="border border-hairline bg-paper">
-                  {info.href ? (
-                    <Link href={info.href} className="group block transition-colors hover:bg-surface">
-                      {body}
-                    </Link>
-                  ) : (
-                    body
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+      {/* Blend Composition (Website Refinements Package 1): the customer buys ONE blended vial, so this is a text-only
+          list — each ingredient and its amount, then the total per vial — read from the structured records for the
+          selected strength. No section at all when the strength has no composition record. */}
+      {size.id && blendCompositions[size.id] && (
+        <section className="mt-6 border border-hairline bg-paper p-5" aria-labelledby="blend-composition-heading" data-blend-composition>
+          <h2 id="blend-composition-heading" className="text-xs uppercase tracking-[0.25em] text-gold-ink">Blend Composition</h2>
+          <dl className="mt-3 divide-y divide-hairline text-sm">
+            {blendCompositions[size.id].ingredients.map((ing) => (
+              <div key={ing.name} className="flex items-baseline justify-between gap-4 py-2" data-blend-ingredient>
+                <dt className="text-navy">{ing.name}</dt>
+                <dd className="shrink-0 font-mono text-[13px] text-muted">{formatMg(ing.amountMg)}</dd>
+              </div>
+            ))}
+            <div className="flex items-baseline justify-between gap-4 pt-3" data-blend-total>
+              <dt className="text-xs uppercase tracking-[0.18em] text-navy">Total per vial</dt>
+              <dd className="shrink-0 font-mono text-[13px] text-navy">{formatMg(blendCompositions[size.id].totalMg)}</dd>
+            </div>
+          </dl>
+        </section>
       )}
 
       {status === "coming_soon" ? (

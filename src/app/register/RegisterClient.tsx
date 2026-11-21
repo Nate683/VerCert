@@ -127,8 +127,7 @@ function RegisterForm() {
           Open the full catalog
         </h1>
         <p className="mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
-          Create your free VeriCert research account to access our catalog, view available compounds
-          and pricing, and manage your research orders.
+          Create an account to access our full research catalog, place orders, and manage your research purchases.
         </p>
 
         <ul className="mt-8 space-y-6">

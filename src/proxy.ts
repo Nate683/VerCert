@@ -70,6 +70,9 @@ const UNGATED_API = [
   "/api/cron",
   // Public certificate search and certificate PDFs (published records only; see lib/coa/public.ts).
   "/api/verify",
+  // The signed-out header search's compound list: on-sale compounds with their strengths and prices only
+  // (Website Refinements Package 1; see lib/catalog-public.ts). The signed-in catalog (/api/catalog) stays gated.
+  "/api/public-catalog",
 ];
 
 const within = (pathname: string, section: string) =>

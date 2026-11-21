@@ -124,7 +124,7 @@ export function Footer({ contact }: { contact: ContactContent }) {
           <p className="text-xs leading-relaxed text-white/70">
             All products distributed under the VeriCert Peptides storefront are intended exclusively for
             in-vitro laboratory research, analytical testing, and comparative reagent chemistry applications
-            by qualified professional entities. Throughout these operations, the brand moniker &quot;VeriCert
+            by qualified researchers and professional entities. Throughout these operations, the brand moniker &quot;VeriCert
             Peptides&quot; refers to the parent operating entity RKNEA Operations LLC. These chemical matrices
             are not classified as therapeutics, clinical products, active pharmaceutical ingredients,
             diagnostic materials, or dietary additions.

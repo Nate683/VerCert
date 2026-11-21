@@ -246,6 +246,14 @@ export const lotSplitSchema = z.object({
   ...lotDetailFields,
   idempotencyKey: z.string().trim().min(8).max(100),
 });
+// Website Refinements Package 1: a blend strength's structured composition. Shape only — the business rules (positive
+// amounts, no duplicates, sum = declared total, known products) are checked by validateComposition and again by the
+// database at commit.
+export const blendCompositionSchema = z.object({
+  declaredTotalMg: z.number().finite(),
+  ingredients: z.array(z.object({ componentSlug: z.string().trim().min(1).max(200), amountMg: z.number().finite() })).max(20),
+});
+
 export const lotUpdateSchema = z.object({
   releaseStatus: z.enum(LOT_RELEASE_STATUSES).optional(),
   testingStatus: z.enum(LOT_TESTING_STATUSES).optional(),

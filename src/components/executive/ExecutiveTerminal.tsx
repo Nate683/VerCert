@@ -16,6 +16,7 @@ import { AssistantChat } from "./AssistantChat";
 import { ProductsPanel } from "./ProductsPanel";
 import { StockPanel } from "./StockPanel";
 import { ReservationsPanel } from "./ReservationsPanel";
+import { BlendsPanel } from "./BlendsPanel";
 import { PaymentsPanel } from "./PaymentsPanel";
 import { SubscriptionsPanel } from "./SubscriptionsPanel";
 import { PromotionsPanel } from "./PromotionsPanel";
@@ -48,6 +49,7 @@ type Tab =
   | "products"
   | "stock"
   | "reservations"
+  | "blends"
   | "payments"
   | "financials"
   | "ledger"
@@ -81,6 +83,8 @@ const BASE_TABS: { id: Tab; label: string }[] = [
   { id: "products", label: "Inventory" },
   // Stage 2: stock per strength — quantities, adjustments, low-stock thresholds and movement history.
   { id: "stock", label: "Stock" },
+  // Website Refinements Package 1: each blend strength's structured composition (ingredients by permanent product id).
+  { id: "blends", label: "Blends" },
   // Stage 3: every live stock reservation (with stuck ones flagged and releasable) and the payment-method switches.
   { id: "reservations", label: "Reservations" },
   { id: "payments", label: "Payments" },
@@ -237,6 +241,7 @@ export function ExecutiveTerminal({
           {tab === "orders" && <OrderTable variant={variant} />}
           {tab === "products" && <ProductsPanel variant={variant} />}
           {tab === "stock" && <StockPanel variant={variant} />}
+          {tab === "blends" && <BlendsPanel variant={variant} />}
           {tab === "reservations" && <ReservationsPanel variant={variant} />}
           {tab === "payments" && <PaymentsPanel variant={variant} />}
           {tab === "certificates" && <CertificatesPanel />}
