@@ -565,3 +565,51 @@ order; all protected data unchanged."** The wording in §P2.2 was approved by th
   Nothing breaks in the meantime.
 
 **Not done:** commit, push, deploy and live checks. Each awaits separate authorization.
+
+## P2.11 Steps 3–5: committed, pushed (deployed), live signed-out checks (2026-11-21, owner-authorized)
+
+- **Commit and push:** commit `a87c349` (31 files), pushed `8918199..a87c349` to `master`. Vercel deployed it
+  automatically; `/api/public-catalog` was live about 50 seconds after the push. `VeriCert_Group_2_Audit_Report.txt`
+  was left out.
+- **Live signed-out checks:** `scripts/stage3-tests/t-live-r1-signed-out.mjs`, **51/51**. Only GET requests, refused
+  requests and page navigation in headless Edge; nothing was created or changed. The only cookie set was the site's
+  21+ acknowledgement.
+
+**Verified live without an account:**
+- **Public list:** count 30 = 30 entries, alphabetical, one per compound.
+  - BAC Water, TB-500, CJC-1295 No DAC and Semax/Selank are absent.
+  - BPC-157 shows only its 10mg strength.
+  - Only name, alternate names, CAS, photo, strengths and prices are returned.
+  - TB-4 shows as "TB-4 (Full Length)" (alternate name "TB-4").
+  - All four blends are listed.
+- **Header search, desktop and phone:**
+  - the placeholder alternates "Compound Search" / "Explore 30 Compounds", fully visible (144 px in 154 px on desktop;
+    the field is 204 px);
+  - an empty field shows "View All 30 Compounds & Prices";
+  - "bpc" finds BPC-157 with "10mg · $64.99", the same as the list;
+  - CAS search works (42464-96-0 → 5-Amino-1MQ);
+  - "TB-4" finds TB-4 (Full Length); "bac" and "tb-500" find nothing;
+  - choosing a result goes to /register;
+  - View All lists the 30 alphabetically, without BAC Water, and covers the screen (screenshots checked; product
+    thumbnails load in production);
+  - choosing a list row goes to /register.
+- **Gates unchanged:**
+  - `/shop` and the product pages (`/shop/glow-blend`, `/shop/wolverine-blend`, `/shop/bac-water`) still redirect to
+    /register;
+  - `/api/catalog` returns 401;
+  - all three Blends endpoints return 401;
+  - the cron routes return 401.
+- **Wording:** footer, register, privacy (both sentences), terms §11 and About all show the approved text, and the old
+  text is gone.
+
+**Could NOT be verified without an account** (they're behind sign-in or the executive login):
+- the **Blend Composition section** on GLOW, KLOW, CJC/Ipamorelin and WOLVERINE pages (product pages need an account).
+  The data is confirmed in production by the read-only check in §P2.10;
+- that the CJC/Ipamorelin page shows **"CJC-1295 (No DAC)"** as text without a link;
+- that the miniature vial cards are gone from live blend pages;
+- that **BAC Water is still findable signed in** (signed-in search, `/shop`, its product page);
+- the **signed-in header search** (unchanged code, but the slot is now 204 px wide at full desktop);
+- the **Executive Office Blends tab** (list, editor, validation, saving);
+- prices on product pages compared with the public list. Both read the same source; tested locally.
+
+All of these passed in the local suites (626/626) against the same code and the same migrated schema.
