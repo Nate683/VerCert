@@ -1,12 +1,13 @@
 # VeriCert — Website Visual Refinements Package 3: Completion Report
 
-Date: 2026-11-25. All development and testing are local. **Nothing was committed, pushed or deployed. There was no
-production access, no migration, no configuration change and no production data change.**
+Date: 2026-11-25. Development and testing were local; this report was first submitted for review before any commit.
+**Update (same day): the owner authorized commit and push. Package 3 is DEPLOYED as `ece0c48`, and the live
+signed-out checks pass 86/86 (§14).** There was no migration, no configuration change and no production data change.
 
 ## Executive summary
 
-**Readiness: READY FOR DEPLOYMENT APPROVAL.** No deployment blocker was found. There are three small owner notes
-(§13).
+**Status: DEPLOYED `ece0c48` (2026-11-25); live signed-out checks 86/86 (§14).** No deployment blocker was found.
+There are three small owner notes (§13).
 
 - **All 926 checks pass in one complete run** on the final code: every Stage 1–3 and Package 1–2 suite, plus the new
   Package 3 suites. That's 0 failures, 0 retries and 0 skipped in the final run.
@@ -269,7 +270,7 @@ scripts. **Production build:** succeeds.
 
 - **No migration:** this is front-end code only, so the deploy is commit + push.
 - **Rollback:** revert to `package3-checkpoint` (`8aed9ed`). No data to undo.
-- **Live checks after the authorized deploy:** the existing live scripts need new expectations:
+- **Live checks after the authorized deploy:** these expectations were updated before the push, and the results are in §14. They were:
   - `scripts/stage3-tests/t-live-r1-signed-out.mjs` still expects the Package 1 placeholder ("Compound Search" /
     "Explore N Compounds") and "View All N …" labels.
   - `scripts/stage3-tests/t-live-v2-signed-out.mjs` (Package 2, uncommitted) expects "VIEW ALL N COMPOUNDS & PRICES →",
@@ -293,4 +294,83 @@ scripts. **Production build:** succeeds.
 **Interpretation, as reported before building:** "signed-out mobile" means narrower than 768 px. Between 768 and
 1279 px the search was already in the top row, so that layout is unchanged.
 
-**STOPPED. Awaiting your review.** Nothing will be committed, pushed or deployed without explicit authorization.
+## 14. Production deployment and live verification
+
+**Authorized by the owner on 2026-11-25:** "Commit and push Package 3", including updated expectations in the Package 1
+and 2 live checks first.
+
+- **Commit:** `ece0c48`, pushed to `master` (`8aed9ed..ece0c48`), deployed by Vercel. There was no migration, no
+  configuration change and no production data change.
+- **Live check updates made before the push** (expectations only, where Package 3 changed a requirement):
+  - `t-live-r1-signed-out.mjs`:
+    - the phone search is found in the header row, not inside the menu;
+    - the placeholder phrases are "COMPOUNDS & PRICES" (desktop) / "VIEW COMPOUNDS & PRICES" (phone) and "SEARCH
+      COMPOUNDS", with fit measured on the visible text;
+    - "View All Compounds & Prices →" carries no count.
+  - `t-live-v2-signed-out.mjs`: the phone search is in the header row; "VIEW ALL COMPOUNDS & PRICES →" has no count.
+  - **New:** `t-live-v3-signed-out.mjs`.
+
+### Live results, signed out (headless Edge, device emulation): 86 / 86
+
+| Script | Result |
+|---|---|
+| `t-live-v3-signed-out.mjs` (Package 3) | **22 / 22** |
+| `t-live-r1-signed-out.mjs` (Package 1, updated) | **51 / 51** |
+| `t-live-v2-signed-out.mjs` (Package 2, updated) | **13 / 13** |
+
+All three passed on their first run against the live build. There were no failures and no retries.
+
+**Verified live:**
+- **Build detection:** the Package 3 build is detected by the compound search sitting beside the logo.
+- **Desktop, 1280 and 1366 px:**
+  - the order is Logo → Search → SHOP → HOW WE TEST → ABOUT → CONTACT → VERIFY → SIGN IN → Cart, and the header is
+    87 px;
+  - "COMPOUNDS & PRICES" shows first;
+  - "VIEW ALL COMPOUNDS & PRICES →" has no count;
+  - the dropdown starts at the field's left edge (184 / 219 px) and ends inside the screen (600 / 635 px).
+- **Tablet, 1024 px:** unchanged. The search is in the top row, VERIFY in its own row, and the header is 146 px.
+- **Phone, 390 px:**
+  - the search is permanently visible in the second row, showing "VIEW COMPOUNDS & PRICES", and the header is 133 px;
+  - the menu opens with VERIFY BEFORE YOU BUY first, with its emblem, and the search isn't duplicated;
+  - VERIFY closes the menu and opens the verification panel.
+- **Registration page, desktop and phone:**
+  - the invitation's heading, text and `type="button"` button are correct;
+  - the shared overlay opens directly: "VIEW ALL COMPOUNDS & PRICES" with no count, all 30 compounds alphabetically,
+    no thumbnails, BAC Water absent, and "Search compounds..." in the search field;
+  - search works by full name, partial name, alternate name and CAS number, over the complete list ("e" → 15
+    results, more than the dropdown's 8);
+  - "No matching compounds found." shows for no matches, and clearing restores all 30.
+- **Registration form-state preservation, desktop and phone,** with synthetic values typed into the live form (names,
+  an `@example.invalid` email, a phone number, a password and confirmation, a research category and the
+  acknowledgment):
+  - values, checkboxes and the same `<form>` element (marker intact) were kept through Escape, ×, selecting a compound
+    and CREATE YOUR FREE ACCOUNT;
+  - focus returned to the invitation button after Escape, and moved to the "Create your account" heading after a
+    selection;
+  - **0 submissions, 0 navigations and no registration request.** None of the entered values appeared in storage,
+    cookies, the URL or any of the 50 (desktop) and 41 (phone) requests;
+  - the form was never submitted and **no production account was created**. The entries were discarded with the
+    browser context.
+- **From another page:** from the header overlay on /about, CREATE YOUR FREE ACCOUNT goes to /register.
+- **Package 1 and 2 behaviour still passes:**
+  - the public catalog, BPC-157 strengths and prices matching the public list;
+  - CAS and TB-4 search;
+  - BAC Water and the hidden TB-500 not found;
+  - wording, the slate field and placeholder fit;
+  - the overlay rows and CTA, and no horizontal scroll.
+
+**Live screenshots, all viewed:** `docs/visual-package-3/live/` holds the desktop header at 1280 / 1366, the desktop
+dropdown, the phone header and menu, the registration page on desktop and phone, the no-results overlay over the
+preserved form, and the overlay opened from the header.
+
+### Not verified live, because it needs an account
+
+- **Signed-in header unchanged:** proven locally only (`t-visual3-baseline.mjs`, 15/15 identical at 9 widths plus the
+  menus).
+- **Coming Soon indicator:** product pages require sign-in. Verified locally at 5.01:1.
+- **Completing a real registration:** deliberately not submitted, so no test account exists in production. Locally,
+  registration with the same entries succeeded after overlay use.
+- **Real devices, Safari and Firefox:** not tested. Everything ran in headless Edge with device emulation.
+
+A quick signed-in look by the owner at the header and at one Coming Soon product page would close these gaps.
+Rollback stays a revert to `8aed9ed` (tag `package3-checkpoint`); there is no data to undo.
