@@ -33,7 +33,8 @@ SNAP=ref1 bash cycle.sh > server-c.log 2>&1 &
 wait_ready server-c.log && {
   node t-refinements-app.mjs > log-r1-app.txt 2>&1
   node t-refinements-ui.mjs > log-r1-ui.txt 2>&1
+  node t-visual2-ui.mjs > log-v2-ui.txt 2>&1
 }
 stop_app
 
-for f in log-migration.txt log-r1-mig.txt log-engine.txt log-api-A.txt log-ui.txt log-stage2.txt log-regress.txt log-api-B.txt log-r1-app.txt log-r1-ui.txt; do echo "== $f"; grep -E "^FAIL|passed, .* failed|FAILED:|Error" "$f" | head -12; done
+for f in log-migration.txt log-r1-mig.txt log-engine.txt log-api-A.txt log-ui.txt log-stage2.txt log-regress.txt log-api-B.txt log-r1-app.txt log-r1-ui.txt log-v2-ui.txt; do echo "== $f"; grep -E "^FAIL|passed, .* failed|FAILED:|Error" "$f" | head -12; done

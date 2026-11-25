@@ -64,20 +64,14 @@ for (const [label, viewport] of [["desktop", DESKTOP], ["phone", PHONE]]) {
   }
   const visibleBox = await page.evaluateHandle(() => [...document.querySelectorAll("[data-public-search]")].find((el) => el.offsetParent !== null) ?? null);
   check(`${label}: the signed-out header shows the compound search`, await visibleBox.evaluate((el) => Boolean(el)));
-  const ph = () => visibleBox.evaluate((el) => { const s = el.querySelector("[data-placeholder]"); return s ? { text: s.textContent, opacity: Number(getComputedStyle(s).opacity) } : null; });
-  // Watch ~7.5 s: both phrases appear, and the switch fades (an opacity below 1 is seen).
+  const ph = () => visibleBox.evaluate((el) => { const s = el.querySelector("[data-placeholder]"); return s ? { text: s.innerText, opacity: Number(getComputedStyle(s).opacity) } : null; });
+  // Visual Package 2 phrases. Watch ~8 s: both appear and the switch fades. (Widths, colours, timing and contrast are
+  // measured in t-visual2-ui.mjs.)
   const seen = new Set(); let minOpacity = 1;
-  for (let i = 0; i < 75; i++) { const p = await ph(); if (p) { seen.add(p.text); minOpacity = Math.min(minOpacity, p.opacity); } await sleep(100); }
-  check(`${label}: placeholder alternates "Compound Search" / "Explore ${COUNT} Compounds" (count from the catalog)`, seen.has("Compound Search") && seen.has(`Explore ${COUNT} Compounds`) && seen.size === 2, [...seen].join(" / "));
-  // Section 5: the longer phrase must fit the field. Wait for it fully faded in, then measure and photograph it.
-  for (let i = 0; i < 60; i++) { const p = await ph(); if (p?.text === `Explore ${COUNT} Compounds` && p.opacity === 1) break; await sleep(100); }
-  const fit = await visibleBox.evaluate((el) => {
-    const s = el.querySelector("[data-placeholder]"); const wrap = s.parentElement; const field = el.querySelector("div.border").getBoundingClientRect();
-    return { text: s.textContent, textWidth: s.scrollWidth, room: wrap.clientWidth, clipped: s.scrollWidth > s.clientWidth + 0.5, field: { x: field.x, y: field.y, w: field.width, h: field.height } };
-  });
-  check(`${label}: "Explore ${COUNT} Compounds" fits the field without truncation`, fit.text === `Explore ${COUNT} Compounds` && !fit.clipped && fit.textWidth <= fit.room, `text ${fit.textWidth}px in ${fit.room}px`);
-  await page.screenshot({ path: path.join(shots, `placeholder-explore-${label}.png`), clip: { x: Math.max(0, fit.field.x - 40), y: Math.max(0, fit.field.y - 30), width: Math.min(viewport.width - Math.max(0, fit.field.x - 40), fit.field.w + 80), height: fit.field.h + 60 } });
-  if (label === "desktop") await page.screenshot({ path: path.join(shots, "header-explore-desktop.png"), clip: { x: 0, y: 0, width: viewport.width, height: Math.ceil(fit.field.y + fit.field.h + 40) } });
+  for (let i = 0; i < 80; i++) { const p = await ph(); if (p) { seen.add(p.text); minOpacity = Math.min(minOpacity, p.opacity); } await sleep(100); }
+  // Full desktop width shows "COMPOUNDS & PRICES" (owner, 2026-11-23); the phone keeps the full phrase.
+  const pricing = label === "phone" ? "VIEW COMPOUNDS & PRICES" : "COMPOUNDS & PRICES";
+  check(`${label}: placeholder alternates "${pricing}" / "SEARCH COMPOUNDS" (no count in the placeholder)`, seen.has(pricing) && seen.has("SEARCH COMPOUNDS") && seen.size === 2, [...seen].join(" / "));
   check(`${label}: the switch is a fade (opacity dips below 1)`, minOpacity < 0.6, `min opacity ${minOpacity.toFixed(2)}`);
   const input = await visibleBox.evaluateHandle((el) => el.querySelector("input"));
   await input.focus();
@@ -85,11 +79,11 @@ for (const [label, viewport] of [["desktop", DESKTOP], ["phone", PHONE]]) {
   for (let i = 0; i < 40; i++) { frozen.add((await ph())?.text); await sleep(100); }
   check(`${label}: rotation stops on focus (same placeholder for 4 s)`, frozen.size === 1 && frozen.has(atFocus), [...frozen].join(" / "));
   const viewAll = await page.evaluate(() => { const panel = [...document.querySelectorAll("[data-public-results]")].find((p) => p.offsetParent !== null); return panel ? { results: panel.querySelectorAll("[data-public-result]").length, button: panel.querySelector("[data-view-all]")?.textContent } : null; });
-  check(`${label}: on focus with an empty field: only "View All ${COUNT} Compounds & Prices"`, viewAll?.results === 0 && viewAll.button === `View All ${COUNT} Compounds & Prices`, JSON.stringify(viewAll));
+  check(`${label}: on focus with an empty field: only "View All ${COUNT} Compounds & Prices →"`, viewAll?.results === 0 && viewAll.button === `View All ${COUNT} Compounds & Prices →`, JSON.stringify(viewAll));
   await input.type("bpc");
   await sleep(300);
   const r = await page.evaluate(() => [...document.querySelectorAll("[data-public-result]")].filter((e) => e.offsetParent !== null).map((e) => ({
-    slug: e.dataset.publicResult, name: e.querySelector("a span.min-w-0")?.textContent, img: Boolean(e.querySelector("img")),
+    slug: e.dataset.publicResult, name: e.querySelector("[data-public-name]")?.textContent, img: Boolean(e.querySelector("img")),
     strengths: [...e.querySelectorAll("[data-public-strength]")].map((s) => s.textContent.replace(/\s+/g, " ").trim()) })));
   const bpcApi = pub.find((c) => c.slug === "bpc-157");
   const bpcRow = r.find((x) => x.slug === "bpc-157");
@@ -166,15 +160,13 @@ for (const [label, viewport] of [["desktop", DESKTOP], ["phone", PHONE]]) {
   check("field size: the signed-out box has the signed-in box's width, height and 13px font", outBox.w === inBox.w && outBox.h === inBox.h && outBox.font === inBox.font && inBox.font === "13px", `out ${JSON.stringify(outBox)} in ${JSON.stringify(inBox)}`);
   check("header height is the same signed out and signed in (no extra text below the header)", outBox.header === inBox.header, `${outBox.header}/${inBox.header}`);
   check("signed-in search unchanged: its own box and placeholder, no public box", inBox.placeholder === "Search name or CAS #" && inBox.publicBox === 0);
-  // Owner, 2026-11-21: the slot is 12.75rem (204px) at full desktop width, so a three-digit count still fits.
+  // Owner, 2026-11-21: the slot is 12.75rem (204px) at full desktop width. (The "Explore N Compounds" phrase it was
+  // widened for was retired by Visual Package 2; the new phrases' fit is measured in t-visual2-ui.mjs.)
   const room = await so.page.evaluate(() => {
     const el = [...document.querySelectorAll("[data-public-search]")].find((e) => e.offsetParent !== null);
-    const slot = el.parentElement.getBoundingClientRect().width;
-    const s = el.querySelector("[data-placeholder]"); const before = s.textContent;
-    s.textContent = "Explore 100 Compounds"; const w = s.scrollWidth, clipped = s.scrollWidth > s.clientWidth + 0.5; s.textContent = before;
-    return { slot: Math.round(slot), threeDigitText: w, room: s.parentElement.clientWidth, clipped };
+    return { slot: Math.round(el.parentElement.getBoundingClientRect().width) };
   });
-  check("desktop: the search slot is 12.75rem (204px) and 'Explore 100 Compounds' would still fit", room.slot === 204 && !room.clipped && room.threeDigitText <= room.room, JSON.stringify(room));
+  check("desktop: the search slot is 12.75rem (204px)", room.slot === 204, JSON.stringify(room));
   for (const width of [1280, 1366]) {
     await so.page.setViewport({ width, height: 860 });
     await so.page.goto(`${BASE}/about`, { waitUntil: "networkidle0" });

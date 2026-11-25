@@ -21,6 +21,9 @@
   --surface:  #F8F8F9;   /* navy 3%  — banded sections */
   --hairline: #E3E5E9;   /* navy 12% — dividers, section rules */
   --control:  #7D8798;   /* 3.63:1 — outlined controls (WCAG 1.4.11) */
+  --search-slate: #223255; /* Visual Package 2: the signed-out header search field — a slate blue a step lighter
+                              than the header navy (same value as the office panel, kept separate so the Executive
+                              Office theme, which reassigns --office-panel, can't change the public header). */
   --gold-ink: #82673B;   /* 5.31:1 — gold for text on the light shell: the
                             old #B08C50 with its hue kept and lightness taken
                             down until small labels pass 4.5:1 on every light
