@@ -167,10 +167,12 @@ export function AddToCartPanel({
         // the label in gold-ink (#82673B, the site's gold for text on light grounds): 4.62:1 on the tint over this
         // panel. Brand gold #c9a227 as text would be 2.11:1 there, so it carries the border and dot, not the words.
         // The date below is gold-ink on the panel, 5.01:1. Styling only: the status and what can be bought are as
-        // before. Visual Package 2: the decorative gold border is removed; the tint and the gold-ink text (the
-        // accessibility fix) and the dot stay.
+        // before. Visual Package 2: the decorative gold border is removed. Visual Package 3: the tint and the badge
+        // padding go too — the dot and the words now sit straight on the panel (bg-surface #F8F8F9). The words stay
+        // gold-ink, 5.01:1 on the panel (brand gold would be 2.28:1); the dot (brand gold) is decoration, the words
+        // carry the status.
         <div className="mt-6" data-coming-soon>
-          <p className="inline-flex items-center gap-2 bg-gold/10 px-3 py-1.5 text-sm font-medium text-gold-ink" data-status-badge>
+          <p className="inline-flex items-center gap-2 text-sm font-medium text-gold-ink" data-status-badge>
             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-gold" />
             {AVAILABILITY_LABELS[status]}
           </p>

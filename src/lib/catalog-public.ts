@@ -1,5 +1,6 @@
 import type { Product, PricedSize } from "./types";
 import { pricedSizes } from "./products/pricing";
+import { searchScore } from "./search";
 
 // Client-safe. The PUBLIC compound list behind the signed-out header search and its "View All" list (Website
 // Refinements Package 1). Same eligibility as the storefront: only products that are on sale (visible, with at least
@@ -52,3 +53,15 @@ export function toPublicCompound(product: Product): PublicCompound {
 }
 
 export const usd = (n: number) => `$${n.toFixed(2)}`;
+
+// THE public matching rule, shared by the header autocomplete and the catalog overlay's search (Visual Package 3), so
+// the two can never diverge: lib/search.ts scoring over name, alternate names and CAS. It returns EVERY match, best
+// first; the autocomplete takes the first few, the overlay filters the complete eligible list with it.
+export function matchPublicCompounds(compounds: PublicCompound[], query: string): PublicCompound[] {
+  if (!query.trim()) return [];
+  return compounds
+    .map((c) => ({ c, score: searchScore({ name: c.name, alternateNames: c.alternateNames, casNumber: c.casNumber, category: null }, query) }))
+    .filter((r): r is { c: PublicCompound; score: number } => r.score !== null)
+    .sort((a, b) => a.score - b.score || a.c.name.localeCompare(b.c.name))
+    .map((r) => r.c);
+}

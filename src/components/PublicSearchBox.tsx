@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { searchScore } from "@/lib/search";
-import { usd, type PublicCompound } from "@/lib/catalog-public";
+import { usePathname, useRouter } from "next/navigation";
+import { matchPublicCompounds, usd, type PublicCompound } from "@/lib/catalog-public";
+import { usePublicCatalog } from "@/lib/use-public-catalog";
+import { REGISTER_FORM_HEADING_ID, useCatalogOverlay } from "./CatalogOverlay";
 
 // The SIGNED-OUT header search (Website Refinements Package 1; presentation refined in Visual Package 2). The
 // signed-in search (SearchBox.tsx) is unchanged.
@@ -17,8 +17,12 @@ import { usd, type PublicCompound } from "@/lib/catalog-public";
 // - As the visitor types: matching compounds by name, alternate name or CAS number (the same scoring as the shop
 //   search, lib/search.ts), each with its existing photo and its strengths with their current prices, on a charcoal
 //   dropdown. Names and strengths in the navigation-gray family, prices in brand gold.
-// - "VIEW ALL N COMPOUNDS & PRICES →" opens a compact alphabetical list (not the shop, not product cards).
-// - Choosing a compound or a strength goes to /register: the catalog itself stays registration-gated.
+// - "VIEW ALL COMPOUNDS & PRICES →" opens the shared catalog overlay (CatalogOverlay.tsx) — the same one the
+//   registration page opens. No count is shown (Visual Package 3); it is still computed by /api/public-catalog.
+// - Choosing a compound or a strength goes to /register: the catalog itself stays registration-gated. On /register
+//   itself it just closes and returns to the form (no same-page navigation).
+// Visual Package 3: data and matching come from the shared loader and matchPublicCompounds (the overlay uses the
+// same), and `anchor` lines the dropdown up with the field's left edge where the field sits beside the logo.
 // Colour/contrast measurements: VERICERT_WEBSITE_VISUAL_REFINEMENTS_PACKAGE_2_REPORT.md.
 
 // The pricing phrase first and longer; the search phrase shorter. A restrained difference, not a flash.
@@ -30,17 +34,7 @@ const PHRASES = [
   { text: "SEARCH COMPOUNDS", desktopText: null, className: "text-white/70", holdMs: 2500 },
 ] as const;
 const FADE_MS = 300;
-let cache: { count: number; compounds: PublicCompound[] } | null = null;
-let inflight: Promise<{ count: number; compounds: PublicCompound[] }> | null = null;
-function loadPublicCatalog() {
-  if (cache) return Promise.resolve(cache);
-  inflight ??= fetch("/api/public-catalog")
-    .then((r) => (r.ok ? r.json() : { count: 0, compounds: [] }))
-    .then((d) => (cache = { count: d.count ?? 0, compounds: d.compounds ?? [] }))
-    .catch(() => ({ count: 0, compounds: [] }))
-    .finally(() => { inflight = null; });
-  return inflight;
-}
+const AUTOCOMPLETE_LIMIT = 8;
 
 function Price({ price }: { price: PublicCompound["strengths"][number]["price"] }) {
   return price.effectiveUsd < price.regularUsd ? (
@@ -52,28 +46,22 @@ function Price({ price }: { price: PublicCompound["strengths"][number]["price"] 
   );
 }
 
-export function PublicSearchBox({ onNavigate, idSuffix = "" }: { onNavigate?: () => void; idSuffix?: string }) {
+export function PublicSearchBox({ onNavigate, idSuffix = "", anchor = "right" }: { onNavigate?: () => void; idSuffix?: string; anchor?: "right" | "left" }) {
   const router = useRouter();
-  const [data, setData] = useState(cache);
+  const pathname = usePathname();
+  const { openCatalog } = useCatalogOverlay();
+  const data = usePublicCatalog();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
   const [highlight, setHighlight] = useState(0);
   const [phrase, setPhrase] = useState(0);
   const [fading, setFading] = useState(false);
-  const [listOpen, setListOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = `public-compound-search${idSuffix}`;
   const listboxId = `public-compound-results${idSuffix}`;
 
-  useEffect(() => {
-    let cancelled = false;
-    loadPublicCatalog().then((d) => { if (!cancelled) setData(d); });
-    return () => { cancelled = true; };
-  }, []);
-
-  const count = data?.count ?? 0;
   const rotating = !focused && query === "";
   // Each phrase holds for its own time, then fades out, swaps, and fades in.
   useEffect(() => {
@@ -84,15 +72,8 @@ export function PublicSearchBox({ onNavigate, idSuffix = "" }: { onNavigate?: ()
   }, [rotating, phrase]);
   const current = PHRASES[phrase];
 
-  const results = useMemo(() => {
-    if (!data || !query.trim()) return [];
-    return data.compounds
-      .map((c) => ({ c, score: searchScore({ name: c.name, alternateNames: c.alternateNames, casNumber: c.casNumber, category: null }, query) }))
-      .filter((r): r is { c: PublicCompound; score: number } => r.score !== null)
-      .sort((a, b) => a.score - b.score || a.c.name.localeCompare(b.c.name))
-      .slice(0, 8)
-      .map((r) => r.c);
-  }, [data, query]);
+  // The shared matching (lib/catalog-public.ts); the autocomplete shows only the best few.
+  const results = useMemo(() => (data ? matchPublicCompounds(data.compounds, query).slice(0, AUTOCOMPLETE_LIMIT) : []), [data, query]);
   const activeIndex = Math.min(highlight, Math.max(0, results.length - 1));
 
   useEffect(() => {
@@ -105,14 +86,20 @@ export function PublicSearchBox({ onNavigate, idSuffix = "" }: { onNavigate?: ()
 
   function toRegister() {
     setOpen(false);
-    setListOpen(false);
     setQuery("");
     onNavigate?.();
-    router.push("/register");
+    if (pathname === "/register") {
+      // Already there: back to the form, without navigating to the page we're on (which could disturb it).
+      const heading = document.getElementById(REGISTER_FORM_HEADING_ID);
+      heading?.scrollIntoView({ block: "start" });
+      heading?.focus({ preventScroll: true });
+    } else {
+      router.push("/register");
+    }
   }
   function openList() {
     setOpen(false);
-    setListOpen(true);
+    openCatalog({ returnFocusTo: inputRef.current });
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -123,7 +110,10 @@ export function PublicSearchBox({ onNavigate, idSuffix = "" }: { onNavigate?: ()
     else if (e.key === "Enter") { e.preventDefault(); toRegister(); }
   }
 
-  const viewAllLabel = `View All ${count > 0 ? `${count} ` : ""}Compounds & Prices`;
+  const viewAllLabel = "View All Compounds & Prices";
+  // Where the dropdown hangs: full width under the field on a phone; on wider layouts a 26rem panel lined up with the
+  // field's right edge (field on the right of the header) or its left edge (field beside the logo, signed-out desktop).
+  const panelPosition = anchor === "left" ? "left-0 right-0 md:right-auto md:w-[26rem]" : "left-0 right-0 md:left-auto md:w-[26rem]";
   return (
     <div ref={containerRef} className="relative w-full" data-public-search>
       <label htmlFor={inputId} className="sr-only">Compound search: search compounds by name or CAS number</label>
@@ -172,14 +162,14 @@ export function PublicSearchBox({ onNavigate, idSuffix = "" }: { onNavigate?: ()
           )}
         </div>
         {query && (
-          <button type="button" onClick={() => { setQuery(""); inputRef.current?.focus(); }} aria-label="Clear search" className="shrink-0 text-white/60 transition-colors hover:text-gold">×</button>
+          <button type="button" onClick={() => { setQuery(""); inputRef.current?.focus(); }} aria-label="Clear search" className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center text-white/60 transition-colors hover:text-gold" data-public-clear>×</button>
         )}
       </div>
 
       {open && (
         <div
           id={listboxId}
-          className="pop-in absolute left-0 right-0 top-full z-50 mt-1 max-h-[70vh] min-w-[18rem] overflow-y-auto border border-white/10 bg-charcoal shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7)] md:left-auto md:w-[26rem]"
+          className={`pop-in absolute top-full z-50 mt-1 max-h-[70vh] min-w-[18rem] overflow-y-auto border border-white/10 bg-charcoal shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7)] ${panelPosition}`}
           data-public-results
         >
           {query.trim() !== "" && (!data ? (
@@ -229,64 +219,6 @@ export function PublicSearchBox({ onNavigate, idSuffix = "" }: { onNavigate?: ()
         </div>
       )}
 
-      {/* Rendered on document.body: the header establishes a containing block (backdrop blur), which would otherwise
-          confine this full-screen sheet to the header's own box. */}
-      {listOpen && data && createPortal(
-        <CompoundList compounds={data.compounds} title={viewAllLabel} onClose={() => setListOpen(false)} onChoose={toRegister} />,
-        document.body
-      )}
-    </div>
-  );
-}
-
-// The "View All" list: every compound on sale, alphabetical, with its strengths and prices. A centred sheet with a
-// navy header over a white list; Escape or the close button closes it; choosing anything goes to /register.
-// On white, the navigation gray itself would be unreadable (about 1.9:1), so names and strengths use the site's
-// existing gray for text on white (--muted, 5.02:1) — names a step larger and heavier — and prices the darker gold for
-// text on light grounds (--gold-ink, 5.31:1), semibold: the strongest text in each row.
-function CompoundList({ compounds, title, onClose, onChoose }: { compounds: PublicCompound[]; title: string; onClose: () => void; onChoose: () => void }) {
-  const closeRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    closeRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", onKey);
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = overflow; };
-  }, [onClose]);
-  const sorted = [...compounds].sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
-  return (
-    <div className="fixed inset-0 z-[60] flex items-start justify-center bg-navy-deep/70 px-4 py-6 sm:items-center sm:py-12" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} data-compound-list>
-      <div role="dialog" aria-modal="true" aria-labelledby="compound-list-title" className="flex max-h-full w-full max-w-2xl flex-col border border-navy bg-paper shadow-[0_24px_48px_-12px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center justify-between gap-4 bg-navy px-5 py-4" data-list-header>
-          <h2 id="compound-list-title" className="text-xs uppercase tracking-[0.22em] text-gold">{title}</h2>
-          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close the compound list" className="px-2 text-lg leading-none text-white/70 transition-colors hover:text-white" data-close-list>×</button>
-        </div>
-        <ul className="divide-y divide-hairline overflow-y-auto px-5" data-compound-rows>
-          {sorted.map((c) => (
-            <li key={c.slug} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6" data-compound-row={c.slug}>
-              <Link href="/register" onClick={(e) => { e.preventDefault(); onChoose(); }} className="text-sm font-medium text-muted transition-colors hover:text-navy" data-list-name>{c.name}</Link>
-              <span className="flex flex-wrap gap-x-4 gap-y-1 sm:justify-end">
-                {c.strengths.map((s) => (
-                  <Link key={s.label} href="/register" onClick={(e) => { e.preventDefault(); onChoose(); }} className="whitespace-nowrap text-[12px] text-muted transition-colors hover:text-navy" data-list-strength>
-                    {s.label} <span className="ml-1 font-semibold text-gold-ink" data-list-price><Price price={s.price} /></span>
-                  </Link>
-                ))}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <div className="flex flex-col gap-3 border-t border-hairline bg-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6" data-list-register>
-          <p className="text-xs leading-relaxed text-muted" data-list-register-text>
-            Compound names, strengths and public prices can be viewed without an account. Registration is required for
-            full product details, inventory availability and purchasing.
-          </p>
-          <Link href="/register" onClick={(e) => { e.preventDefault(); onChoose(); }}
-            className="shrink-0 border border-gold bg-gold px-5 py-2.5 text-center text-xs uppercase tracking-[0.18em] text-black transition-colors hover:border-gold-ink hover:bg-transparent hover:text-gold-ink" data-list-cta>
-            Create Your Free Account
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

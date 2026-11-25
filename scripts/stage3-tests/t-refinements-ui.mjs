@@ -79,7 +79,7 @@ for (const [label, viewport] of [["desktop", DESKTOP], ["phone", PHONE]]) {
   for (let i = 0; i < 40; i++) { frozen.add((await ph())?.text); await sleep(100); }
   check(`${label}: rotation stops on focus (same placeholder for 4 s)`, frozen.size === 1 && frozen.has(atFocus), [...frozen].join(" / "));
   const viewAll = await page.evaluate(() => { const panel = [...document.querySelectorAll("[data-public-results]")].find((p) => p.offsetParent !== null); return panel ? { results: panel.querySelectorAll("[data-public-result]").length, button: panel.querySelector("[data-view-all]")?.textContent } : null; });
-  check(`${label}: on focus with an empty field: only "View All ${COUNT} Compounds & Prices →"`, viewAll?.results === 0 && viewAll.button === `View All ${COUNT} Compounds & Prices →`, JSON.stringify(viewAll));
+  check(`${label}: on focus with an empty field: only "View All Compounds & Prices →" (Package 3: no count)`, viewAll?.results === 0 && viewAll.button === "View All Compounds & Prices →", JSON.stringify(viewAll));
   await input.type("bpc");
   await sleep(300);
   const r = await page.evaluate(() => [...document.querySelectorAll("[data-public-result]")].filter((e) => e.offsetParent !== null).map((e) => ({
@@ -133,7 +133,7 @@ for (const [label, viewport] of [["desktop", DESKTOP], ["phone", PHONE]]) {
     list.overlay.top === 0 && list.overlay.left === 0 && Math.round(list.overlay.w) >= viewport.width - 20 && Math.round(list.overlay.h) === viewport.height
     && list.dlgHeight >= viewport.height * 0.6 && list.visibleRows >= 6, `overlay ${JSON.stringify(list.overlay)}, sheet ${Math.round(list.dlgHeight)}px, ${list.visibleRows} rows fully visible`);
   const sortedNames = pub.map((c) => c.name);
-  check(`${label}: View All opens a compact alphabetical list of all ${COUNT} compounds (no product cards or images)`, list.title === `View All ${COUNT} Compounds & Prices` && list.names.length === COUNT && JSON.stringify(list.names) === JSON.stringify(sortedNames) && list.imgs === 0, `${list.names.length} rows`);
+  check(`${label}: View All opens a compact alphabetical list of all ${COUNT} compounds (no product cards or images)`, list.title === "View All Compounds & Prices" && list.names.length === COUNT && JSON.stringify(list.names) === JSON.stringify(sortedNames) && list.imgs === 0, `${list.names.length} rows`);
   const first = pub[0];
   check(`${label}: each row shows the compound's strengths and prices`, list.firstRow === `${first.name}${first.strengths.map((s) => `${s.label} $${s.price.regularUsd.toFixed(2)}`).join("")}`.replace(/\s+/g, " ").trim(), list.firstRow);
   check(`${label}: the list fits the screen (no horizontal scroll), focus moves to its close button`, list.dlgLeft >= 0 && list.dlgRight <= viewport.width && (await noHScroll(page)) && list.focused, `${list.dlgLeft}–${list.dlgRight}`);

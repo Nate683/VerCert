@@ -7,6 +7,8 @@ import { safeNextPath } from "@/lib/safe-next";
 import { ConfirmPasswordField, PasswordField } from "@/components/PasswordField";
 import { RESEARCH_CATEGORIES, normalizePhone } from "@/lib/users/registration";
 import { AcknowledgmentText } from "@/components/AcknowledgmentText";
+import { REGISTER_FORM_HEADING_ID } from "@/components/CatalogOverlay";
+import { ExploreInvitation } from "./ExploreInvitation";
 
 // What an account opens up. Every line is something the site does today;
 // keep it that way when editing. (Certificate lookup isn't listed: it needs no
@@ -130,6 +132,8 @@ function RegisterForm() {
           Create an account to access our full research catalog, place orders, and manage your research purchases.
         </p>
 
+        <ExploreInvitation />
+
         <ul className="mt-8 space-y-6">
           {ACCOUNT_BENEFITS.map((benefit) => (
             <li key={benefit.title} className="flex gap-4">
@@ -148,7 +152,8 @@ function RegisterForm() {
       </section>
 
       <div className="border border-hairline bg-surface p-5 sm:p-8">
-        <h2 className="font-serif text-2xl text-navy">Create your account</h2>
+        {/* Where a registration action in the catalog overlay returns the visitor (CatalogOverlay.tsx). */}
+        <h2 id={REGISTER_FORM_HEADING_ID} tabIndex={-1} className="scroll-mt-40 font-serif text-2xl text-navy focus:outline-none">Create your account</h2>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <input

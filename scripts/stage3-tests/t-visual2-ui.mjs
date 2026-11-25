@@ -149,7 +149,7 @@ for (const [label, viewport] of [["desktop", { width: 1366, height: 860 }], ["ph
   const input = await box.evaluateHandle((el) => el.querySelector("input"));
   await input.focus(); await sleep(300);
   const va = await page.evaluate(() => { const b = [...document.querySelectorAll("[data-view-all]")].find((x) => x.offsetParent !== null); return b ? { text: b.innerText.trim(), c: window.__contrast(b) } : null; });
-  check(`${label}: empty field shows "VIEW ALL ${COUNT} COMPOUNDS & PRICES →" (uppercase, arrow, live count)`, va?.text === `VIEW ALL ${COUNT} COMPOUNDS & PRICES →`, va?.text);
+  check(`${label}: empty field shows "VIEW ALL COMPOUNDS & PRICES →" (uppercase, arrow; Package 3: no count)`, va?.text === "VIEW ALL COMPOUNDS & PRICES →", va?.text);
   if (label === "desktop") measure(`dropdown "VIEW ALL … →" (gold 85%): ${va.c.fg} on ${va.c.bg} → ${va.c.ratio}:1`);
   await input.type("bpc"); await sleep(400);
   const d = await page.evaluate(() => {
@@ -206,7 +206,7 @@ for (const [label, viewport] of [["desktop", { width: 1366, height: 860 }], ["ph
       names: rows.map((x) => x.querySelector("[data-list-name]").textContent), imgs: dlg.querySelectorAll("img").length,
       scrollable: list.scrollHeight > list.clientHeight, overflow: document.documentElement.scrollWidth > innerWidth + 1, focused: document.activeElement?.hasAttribute("data-close-list") };
   });
-  check(`${label}: overlay title "VIEW ALL ${COUNT} COMPOUNDS & PRICES" on a navy header; white content`, o.title.text === `VIEW ALL ${COUNT} COMPOUNDS & PRICES` && o.headerBg === "#132544" && o.contentBg === "#ffffff", `${o.title.text} ${o.headerBg} ${o.contentBg}`);
+  check(`${label}: overlay title "VIEW ALL COMPOUNDS & PRICES" on a navy header; white content (Package 3: no count)`, o.title.text === "VIEW ALL COMPOUNDS & PRICES" && o.headerBg === "#132544" && o.contentBg === "#ffffff", `${o.title.text} ${o.headerBg} ${o.contentBg}`);
   check(`${label}: all ${COUNT} compounds, alphabetical, no thumbnails`, JSON.stringify(o.names) === JSON.stringify(pubData.compounds.map((c) => c.name)) && o.imgs === 0, `${o.names.length} rows, ${o.imgs} images`);
   check(`${label}: names and strengths gray (not white), prices gold-ink, semibold`, o.name.fg === "#6a7075" && o.strength.fg === "#6a7075" && o.price.fg === "#82673b" && Number(o.priceWeight) >= 600, `${o.name.fg} ${o.strength.fg} ${o.price.fg} w${o.priceWeight}`);
   check(`${label}: prices are the highest-contrast text in each row`, o.price.ratio > o.name.ratio && o.price.ratio > o.strength.ratio, `${o.price.ratio} vs ${o.name.ratio}/${o.strength.ratio}`);
@@ -252,7 +252,7 @@ try {
           button: btn ? { text: btn.innerText.trim(), disabled: btn.disabled } : null, rect: el.getBoundingClientRect().toJSON() };
       });
       const tag = `${label}, ${date ? "with" : "without"} a date`;
-      check(`Coming Soon (${tag}): no border; tint kept; gold-ink text; dot kept`, b.borders.slice(0, 4).every((w) => w === "0px") && b.tint !== "rgba(0, 0, 0, 0)" && b.color === "#82673b" && b.dot && b.text === "Coming Soon", JSON.stringify(b.borders));
+      check(`Coming Soon (${tag}): no border; no tint (Package 3); gold-ink text; dot kept`, b.borders.slice(0, 4).every((w) => w === "0px") && b.tint === "rgba(0, 0, 0, 0)" && b.color === "#82673b" && b.dot && b.text === "Coming Soon", JSON.stringify(b.borders));
       check(`Coming Soon (${tag}): text ≥ 4.5:1 on its tint`, b.c.ratio >= 4.5, `${b.c.fg} on ${b.c.bg} → ${b.c.ratio}:1`);
       check(`Coming Soon (${tag}): ${date ? "estimated date shown from the strength record" : "no date invented"}`, date ? /Estimated availability: December 15, 2026/.test(b.date ?? "") : b.date === null, b.date ?? "none");
       check(`Coming Soon (${tag}): the larger disabled Coming Soon button is unchanged`, b.button?.text.toUpperCase() === "COMING SOON" && b.button.disabled, JSON.stringify(b.button));

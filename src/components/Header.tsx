@@ -18,13 +18,18 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-export function Header() {
+export function Header({ signedInAtRender = false }: { signedInAtRender?: boolean }) {
   const pathname = usePathname();
   const { itemCount } = useCart();
   const { user, loading: authLoading } = useAuth();
   // Website Refinements Package 1: signed-out visitors get the public compound search in the same slot, shown only
   // once the session check has finished (so a signed-in visitor never sees it flash before their own search).
   const signedOut = !user && !authLoading;
+  // Visual Package 3: the signed-out LAYOUT (search beside the logo on desktop; search in the slim row and VERIFY in
+  // the menu on phones). Decided from the server's own session check while the client one is still loading, so
+  // neither layout jumps when it finishes. When signed in this is false and every element below renders exactly as
+  // before (same elements, same class strings) — verified against screenshots and HTML of the previous build.
+  const signedOutLayout = user ? false : authLoading ? !signedInAtRender : true;
   // The drawer is only open for the route it was opened on, so any navigation
   // — including a back/forward move — closes it without an effect.
   const [openedAt, setOpenedAt] = useState<string | null>(null);
@@ -82,6 +87,15 @@ export function Header() {
           />
         </Link>
 
+        {/* Visual Package 3, signed-out desktop (xl): the public compound search sits right after the logo, before
+            SHOP — away from the gold-outlined VERIFY BEFORE YOU BUY. Same 12.75rem slot; its dropdown hangs from the
+            field's left edge so it stays on screen. Signed in, nothing is rendered here. */}
+        {signedOutLayout && (
+          <div className="hidden xl:mr-2 xl:block xl:w-[12.75rem] xl:shrink-0" data-public-search-slot="desktop">
+            {signedOut && <PublicSearchBox anchor="left" idSuffix="-desktop" />}
+          </div>
+        )}
+
         <nav className="hidden items-center gap-6 xl:flex">
           {NAV_LINKS.map((link) => {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
@@ -108,7 +122,8 @@ export function Header() {
             search (Website Refinements Package 1). At full desktop width (xl) it is 12.75rem, 8px wider than the
             original 12.25rem (owner, 2026-11-21): "Explore 30 Compounds" had only 2px to spare, too little for a
             three-digit count or Safari's slightly wider text. Below xl nothing changed. */}
-        <div className="ml-auto hidden w-full max-w-xs md:block xl:ml-2 xl:w-[12.75rem] xl:max-w-none xl:shrink-0">{user ? <SearchBox /> : signedOut ? <PublicSearchBox /> : null}</div>
+        {/* Signed out, this slot is used only below xl (tablets); at xl the search is beside the logo instead. */}
+        <div className={`ml-auto hidden w-full max-w-xs md:block xl:ml-2 xl:w-[12.75rem] xl:max-w-none xl:shrink-0${signedOutLayout ? " xl:hidden" : ""}`}>{user ? <SearchBox /> : signedOut ? <PublicSearchBox /> : null}</div>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-4 md:ml-0">
           {user?.role && (
@@ -161,8 +176,22 @@ export function Header() {
       </div>
 
       {/* Below xl the top row is full, so VERIFY BEFORE YOU BUY gets its own slim row inside the header. */}
+      {/* Visual Package 3, signed-out phones (below md): this row holds the public compound search instead, at the
+          row's own height (58px), and VERIFY BEFORE YOU BUY moves to the top of the menu. From md the search is already
+          in the top row, so the row keeps VERIFY there. Signed in: unchanged. */}
       <div className="border-t border-white/10 px-4 xl:hidden">
-        <VerifyButton open={verifyOpen} onToggle={toggleVerify} compact />
+        {signedOutLayout ? (
+          <>
+            <div className="flex h-[58px] items-center md:hidden" data-public-search-slot="mobile">
+              {signedOut && <PublicSearchBox idSuffix="-mobile" />}
+            </div>
+            <div className="hidden md:block">
+              <VerifyButton open={verifyOpen} onToggle={toggleVerify} compact />
+            </div>
+          </>
+        ) : (
+          <VerifyButton open={verifyOpen} onToggle={toggleVerify} compact />
+        )}
       </div>
 
       {verifyOpen && <VerifyPanel onClose={() => setVerifyAt(null)} />}
@@ -179,8 +208,11 @@ export function Header() {
               <SearchBox onNavigate={() => setMenuOpen(false)} />
             </div>
           ) : signedOut ? (
-            <div className="md:hidden">
-              <PublicSearchBox onNavigate={() => setMenuOpen(false)} idSuffix="-menu" />
+            // Visual Package 3: on signed-out phones the search is always visible in the row above, so the menu opens
+            // with VERIFY BEFORE YOU BUY as its first item (same control, emblem and panel). Tapping it closes the menu
+            // and opens the verification panel, so the two never overlap.
+            <div className="md:hidden" data-menu-verify>
+              <VerifyButton open={verifyOpen} onToggle={() => { setMenuOpen(false); toggleVerify(); }} compact />
             </div>
           ) : null}
           <nav className="mt-2 flex flex-col">

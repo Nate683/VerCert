@@ -13,7 +13,7 @@ const EDGE = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
 const shots = path.join(path.dirname(new URL(import.meta.url).pathname).replace(/^\/([A-Z]:)/, "$1"), "shots-live-r1");
 fs.mkdirSync(shots, { recursive: true });
 let pass = 0, fail = 0; const failures = [];
-const check = (name, ok, detail = "") => { ok ? pass++ : (fail++, failures.push(name)); console.log(`${ok ? "PASS" : "FAIL"}  [LIVE-R1] ${name}${detail ? `  — ${detail}` : ""}`); };
+const check = (name, ok, detail = "") => { if (ok) pass++; else { fail++; failures.push(name); } console.log(`${ok ? "PASS" : "FAIL"}  [LIVE-R1] ${name}${detail ? `  — ${detail}` : ""}`); };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const AGE = "vericert_age_ack=1";
 const get = async (p, cookie = AGE) => { const r = await fetch(BASE + p, { redirect: "manual", headers: { Cookie: cookie } }); return { status: r.status, location: r.headers.get("location") ?? "", text: await r.text(), cc: r.headers.get("cache-control") ?? "" }; };
@@ -71,16 +71,17 @@ for (const [label, viewport] of [["desktop", { width: 1366, height: 860 }], ["ph
   await page.setViewport(viewport);
   await ctx.setCookie({ name: "vericert_age_ack", value: "1", domain: "vericertpeptides.com", path: "/" });
   await page.goto(`${BASE}/about`, { waitUntil: "networkidle2" });
-  if (label === "phone") { await page.click('button[aria-label="Toggle menu"]'); await sleep(500); }
   const box = await page.evaluateHandle(() => [...document.querySelectorAll("[data-public-search]")].find((e) => e.offsetParent !== null) ?? null);
   const present = await box.evaluate((e) => Boolean(e));
   check(`${label}: the signed-out header shows the compound search`, present);
   if (!present) { await ctx.close(); continue; }
-  const ph = () => box.evaluate((el) => { const s = el.querySelector("[data-placeholder]"); return s ? { t: s.textContent, o: Number(getComputedStyle(s).opacity), w: s.scrollWidth, room: s.parentElement.clientWidth, clipped: s.scrollWidth > s.clientWidth + 0.5 } : null; });
+  const ph = () => box.evaluate((el) => { const s = el.querySelector("[data-placeholder]"); if (!s) return null; const v = [...s.children].find((c) => getComputedStyle(c).display !== "none") ?? s; return { t: s.innerText, o: Number(getComputedStyle(s).opacity), w: v.scrollWidth, room: v.clientWidth, clipped: v.scrollWidth > v.clientWidth + 0.5 }; });
+  // Package 3 wording: "COMPOUNDS & PRICES" at full desktop width, the full phrase on a phone; then "SEARCH COMPOUNDS".
+  const pricing = label === "phone" ? "VIEW COMPOUNDS & PRICES" : "COMPOUNDS & PRICES";
   const seen = new Set(); let fit = null;
-  for (let i = 0; i < 80; i++) { const p = await ph(); if (p) { seen.add(p.t); if (p.t.startsWith("Explore") && p.o === 1) fit = p; } if (seen.size === 2 && fit) break; await sleep(100); }
-  check(`${label}: placeholder alternates "Compound Search" / "Explore ${pub.count} Compounds"`, seen.has("Compound Search") && seen.has(`Explore ${pub.count} Compounds`), [...seen].join(" / "));
-  check(`${label}: "Explore ${pub.count} Compounds" fits without truncation`, fit && !fit.clipped && fit.w <= fit.room, fit ? `${fit.w}px in ${fit.room}px` : "not captured");
+  for (let i = 0; i < 80; i++) { const p = await ph(); if (p) { seen.add(p.t); if (p.t === pricing && p.o === 1) fit = p; } if (seen.size === 2 && fit) break; await sleep(100); }
+  check(`${label}: placeholder alternates "${pricing}" / "SEARCH COMPOUNDS" (no count)`, seen.has(pricing) && seen.has("SEARCH COMPOUNDS"), [...seen].join(" / "));
+  check(`${label}: "${pricing}" fits without truncation`, fit && !fit.clipped && fit.w <= fit.room, fit ? `${fit.w}px in ${fit.room}px` : "not captured");
   const field = await box.evaluate((el) => { const r = el.querySelector("div.border").getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
   await page.screenshot({ path: path.join(shots, `placeholder-${label}.png`), clip: { x: Math.max(0, field.x - 30), y: Math.max(0, field.y - 20), width: Math.min(viewport.width - Math.max(0, field.x - 30), field.w + 60), height: field.h + 40 } });
   if (label === "desktop") {
@@ -90,7 +91,7 @@ for (const [label, viewport] of [["desktop", { width: 1366, height: 860 }], ["ph
   const input = await box.evaluateHandle((el) => el.querySelector("input"));
   await input.focus(); await sleep(300);
   const empty = await page.evaluate(() => { const p = [...document.querySelectorAll("[data-public-results]")].find((e) => e.offsetParent !== null); return p ? { results: p.querySelectorAll("[data-public-result]").length, va: p.querySelector("[data-view-all]")?.textContent } : null; });
-  check(`${label}: focus with an empty field shows only "View All ${pub.count} Compounds & Prices"`, empty?.results === 0 && empty.va === `View All ${pub.count} Compounds & Prices`, JSON.stringify(empty));
+  check(`${label}: focus with an empty field shows only "View All Compounds & Prices →" (no count)`, empty?.results === 0 && empty.va === "View All Compounds & Prices →", JSON.stringify(empty));
   const results = async (q) => { await input.evaluate((el) => el.select()); await input.type(q); await sleep(400); return page.evaluate(() => [...document.querySelectorAll("[data-public-result]")].filter((e) => e.offsetParent !== null).map((e) => ({ slug: e.dataset.publicResult, strengths: [...e.querySelectorAll("[data-public-strength]")].map((s) => s.textContent.replace(/\s+/g, " ").trim()) }))); };
   const bpc = (await results("bpc")).find((r) => r.slug === "bpc-157");
   const bpcApi = C.find((c) => c.slug === "bpc-157");
@@ -104,7 +105,6 @@ for (const [label, viewport] of [["desktop", { width: 1366, height: 860 }], ["ph
   await Promise.all([page.waitForNavigation({ waitUntil: "networkidle2" }), page.evaluate(() => [...document.querySelectorAll("[data-public-result] a")].find((a) => a.offsetParent !== null).click())]);
   check(`${label}: choosing a compound goes to /register`, new URL(page.url()).pathname === "/register", page.url());
   await page.goto(`${BASE}/about`, { waitUntil: "networkidle2" });
-  if (label === "phone") { await page.click('button[aria-label="Toggle menu"]'); await sleep(500); }
   const box2 = await page.evaluateHandle(() => [...document.querySelectorAll("[data-public-search]")].find((e) => e.offsetParent !== null));
   await (await box2.evaluateHandle((el) => el.querySelector("input"))).focus(); await sleep(300);
   await page.evaluate(() => [...document.querySelectorAll("[data-view-all]")].find((b) => b.offsetParent !== null).click());

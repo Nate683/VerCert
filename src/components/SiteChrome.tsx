@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Header } from "./Header";
+import { CatalogOverlayProvider } from "./CatalogOverlay";
 import { Footer } from "./Footer";
 import { ExecModeToggle } from "./ExecModeToggle";
 import { TickerBanner } from "./TickerBanner";
@@ -51,8 +52,11 @@ export function SiteChrome({
 
   if (isExecutive) return <>{children}</>;
 
+  // CatalogOverlayProvider (Visual Package 3): the one public catalog overlay, shared by the header searches and the
+  // registration page. It wraps the header AND the page, so opening it from either changes only its own state — the
+  // page below (a half-filled registration form) is never re-rendered or remounted.
   return (
-    <>
+    <CatalogOverlayProvider>
       {/* Rendered inside this branch on purpose: the executive terminals
           returned above, so /command, /office, /executive and /hq never see the gate. */}
       <AgeGate />
@@ -88,9 +92,9 @@ export function SiteChrome({
         memberAnnouncement={memberAnnouncement}
         publicAnnouncement={publicAnnouncement}
       />
-      <Header />
+      <Header signedInAtRender={signedInAtRender} />
       <main className="flex-1">{children}</main>
       <Footer contact={contact} />
-    </>
+    </CatalogOverlayProvider>
   );
 }
